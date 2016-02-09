@@ -18,6 +18,31 @@
  *
  * Note that this does NOT provide any functionality for accessing the
  * transaction based api.
+ *
+ * USAGE:
+ *
+ *   i) Define types as structs in a layout.h that is used for an entire project.
+ *      To define object relationships use persistent_ptr<> below.
+ *
+ *  ii) Use the following macros to define unique IDs for the memory regions that
+ *      permit type-checking on resumption from power-off, etc.
+ *
+ *        POBJ_LAYOUT_BEGIN(layout_name);
+ *        POBJ_CPP_LAYOUT_ROOT(layout_name, root_structure);
+ *        POJB_CPP_LAYOUT_TOID(layout_name, structure);
+ *        POBJ_LAYOUT_END(layout_name)
+ *
+ *      These macros work in the same way as discussed in the pmem.io documentation
+ *      (http://pmem.io/2015/06/18/ntx-alloc.html), but additionally hook the C
+ *      macro based type system into the persistent_ptr class defined below.
+ *
+ * iii) Define functors derived from atomic_constructor<structure> to define
+ *      arbitrarily sophisticated initialisation of the defined data structures.
+ *
+ *  iv) Build a datastructure in memory using the atomic operations allocate() and
+ *      free(). To build the first (root) element, the allocate_root() method may be
+ *      used, otherwise an object can only be created associated with an existing
+ *      (but NULL) pointer.
  */
 
 
@@ -125,6 +150,7 @@ public: // methods
     /// Note that allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
     void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
+        ASSERT(null());
         ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
                         &persistent_ptr<T>::constructor, &constructor);
     }
