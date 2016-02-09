@@ -60,15 +60,6 @@ struct list_obj_atomic {
 };
 
 
-/*
- * Structures used for initialisation of the atomically created objects.
- */
-
-struct list_obj_init_info {
-    const void * data;
-    size_t len;
-};
-
 // -------------------------------------------------------------------------------------------------
 
 #endif // objserver_layout_H
