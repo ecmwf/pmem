@@ -36,16 +36,10 @@ class root_obj_atomic;
 class list_obj_atomic;
 
 POBJ_LAYOUT_BEGIN(ll_atomic);
-POBJ_LAYOUT_ROOT(ll_atomic, root_obj_atomic);
-POBJ_LAYOUT_TOID(ll_atomic, list_obj_atomic);
+POBJ_CPP_LAYOUT_ROOT(ll_atomic, root_obj_atomic);
+POBJ_CPP_LAYOUT_TOID(ll_atomic, list_obj_atomic);
 POBJ_LAYOUT_END(ll_atomic);
 
-
-template<>
-int ::pmem::persistent_ptr<root_obj_atomic>::type_id = TOID_TYPE_NUM(root_obj_atomic);
-
-template<>
-int ::pmem::persistent_ptr<list_obj_atomic>::type_id = TOID_TYPE_NUM(list_obj_atomic);
 
 /*
  * And define the structures

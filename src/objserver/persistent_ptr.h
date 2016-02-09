@@ -28,8 +28,25 @@
 #ifndef objserver_persistent_ptr_H
 #define objserver_persistent_ptr_H
 
-
 #include "libpmemobj.h"
+
+/*
+ * Here we define a couple of macros to extend the layout definitions associated with the
+ * C-Macro system. This injects the TOID type information, which is only obtainable from
+ * the C macros, into the templated C++ type system.
+ *
+ * POBJ_LAYOUT_ROOT --> POBJ_CPP_LAYOUT_ROOT
+ * POBJ_LAYOUT_TOID --> POBJ_CPP_LAYOUt_TOID
+ */
+
+#define POBJ_CPP_LAYOUT_ROOT(layout, t) \
+    POBJ_LAYOUT_ROOT(layout, t) \
+    template<> int ::pmem::persistent_ptr<t>::type_id = TOID_TYPE_NUM(t)
+
+#define POBJ_CPP_LAYOUT_TOID(layout, t) \
+    POBJ_LAYOUT_TOID(layout, t) \
+    template<> int ::pmem::persistent_ptr<t>::type_id = TOID_TYPE_NUM(t)
+
 
 namespace pmem {
 
