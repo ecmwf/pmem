@@ -192,43 +192,6 @@ void ObjectServer::run_atomic() {
 
         tgt->allocate(pop, obj_builder);
 
-
-//        TOID(root_obj_atomic) root = POBJ_ROOT(pop, root_obj_atomic);
-//
-//        // Normally we would use the POBJ_NEW macro, but by using the pmemobj_alloc routine
-//        // directly, we can allocate arbitrarily sized objects.
-//        // TODO: Wrap this all in a C++ class!
-//
-//        PMEMoid * target;
-//
-//        if (TOID_IS_NULL(D_RO(root)->next)) {
-//            Log::info() << "Only the root object..." << std::endl;
-//            target = &D_RW(root)->next.oid;
-//        } else {
-//
-//            TOID(list_obj_atomic) obj = D_RW(root)->next;
-//            while (!TOID_IS_NULL(obj)) {
-//
-//                std::string rstring(D_RO(obj)->buf, D_RO(obj)->len);
-//                Log::info() << "Read (" << D_RO(obj)->len << "): " << rstring << std::endl;
-//
-//                target = &D_RW(obj)->next.oid;
-//                obj = D_RW(obj)->next;
-//            };
-//        }
-//
-//        // Note that the allocated size does not equal the size of the object, as there is some
-//        // accounting information included as well.
-//        size_t genlen = buflen_min + (rand() % (buflen_max-buflen_min));
-//        size_t objlen = genlen - buflen_min + sizeof(list_obj_atomic);
-//        Log::info() << "Allocating new: " << genlen << " bytes" << std::endl;
-//
-//        std::string strtmp(genlen, 'a');
-//        list_obj_init_info info;
-//        info.len = genlen;
-//        info.data = strtmp.c_str();
-//        pmemobj_alloc(pop, target, objlen, TOID_TYPE_NUM(list_obj_atomic), construct_list_element, &info);
-
     } else {
 
         Log::info() << "Creating memory pool: " << POBJ_LAYOUT_NAME(string_store_atomic) << std::endl;
