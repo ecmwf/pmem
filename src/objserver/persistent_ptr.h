@@ -20,10 +20,6 @@
  * transaction based api.
  */
 
-//   i) Declare layout
-//  ii) Define construction routines, with appropriate data accepted.
-// iii) Store the oid directly inside the object, not outside
-//  iv) Note that this should support c++97, not just c++11...
 
 #ifndef objserver_persistent_ptr_H
 #define objserver_persistent_ptr_H
@@ -71,10 +67,6 @@ public:
 
 
 // -------------------------------------------------------------------------------------------------
-
-// Usage notes:
-//
-// i) We must declare the types using POBJ_LAYOUT_BEGIN, POBJ_LAYOUT_ROOT, POBJ_LAYOUt_TOID, POBJ_LAYOUT_END
 
 
 template <typename T>
@@ -130,15 +122,8 @@ public: // methods
         oid_ = OID_NULL;
     }
 
-    // TODO: This probably shouldn't be publically accessible...
-    static void constructor(PMEMobjpool * pop, void * ptr, void * arg) {
-        T * obj = reinterpret_cast<T*>(ptr);
-        const atomic_constructor<T> * constr_fn = reinterpret_cast<const atomic_constructor<T>*>(arg);
-
-        constr_fn->build(obj);
-        ::pmemobj_persist(pop, obj, constr_fn->size());
-    }
-
+    /// Note that allocation and setting of the pointer are atomic. The work of setting up the
+    /// object is done inside the functor atomic_constructor<T>.
     void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
         ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
                         &persistent_ptr<T>::constructor, &constructor);
@@ -147,6 +132,11 @@ public: // methods
     void allocate_root(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
         ::pmemobj_alloc(pop, NULL, constructor.size(), type_id,
                         &persistent_ptr<T>::constructor, &constructor);
+    }
+
+    /// Deallocate the memory. Note that this atomically frees and sets oid_ == OID_NULL.
+    void free() {
+        ::pmemobj_free(&oid_);
     }
 
     /*
@@ -159,8 +149,20 @@ public: // methods
 
 private: // methods
 
+    /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
     persistent_ptr(PMEMoid oid) :
         oid_(oid) {}
+
+    /// This is a static routine that can be passed to the atomic allocation routines. All the logic
+    /// should be passed in as the functor atomic_constructor<T>.
+    static void constructor(PMEMobjpool * pop, void * ptr, void * arg) {
+        T * obj = reinterpret_cast<T*>(ptr);
+        const atomic_constructor<T> * constr_fn = reinterpret_cast<const atomic_constructor<T>*>(arg);
+
+        constr_fn->build(obj);
+        ::pmemobj_persist(pop, obj, constr_fn->size());
+    }
+
 
 private: // members
 
