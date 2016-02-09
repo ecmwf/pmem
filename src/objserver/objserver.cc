@@ -23,8 +23,10 @@
 #include <cstdlib>
 
 #include "objserver/layout.h"
+#include "objserver/persistent_ptr.h"
 
 using namespace eckit;
+using namespace pmem;
 
 namespace objserver {
 
@@ -78,29 +80,64 @@ void ObjectServer::run() {
 const size_t buflen_max = 100;
 const size_t buflen_min = sizeof(size_t);
 
+// This is the constructor fn
+class constr : public atomic_constructor<list_obj_atomic> {
+public: // methods
+
+    constr(const char* data, size_t len) : data_(data), len_(len) {}
+
+    void make(list_obj_atomic * obj) const {
+        obj->next.nullify();
+        obj->len = len_;
+        ::memcpy(obj->buf, data_, len_);
+    }
+
+    /// Overall size of the data object
+    virtual size_t size() const { return sizeof(list_obj_atomic) - sizeof(size_t) + len_; }
+
+    virtual int type_id() const { return TOID_TYPE_NUM(list_obj_atomic); }
+
+private: // members
+
+    const void * data_;
+    size_t len_;
+};
 
 
-void construct_list_element(PMEMobjpool * pop, void * ptr, void * arg) {
-    list_obj_atomic * obj = reinterpret_cast<list_obj_atomic*>(ptr);
-    const list_obj_init_info * info = reinterpret_cast<const list_obj_init_info*>(arg);
-
-    Log::info() << "Building!!!" << std::endl;
-    // Initialise an the list object with the correct number of characters
-    // of the specified type
-    obj->next = OID_NULL;
-    obj->len = info->len;
-    ::memcpy(obj->buf, info->data, info->len);
-
-    ::pmemobj_persist(pop, obj, info->len - buflen_min + sizeof(list_obj_atomic));
-}
+//void construct_list_element(PMEMobjpool * pop, void * ptr, void * arg) {
+//    
+//    list_obj_atomic * obj = reinterpret_cast<list_obj_atomic*>(ptr);
+//    const constr * constr_fn = reinterpret_cast<const constr*>(arg);
+//
+//    constr_fn->build(obj);
+//    ::pmemobj_persist(pop, obj, constr_fn->size());
+//}
 
 
-void construct_root_element(PMEMobjpool * pop, void * ptr, void * arg) {
-    root_obj_atomic * root = reinterpret_cast<root_obj_atomic*>(ptr);
 
-    root->next = OID_NULL;
-    pmemobj_persist(pop, root, sizeof(root_obj_atomic));
-}
+
+
+//void construct_list_element(PMEMobjpool * pop, void * ptr, void * arg) {
+//    list_obj_atomic * obj = reinterpret_cast<list_obj_atomic*>(ptr);
+//    const list_obj_init_info * info = reinterpret_cast<const list_obj_init_info*>(arg);
+//
+//    Log::info() << "Building!!!" << std::endl;
+//    // Initialise an the list object with the correct number of characters
+//    // of the specified type
+//    obj->next = OID_NULL;
+//    obj->len = info->len;
+//    ::memcpy(obj->buf, info->data, info->len);
+//
+//    ::pmemobj_persist(pop, obj, info->len - buflen_min + sizeof(list_obj_atomic));
+//}
+//
+//
+//void construct_root_element(PMEMobjpool * pop, void * ptr, void * arg) {
+//    root_obj_atomic * root = reinterpret_cast<root_obj_atomic*>(ptr);
+//
+//    root->next = OID_NULL;
+//    pmemobj_persist(pop, root, sizeof(root_obj_atomic));
+//}
 
 
 void ObjectServer::run_atomic() {
@@ -128,53 +165,82 @@ void ObjectServer::run_atomic() {
             return;
         }
 
-        TOID(root_obj_atomic) root = POBJ_ROOT(pop, root_obj_atomic);
+        persistent_ptr<root_obj_atomic> root = persistent_ptr<root_obj_atomic>::get_root_object(pop);
+        persistent_ptr<list_obj_atomic> * tgt;
 
-        // Normally we would use the POBJ_NEW macro, but by using the pmemobj_alloc routine
-        // directly, we can allocate arbitrarily sized objects.
-        // TODO: Wrap this all in a C++ class!
-
-        PMEMoid * target;
-
-        if (TOID_IS_NULL(D_RO(root)->next)) {
+        if (root->next.null()) {
             Log::info() << "Only the root object..." << std::endl;
-            target = &D_RW(root)->next.oid;
+            tgt = &root->next;
         } else {
+            Log::info() << "Need to read trailing members..." << std::endl;
 
-            TOID(list_obj_atomic) obj = D_RW(root)->next;
-            while (!TOID_IS_NULL(obj)) {
+            persistent_ptr<list_obj_atomic> obj = root->next;
+            do {
 
-                std::string rstring(D_RO(obj)->buf, D_RO(obj)->len);
-                Log::info() << "Read (" << D_RO(obj)->len << "): " << rstring << std::endl;
+                std::string rstring(obj->buf, obj->len);
+                Log::info() << "Read (" << obj->len << "): " << rstring << std::endl;
 
-                target = &D_RW(obj)->next.oid;
-                obj = D_RW(obj)->next;
-            };
+                tgt = &obj->next;
+                obj = obj->next;
+            } while(!obj.null());
         }
 
-        // Note that the allocated size does not equal the size of the object, as there is some
-        // accounting information included as well.
-        size_t genlen = buflen_min + (rand() % (buflen_max-buflen_min));
-        size_t objlen = genlen - buflen_min + sizeof(list_obj_atomic);
-        Log::info() << "Allocating new: " << genlen << " bytes" << std::endl;
-
+        // Generate the contents to append to the list
+        size_t genlen = buflen_min + (rand() %(buflen_max-buflen_min));
         std::string strtmp(genlen, 'a');
-        list_obj_init_info info;
-        info.len = genlen;
-        info.data = strtmp.c_str();
-        pmemobj_alloc(pop, target, objlen, TOID_TYPE_NUM(list_obj_atomic), construct_list_element, &info);
+        constr obj_builder(strtmp.c_str(), genlen);
+
+        tgt->allocate(pop, obj_builder);
+
+
+//        TOID(root_obj_atomic) root = POBJ_ROOT(pop, root_obj_atomic);
+//
+//        // Normally we would use the POBJ_NEW macro, but by using the pmemobj_alloc routine
+//        // directly, we can allocate arbitrarily sized objects.
+//        // TODO: Wrap this all in a C++ class!
+//
+//        PMEMoid * target;
+//
+//        if (TOID_IS_NULL(D_RO(root)->next)) {
+//            Log::info() << "Only the root object..." << std::endl;
+//            target = &D_RW(root)->next.oid;
+//        } else {
+//
+//            TOID(list_obj_atomic) obj = D_RW(root)->next;
+//            while (!TOID_IS_NULL(obj)) {
+//
+//                std::string rstring(D_RO(obj)->buf, D_RO(obj)->len);
+//                Log::info() << "Read (" << D_RO(obj)->len << "): " << rstring << std::endl;
+//
+//                target = &D_RW(obj)->next.oid;
+//                obj = D_RW(obj)->next;
+//            };
+//        }
+//
+//        // Note that the allocated size does not equal the size of the object, as there is some
+//        // accounting information included as well.
+//        size_t genlen = buflen_min + (rand() % (buflen_max-buflen_min));
+//        size_t objlen = genlen - buflen_min + sizeof(list_obj_atomic);
+//        Log::info() << "Allocating new: " << genlen << " bytes" << std::endl;
+//
+//        std::string strtmp(genlen, 'a');
+//        list_obj_init_info info;
+//        info.len = genlen;
+//        info.data = strtmp.c_str();
+//        pmemobj_alloc(pop, target, objlen, TOID_TYPE_NUM(list_obj_atomic), construct_list_element, &info);
 
     } else {
 
         Log::info() << "Creating memory pool: " << POBJ_LAYOUT_NAME(string_store_atomic) << std::endl;
         pop = pmemobj_create(pmemPath_.localPath(), POBJ_LAYOUT_NAME(string_store_atomic), 
                                            PMEMOBJ_MIN_POOL, 0666);
-        if (pop == NULL) {
-            Log::error() << "Failed to create memory pool" << std::endl;
-            return;
-        }
-
-        POBJ_NEW(pop, NULL, root_obj_atomic, construct_root_element, NULL);
+        NOTIMP;
+//        if (pop == NULL) {
+//            Log::error() << "Failed to create memory pool" << std::endl;
+//            return;
+//        }
+//
+//        POBJ_NEW(pop, NULL, root_obj_atomic, construct_root_element, NULL);
     }
 
     Log::info() << "Closing" << std::endl;

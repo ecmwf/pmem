@@ -17,6 +17,7 @@
 
 
 #include "libpmemobj.h"
+#include "objserver/persistent_ptr.h"
 
 namespace objserver {
 
@@ -40,13 +41,13 @@ POBJ_LAYOUT_END(ll_atomic);
  */
 
 struct root_obj_atomic {
-    TOID(list_obj_atomic) next;
+    pmem::persistent_ptr<list_obj_atomic> next;
 };
 
 
 struct list_obj_atomic {
     size_t len;
-    TOID(list_obj_atomic) next;
+    pmem::persistent_ptr<list_obj_atomic> next;
 
     // This element does not store any data directly. It only exists to provide an access
     // point to data of a variable size.

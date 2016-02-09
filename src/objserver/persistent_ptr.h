@@ -35,6 +35,28 @@ namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
 
+
+// We should probably put this somewhere else...
+
+template <typename T>
+class atomic_constructor {
+public:
+
+    virtual void make (T * object) const = 0;
+
+    void build (void * obj) const {
+        T * object = reinterpret_cast<T*>(obj);
+        make(object);
+    }
+
+    virtual size_t size() const { return sizeof(T); }
+
+    virtual int type_id() const = 0;
+};
+
+
+// -------------------------------------------------------------------------------------------------
+
 // Usage notes:
 //
 // i) We must declare the types using POBJ_LAYOUT_BEGIN, POBJ_LAYOUT_ROOT, POBJ_LAYOUt_TOID, POBJ_LAYOUT_END
@@ -43,7 +65,86 @@ namespace pmem {
 template <typename T>
 class persistent_ptr {
 
+public: // methods
+
+    /*
+     * Constructors
+     */
+    persistent_ptr() :
+        oid_(OID_NULL) {}
+
+    /*
+     * Access the stored object
+     *
+     * Note that these are _const_ pointers, as using atomic access we are only allowed
+     * to allocate/free objects, not to modify them.
+     */
+
+    const T& operator*() const {
+        *get();
+    }
+
+    T* operator->() const {
+    //const T* operator->() const {
+        return get();
+    };
+
+    T* get() const {
+    //const T* get() const {
+        return (T*)pmemobj_direct(oid_);
+    }
+
+    /*
+     * Status testing?
+     */
+    bool null() const {
+        return oid_.off == 0;
+    }
+
+    /*
+     * Modification
+     */
+    void nullify() {
+        oid_ = OID_NULL;
+    }
+
+    static void constructor(PMEMobjpool * pop, void * ptr, void * arg) {
+        T * obj = reinterpret_cast<T*>(ptr);
+        const atomic_constructor<T> * constr_fn = reinterpret_cast<const atomic_constructor<T>*>(arg);
+
+        constr_fn->build(obj);
+        ::pmemobj_persist(pop, obj, constr_fn->size());
+    }
+
+    void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
+        ::pmemobj_alloc(pop, &oid_, constructor.size(), constructor.type_id(),
+                        &persistent_ptr<T>::constructor, &constructor);
+    }
+
+    /*
+     * useful accessors
+     * TODO: Consider if these should be pulled out of the class, into helper routines.
+     */
+    static persistent_ptr get_root_object(PMEMobjpool * pop) {
+        return persistent_ptr(pmemobj_root(pop, sizeof(T)));
+    }
+
+private: // methods
+
+    persistent_ptr(PMEMoid oid) :
+        oid_(oid) {}
+
 private: // members
+
+    /*
+     * N.B. There is only ONEC data member here. This is a PMEMoid, and is the SAME data that
+     *      is held in the TOID() macro-enhanced data type in the C-bindings. (In C this is
+     *      actually a named union, with the only data being a PMEMoid). This means that PMEMoid,
+     *      TOID and persistent_ptr can be used interchangeably in the data format.
+     *
+     * N.B. 2 - Because we want to ensure the data stays the same, persistent_ptr MUST NOT be
+     *          a virtual class.
+     */
 
     PMEMoid oid_;
 };
