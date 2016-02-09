@@ -103,7 +103,6 @@ public: // methods
     }
 
     bool valid() const {
-        eckit::Log::info() << "Type: " <<  pmemobj_type_num(oid_) << std::endl;
         return pmemobj_type_num(oid_) == type_id;
     }
 
