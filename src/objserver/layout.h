@@ -19,12 +19,17 @@
 #include "libpmemobj.h"
 #include "objserver/persistent_ptr.h"
 
-namespace objserver {
 
 // -------------------------------------------------------------------------------------------------
 
 /*
  * Define the layout
+ *
+ * Note that this MUST not be inside a namespace, or we break the C-based MACROS, which assume
+ * global scope...
+ *
+ * Ultimately we want to maintain backwards compatibility with the C-interface, so we must
+ * abide by its rules.
  */
 
 class root_obj_atomic;
@@ -35,6 +40,12 @@ POBJ_LAYOUT_ROOT(ll_atomic, root_obj_atomic);
 POBJ_LAYOUT_TOID(ll_atomic, list_obj_atomic);
 POBJ_LAYOUT_END(ll_atomic);
 
+
+template<>
+int ::pmem::persistent_ptr<root_obj_atomic>::type_id = TOID_TYPE_NUM(root_obj_atomic);
+
+template<>
+int ::pmem::persistent_ptr<list_obj_atomic>::type_id = TOID_TYPE_NUM(list_obj_atomic);
 
 /*
  * And define the structures
@@ -65,8 +76,6 @@ struct list_obj_init_info {
 };
 
 // -------------------------------------------------------------------------------------------------
-
-}
 
 #endif // objserver_layout_H
 

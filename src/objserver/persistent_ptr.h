@@ -65,6 +65,14 @@ public:
 template <typename T>
 class persistent_ptr {
 
+public: // members
+
+    /// This static is used to perform type id lookups, so that the type checking that
+    /// works in the C-MACRO based version continues to work in this C++ wrapper.
+    ///
+    /// TODO: Define updated POBJ_LAYOUT_* macros to define this type_id statically.
+    static int type_id;
+
 public: // methods
 
     /*
@@ -101,6 +109,10 @@ public: // methods
         return oid_.off == 0;
     }
 
+    bool valid() const {
+        return pmemobj_type_num(oid_) == type_id;
+    }
+
     /*
      * Modification
      */
@@ -117,7 +129,7 @@ public: // methods
     }
 
     void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
-        ::pmemobj_alloc(pop, &oid_, constructor.size(), constructor.type_id(),
+        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
                         &persistent_ptr<T>::constructor, &constructor);
     }
 

@@ -166,8 +166,9 @@ void ObjectServer::run_atomic() {
         }
 
         persistent_ptr<root_obj_atomic> root = persistent_ptr<root_obj_atomic>::get_root_object(pop);
-        persistent_ptr<list_obj_atomic> * tgt;
+        ASSERT(root.valid());
 
+        persistent_ptr<list_obj_atomic> * tgt;
         if (root->next.null()) {
             Log::info() << "Only the root object..." << std::endl;
             tgt = &root->next;
@@ -176,6 +177,7 @@ void ObjectServer::run_atomic() {
 
             persistent_ptr<list_obj_atomic> obj = root->next;
             do {
+                ASSERT(obj.valid()); // Validate type information
 
                 std::string rstring(obj->buf, obj->len);
                 Log::info() << "Read (" << obj->len << "): " << rstring << std::endl;
