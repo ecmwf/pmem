@@ -74,7 +74,14 @@ namespace pmem {
 // -------------------------------------------------------------------------------------------------
 
 
-// We should probably put this somewhere else...
+/*
+ * This is the base class for atomically constructing a type in persistent memory. The derived
+ * make(T* object) method is called (indirectly) from inside the atomic allocator in libpmemobj.h.
+ *
+ * There may be an arbitrary number of atomic constructors for any given structure, to allow
+ * arbitrary complexity of usage. A constructor instance is passed into the allocate() method
+ * as (effectively, if not strictly) a functor.
+ */
 
 template <typename T>
 class atomic_constructor {
