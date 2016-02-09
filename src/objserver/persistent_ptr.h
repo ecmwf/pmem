@@ -94,6 +94,8 @@ public:
         make(object);
     }
 
+    /// N.b. This is virtual. This allows the constructor to actually allocate more memory
+    ///      than the size of the declared structure (e.g. if allocating a buffer).
     virtual size_t size() const { return sizeof(T); }
 };
 

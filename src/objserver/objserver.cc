@@ -80,11 +80,10 @@ void ObjectServer::run() {
 const size_t buflen_max = 100;
 const size_t buflen_min = sizeof(size_t);
 
-// This is the constructor fn
-class constr : public atomic_constructor<list_obj_atomic> {
+class ConstructListObj : public atomic_constructor<list_obj_atomic> {
 public: // methods
 
-    constr(const char* data, size_t len) : data_(data), len_(len) {}
+    ConstructListObj(const char* data, size_t len) : data_(data), len_(len) {}
 
     void make(list_obj_atomic * obj) const {
         obj->next.nullify();
@@ -93,7 +92,9 @@ public: // methods
     }
 
     /// Overall size of the data object
-    virtual size_t size() const { return sizeof(list_obj_atomic) - sizeof(size_t) + len_; }
+    virtual size_t size() const {
+        return std::max(sizeof(list_obj_atomic), sizeof(list_obj_atomic) - sizeof(size_t) + len_);
+    }
 
 private: // members
 
@@ -102,10 +103,10 @@ private: // members
 };
 
 
-class constr_rt : public atomic_constructor<root_obj_atomic> {
+class ConstructRootObj : public atomic_constructor<root_obj_atomic> {
 public: // methods
 
-    constr_rt() {}
+    ConstructRootObj() {}
 
     void make(root_obj_atomic * obj) const {
         obj->next.nullify();
@@ -165,7 +166,7 @@ void ObjectServer::run_atomic() {
         // Generate the contents to append to the list
         size_t genlen = buflen_min + (rand() %(buflen_max-buflen_min));
         std::string strtmp(genlen, 'a');
-        constr obj_builder(strtmp.c_str(), genlen);
+        ConstructListObj obj_builder(strtmp.c_str(), genlen);
 
         tgt->allocate(pop, obj_builder);
 
@@ -181,7 +182,7 @@ void ObjectServer::run_atomic() {
 
         persistent_ptr<root_obj_atomic> root = persistent_ptr<root_obj_atomic>::get_root_object(pop);
 
-        constr_rt root_builder;
+        ConstructRootObj root_builder;
         root.allocate_root(pop, root_builder);
     }
 
