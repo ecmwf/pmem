@@ -118,17 +118,6 @@ public: // methods
 
 void ObjectServer::run_atomic() {
 
-
-
-
-    // TODO:
-    // - Append a new list element for each run.
-    // - Convert from using transactions to using atomic operations
-    // - Wrap the atomic operations inside C++ code!
-    // - Make the list reference arbitrary BLOCKs of memory, of randomized size.
-
-
-
     PMEMobjpool * pop = NULL;
 
     // Do different things if the file exists, or if it needs to be created
