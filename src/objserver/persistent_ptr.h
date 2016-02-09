@@ -81,22 +81,17 @@ public: // methods
 
     /*
      * Access the stored object
-     *
-     * Note that these are _const_ pointers, as using atomic access we are only allowed
-     * to allocate/free objects, not to modify them.
      */
 
-    const T& operator*() const {
+    T& operator*() const {
         *get();
     }
 
     T* operator->() const {
-    //const T* operator->() const {
         return get();
     };
 
     T* get() const {
-    //const T* get() const {
         return (T*)pmemobj_direct(oid_);
     }
 
