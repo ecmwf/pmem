@@ -16,11 +16,13 @@
 
 #include <errno.h>
 #include <fcntl.h>
-//#include "libpmem.h"
+#include "libpmem.h"
 #include <unistd.h>
 #include "libpmemobj.h"
 #include <stdio.h>
 #include <cstdlib>
+
+#include "objserver/layout.h"
 
 using namespace eckit;
 
@@ -74,46 +76,22 @@ void ObjectServer::run() {
 
 // -------------------------------------------------------------------------------------------------
 const size_t buflen_max = 100;
-const size_t buflen_min = 10;
+const size_t buflen_min = sizeof(size_t);
 
-
-class root_obj_atomic;
-class list_obj_atomic;
-POBJ_LAYOUT_BEGIN(string_store_atomic);
-POBJ_LAYOUT_ROOT(string_store_atomic, root_obj_atomic);
-POBJ_LAYOUT_TOID(string_store_atomic, list_obj_atomic);
-POBJ_LAYOUT_END(string_store_atomic);
-
-    
-struct root_obj_atomic  {
-    TOID(list_obj_atomic) next;
-};
-
-struct list_obj_atomic {
-    size_t len;
-    TOID(list_obj_atomic) next;
-
-    char buf[buflen_min];
-};
-
-struct init_info {
-    char c;
-    size_t len;
-};
 
 
 void construct_list_element(PMEMobjpool * pop, void * ptr, void * arg) {
     list_obj_atomic * obj = reinterpret_cast<list_obj_atomic*>(ptr);
-    const init_info * info = reinterpret_cast<const init_info*>(arg);
+    const list_obj_init_info * info = reinterpret_cast<const list_obj_init_info*>(arg);
 
     Log::info() << "Building!!!" << std::endl;
     // Initialise an the list object with the correct number of characters
     // of the specified type
     obj->next = OID_NULL;
     obj->len = info->len;
-    memset(obj->buf, info->c, info->len);
+    ::memcpy(obj->buf, info->data, info->len);
 
-    pmemobj_persist(pop, obj, info->len - buflen_min + sizeof(list_obj_atomic));
+    ::pmemobj_persist(pop, obj, info->len - buflen_min + sizeof(list_obj_atomic));
 }
 
 
@@ -180,9 +158,10 @@ void ObjectServer::run_atomic() {
         size_t objlen = genlen - buflen_min + sizeof(list_obj_atomic);
         Log::info() << "Allocating new: " << genlen << " bytes" << std::endl;
 
-        init_info info;
+        std::string strtmp(genlen, 'a');
+        list_obj_init_info info;
         info.len = genlen;
-        info.c = 'a';
+        info.data = strtmp.c_str();
         pmemobj_alloc(pop, target, objlen, TOID_TYPE_NUM(list_obj_atomic), construct_list_element, &info);
 
     } else {

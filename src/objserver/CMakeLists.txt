@@ -4,6 +4,9 @@ ecbuild_add_executable(
 
     SOURCES
         objserver.cc
+        layout.h
+        persistent_ptr.h
+
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}

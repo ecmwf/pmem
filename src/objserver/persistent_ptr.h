@@ -25,7 +25,9 @@
 // iii) Store the oid directly inside the object, not outside
 //  iv) Note that this should support c++97, not just c++11...
 
-#include "eckit/memory/NonCopyable.h"
+#ifndef objserver_persistent_ptr_H
+#define objserver_persistent_ptr_H
+
 
 #include "libpmemobj.h"
 
@@ -33,9 +35,13 @@ namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
 
+// Usage notes:
+//
+// i) We must declare the types using POBJ_LAYOUT_BEGIN, POBJ_LAYOUT_ROOT, POBJ_LAYOUt_TOID, POBJ_LAYOUT_END
+
 
 template <typename T>
-class persistent_ptr : eckit::NonCopyable {
+class persistent_ptr {
 
 private: // members
 
@@ -46,3 +52,5 @@ private: // members
 // -------------------------------------------------------------------------------------------------
 
 }
+
+#endif // objserver_persistent_ptr_H
