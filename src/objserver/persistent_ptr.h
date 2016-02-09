@@ -50,8 +50,6 @@ public:
     }
 
     virtual size_t size() const { return sizeof(T); }
-
-    virtual int type_id() const = 0;
 };
 
 
@@ -110,6 +108,7 @@ public: // methods
     }
 
     bool valid() const {
+        eckit::Log::info() << "Type: " <<  pmemobj_type_num(oid_) << std::endl;
         return pmemobj_type_num(oid_) == type_id;
     }
 
@@ -120,6 +119,7 @@ public: // methods
         oid_ = OID_NULL;
     }
 
+    // TODO: This probably shouldn't be publically accessible...
     static void constructor(PMEMobjpool * pop, void * ptr, void * arg) {
         T * obj = reinterpret_cast<T*>(ptr);
         const atomic_constructor<T> * constr_fn = reinterpret_cast<const atomic_constructor<T>*>(arg);
@@ -130,6 +130,11 @@ public: // methods
 
     void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
         ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
+                        &persistent_ptr<T>::constructor, &constructor);
+    }
+
+    void allocate_root(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
+        ::pmemobj_alloc(pop, NULL, constructor.size(), type_id,
                         &persistent_ptr<T>::constructor, &constructor);
     }
 

@@ -95,8 +95,6 @@ public: // methods
     /// Overall size of the data object
     virtual size_t size() const { return sizeof(list_obj_atomic) - sizeof(size_t) + len_; }
 
-    virtual int type_id() const { return TOID_TYPE_NUM(list_obj_atomic); }
-
 private: // members
 
     const void * data_;
@@ -104,40 +102,17 @@ private: // members
 };
 
 
-//void construct_list_element(PMEMobjpool * pop, void * ptr, void * arg) {
-//    
-//    list_obj_atomic * obj = reinterpret_cast<list_obj_atomic*>(ptr);
-//    const constr * constr_fn = reinterpret_cast<const constr*>(arg);
-//
-//    constr_fn->build(obj);
-//    ::pmemobj_persist(pop, obj, constr_fn->size());
-//}
+class constr_rt : public atomic_constructor<root_obj_atomic> {
+public: // methods
 
+    constr_rt() {}
 
+    void make(root_obj_atomic * obj) const {
+        obj->next.nullify();
+    }
 
-
-
-//void construct_list_element(PMEMobjpool * pop, void * ptr, void * arg) {
-//    list_obj_atomic * obj = reinterpret_cast<list_obj_atomic*>(ptr);
-//    const list_obj_init_info * info = reinterpret_cast<const list_obj_init_info*>(arg);
-//
-//    Log::info() << "Building!!!" << std::endl;
-//    // Initialise an the list object with the correct number of characters
-//    // of the specified type
-//    obj->next = OID_NULL;
-//    obj->len = info->len;
-//    ::memcpy(obj->buf, info->data, info->len);
-//
-//    ::pmemobj_persist(pop, obj, info->len - buflen_min + sizeof(list_obj_atomic));
-//}
-//
-//
-//void construct_root_element(PMEMobjpool * pop, void * ptr, void * arg) {
-//    root_obj_atomic * root = reinterpret_cast<root_obj_atomic*>(ptr);
-//
-//    root->next = OID_NULL;
-//    pmemobj_persist(pop, root, sizeof(root_obj_atomic));
-//}
+    virtual int type_id() const { return 999999999; }
+};
 
 
 void ObjectServer::run_atomic() {
@@ -199,13 +174,15 @@ void ObjectServer::run_atomic() {
         Log::info() << "Creating memory pool: " << POBJ_LAYOUT_NAME(string_store_atomic) << std::endl;
         pop = pmemobj_create(pmemPath_.localPath(), POBJ_LAYOUT_NAME(string_store_atomic), 
                                            PMEMOBJ_MIN_POOL, 0666);
-        NOTIMP;
-//        if (pop == NULL) {
-//            Log::error() << "Failed to create memory pool" << std::endl;
-//            return;
-//        }
-//
-//        POBJ_NEW(pop, NULL, root_obj_atomic, construct_root_element, NULL);
+        if (pop == NULL) {
+            Log::error() << "Failed to create memory pool" << std::endl;
+            return;
+        }
+
+        persistent_ptr<root_obj_atomic> root = persistent_ptr<root_obj_atomic>::get_root_object(pop);
+
+        constr_rt root_builder;
+        root.allocate_root(pop, root_builder);
     }
 
     Log::info() << "Closing" << std::endl;
