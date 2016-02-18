@@ -13,43 +13,32 @@
 /// @date   Feb 2016
 
 
-#ifndef tree_TreeRoot_H
-#define tree_TreeRoot_H
+#ifndef persistent_PolymorphicPersistentPtr_H
+#define persistent_PolymorphicPersistentPtr_H
 
-#include "tree/TreeNode.h"
-
-#include "persistent/PolymorphicPersistentPtr.h"
-
-#include "eckit/types/FixedString.h"
+#include "persistent/PersistentPtr.h"
 
 
-namespace treetool {
+namespace pmem {
+
 
 // -------------------------------------------------------------------------------------------------
 
+// --> Fundamentally we need to overload get() to return a new OBJECT, which itself
+//     must refer to the relevant PersistentPtr.
+//
+// --> We need to have _FACTORIES_ to return the correct PersistentPtr types, and the
+//     the correct object types given the typeid
+//
+// --> We can then check that the deriving of the type is valid.
 
-// N.B. This is to be stored in PersistentPtr --> NO virtual behaviour.
-
-class TreeRoot {
-public: // methods
-
-    bool valid() const;
-
-public: // members
-
-    eckit::FixedString<8> tag_;
-
-    pmem::PolymorphicPersistentPtr<TreeNode> root_;
-
+template <typename T>
+class PolymorphicPersistentPtr : public PersistentPtr<T> {
 };
-
-
-// A consistent definition of the tag for comparison purposes.
-const eckit::FixedString<8> TreeRootTag = "999TREE9";
 
 
 // -------------------------------------------------------------------------------------------------
 
 }
 
-#endif // tree_TreeRoot_H
+#endif // persistent_PersistentPtr_H
