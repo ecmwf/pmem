@@ -8,6 +8,9 @@
  * nor does it submit to any jurisdiction.
  */
 
+#include "tree/TreePool.h"
+#include "tree/TreeRoot.h"
+
 #include "eckit/config/Resource.h"
 #include "eckit/filesystem/PathName.h"
 #include "eckit/runtime/Tool.h"
@@ -55,7 +58,13 @@ TreeTool::~TreeTool() {}
 void TreeTool::run() {
     eckit::Log::info() << "Inside the run routine" << std::endl;
 
-    PersistentPool pool(pmemPath_, pmemLength_, "tree-exp");
+    TreePool pool(pmemPath_, pmemLength_);
+
+    PersistentPtr<TreeRoot> root = pool.root();
+
+    Log::info() << "Root tag: " << root->tag_ << std::endl;
+
+    Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
 
 }
 

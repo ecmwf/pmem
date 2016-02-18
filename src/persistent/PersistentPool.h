@@ -15,8 +15,10 @@
 #include <cstddef>
 #include <string>
 
-#ifndef persistent_PersistentPtr_H
-#define persistent_PersistentPtr_H
+#ifndef persistent_PersistentPool_H
+#define persistent_PersistentPool_H
+
+#include "persistent/AtomicConstructor.h"
 
 
 // -------------------------------------------------------------------------------------------------
@@ -37,14 +39,12 @@ template <typename T> class PersistentPtr;
 // -------------------------------------------------------------------------------------------------
 
 class PersistentPool {
-public:
 
-   PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name);
+public: // methods
+
+   PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
+                  AtomicConstructorBase& constructor);
    ~PersistentPool();
-
-   // Get hold of the root object.
-   template <typename T>
-   PersistentPtr<T> getRoot();
 
    // TODO: Keep track of open objects, so they can be invalidated?
 
@@ -52,7 +52,14 @@ public:
 
    const bool newPool() const;
 
-private:
+
+protected: // methods
+
+   // Get hold of the root object.
+   template <typename T>
+   PersistentPtr<T> getRoot() const;
+
+protected: // members
 
     PMEMobjpool * pop_;
 
@@ -61,6 +68,13 @@ private:
 
 // -------------------------------------------------------------------------------------------------
 
+template <typename T>
+PersistentPtr<T> PersistentPool::getRoot()  const {
+    return PersistentPtr<T>(::pmemobj_root(pop_, sizeof(T)));
+}
+
+// -------------------------------------------------------------------------------------------------
+
 } // namespace pmem
 
-#endif // persistent_PersistentPtr_H
+#endif // persistent_PersistentPool_H

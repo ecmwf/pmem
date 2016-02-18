@@ -4,8 +4,10 @@ ecbuild_add_executable(
 
     SOURCES
         TreeTool.cc
-        Layout.h
-        Layout.cc
+        TreeRoot.h
+        TreeRoot.cc
+        TreePool.h
+        TreePool.cc
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}

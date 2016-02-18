@@ -13,6 +13,8 @@
 
 #include "persistent/PersistentPool.h"
 #include "persistent/Exceptions.h"
+#include "persistent/AtomicConstructor.h"
+#include "persistent/PersistentPtr.h"
 
 #include "eckit/filesystem/PathName.h"
 #include "eckit/log/Log.h"
@@ -25,7 +27,8 @@ namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
 
-PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name) :
+PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
+                               AtomicConstructorBase& constructor) :
     newPool_(false) {
 
     // If the persistent pool already exists, then open it. Otherwise create it.
@@ -37,8 +40,13 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
         pop_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
         newPool_ = true;
 
+        Log::info() << "Root size: " << ::pmemobj_root_size(pop_) << std::endl;
+
+
         if (!pop_)
             throw PersistentCreateError(path, errno, Here());
+
+        // We must initialise the root object without explicitly knowing its type
 
     } else {
 
@@ -49,6 +57,11 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
         if (!pop_)
             throw PersistentOpenError(path, errno, Here());
 
+    }
+
+    if (::pmemobj_root_size(pop_) == 0) {
+        Log::info() << "Initialising root element" << std::endl;
+        ::pmemobj_root_construct(pop_, constructor.size(), persistentConstructor, &constructor);
     }
 }
 

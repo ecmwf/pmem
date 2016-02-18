@@ -9,6 +9,7 @@ ecbuild_add_library(
         PersistentPool.cc
         Exceptions.h
         Exceptions.cc
+        AtomicConstructor.h
 
 
     INCLUDES

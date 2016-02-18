@@ -16,6 +16,8 @@
 #ifndef persistent_PersistentPtr_H
 #define persistent_PersistentPtr_H
 
+#include "persistent/AtomicConstructor.h"
+
 #include "libpmemobj.h"
 
 
@@ -109,16 +111,6 @@ private: // methods
     PersistentPtr(PMEMoid oid) :
         oid_(oid) {}
 
-//    /// This is a static routine that can be passed to the atomic allocation routines. All the logic
-//    /// should be passed in as the functor atomic_constructor<T>.
-//    static void constructor(PMEMobjpool * pop, void * ptr, void * arg) {
-//        T * obj = reinterpret_cast<T*>(ptr);
-//        const atomic_constructor<T> * constr_fn = reinterpret_cast<const atomic_constructor<T>*>(arg);
-//
-//        constr_fn->build(obj);
-//        ::pmemobj_persist(pop, obj, constr_fn->size());
-//    }
-
     friend bool operator== (const PersistentPtr& lhs, const PersistentPtr& rhs) {
         return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
     };
@@ -138,7 +130,21 @@ private: // members
      */
 
     PMEMoid oid_;
+
+    friend class PersistentPool;
 };
+
+// -------------------------------------------------------------------------------------------------
+
+/// This is a static routine that can be passed to the atomic allocation routines. All the logic
+/// should be passed in as the functor AtomicConstructor<T>.
+static void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg) {
+    const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
+
+    constr_fn->build(obj);
+    ::pmemobj_persist(pop, obj, constr_fn->size());
+}
+
 
 
 // -------------------------------------------------------------------------------------------------
