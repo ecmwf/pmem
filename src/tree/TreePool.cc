@@ -22,6 +22,13 @@ using namespace eckit;
 using namespace pmem;
 
 
+// Register this type with the type management
+// TODO: Can we ensure that there are no type-conflicts?
+
+template<> int pmem::PersistentPtr<treetool::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
+
+
+
 namespace treetool {
 
 // -------------------------------------------------------------------------------------------------

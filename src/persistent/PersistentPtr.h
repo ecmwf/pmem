@@ -18,10 +18,20 @@
 
 #include "persistent/AtomicConstructor.h"
 
+#include "eckit/exception/Exceptions.h"
+
 #include "libpmemobj.h"
 
 
 namespace pmem {
+
+// -------------------------------------------------------------------------------------------------
+
+
+/// This is a static routine that can be passed to the atomic allocation routines. All the logic
+/// should be passed in as the functor AtomicConstructor<T>.
+void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg);
+
 
 // -------------------------------------------------------------------------------------------------
 
@@ -57,6 +67,7 @@ public: // methods
     };
 
     T* get() const {
+        ASSERT(valid());
         return (T*)pmemobj_direct(oid_);
     }
 
@@ -78,31 +89,18 @@ public: // methods
         oid_ = OID_NULL;
     }
 
-//    /// Note that allocation and setting of the pointer are atomic. The work of setting up the
-//    /// object is done inside the functor atomic_constructor<T>.
-//    void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
-//        // n.b. We don't want to assert(null()). We may be updating, say, pointers in a chain of
-//        //      objects, with atomic rearrangement. That is fine.
-//        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
-//                        &persistent_ptr<T>::constructor, &constructor);
-//    }
-//
-//    void allocate_root(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
-//        ::pmemobj_alloc(pop, NULL, constructor.size(), type_id,
-//                        &persistent_ptr<T>::constructor, &constructor);
-//    }
+    /// Note that allocation and setting of the pointer are atomic. The work of setting up the
+    /// object is done inside the functor atomic_constructor<T>.
+    void allocate(PMEMobjpool * pop, AtomicConstructor<T>& constructor) {
+        // n.b. We don't want to assert(null()). We may be updating, say, pointers in a chain of
+        //      objects, with atomic rearrangement. That is fine.
+        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
+                        &persistentConstructor, &constructor);
+    }
 
     /// Deallocate the memory. Note that this atomically frees and sets oid_ == OID_NULL.
     void free() {
         ::pmemobj_free(&oid_);
-    }
-
-    /*
-     * useful accessors
-     * TODO: Consider if these should be pulled out of the class, into helper routines.
-     */
-    static PersistentPtr get_root_object(PMEMobjpool * pop) {
-        return PersistentPtr(pmemobj_root(pop, sizeof(T)));
     }
 
 private: // methods
@@ -133,17 +131,6 @@ private: // members
 
     friend class PersistentPool;
 };
-
-// -------------------------------------------------------------------------------------------------
-
-/// This is a static routine that can be passed to the atomic allocation routines. All the logic
-/// should be passed in as the functor AtomicConstructor<T>.
-static void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg) {
-    const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
-
-    constr_fn->build(obj);
-    ::pmemobj_persist(pop, obj, constr_fn->size());
-}
 
 
 
