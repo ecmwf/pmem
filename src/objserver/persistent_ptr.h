@@ -159,7 +159,8 @@ public: // methods
     /// Note that allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
     void allocate(PMEMobjpool * pop, atomic_constructor<T>& constructor) {
-        ASSERT(null());
+        // n.b. We don't want to assert(null()). We may be updating, say, pointers in a chain of
+        //      objects, with atomic rearrangement. That is fine.
         ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
                         &persistent_ptr<T>::constructor, &constructor);
     }
@@ -198,6 +199,9 @@ private: // methods
         ::pmemobj_persist(pop, obj, constr_fn->size());
     }
 
+    friend bool operator== (const persistent_ptr& lhs, const persistent_ptr& rhs) {
+        return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
+    };
 
 private: // members
 
