@@ -29,26 +29,26 @@ PersistentError::PersistentError(const std::string& msg) :
     Exception(msg) {}
 
 
-PersistentCreateError::PersistentCreateError(const std::string& file, int errno, const CodeLocation& loc) :
+PersistentCreateError::PersistentCreateError(const std::string& file, int error, const CodeLocation& loc) :
     PersistentError(
-        std::string("Error creating persistent memory pool: ") + file + " (" + strerror(errno) + ")",
+        std::string("Error creating persistent memory pool: ") + file + " (" + strerror(error) + ")",
         loc) {}
 
 
-PersistentCreateError::PersistentCreateError(const std::string& file, int errno) :
+PersistentCreateError::PersistentCreateError(const std::string& file, int error) :
     PersistentError(
-        std::string("Error creating persistent memory pool: ") + file + " (" + strerror(errno) + ")") {}
+        std::string("Error creating persistent memory pool: ") + file + " (" + strerror(error) + ")") {}
 
 
-PersistentOpenError::PersistentOpenError(const std::string& file, int errno, const CodeLocation& loc) :
+PersistentOpenError::PersistentOpenError(const std::string& file, int error, const CodeLocation& loc) :
     PersistentError(
-        std::string("Error opening persistent memory pool: ") + file + " (" + strerror(errno) + ")",
+        std::string("Error opening persistent memory pool: ") + file + " (" + strerror(error) + ")",
         loc) {}
 
 
-PersistentOpenError::PersistentOpenError(const std::string& file, int errno) :
+PersistentOpenError::PersistentOpenError(const std::string& file, int error) :
     PersistentError(
-        std::string("Error opening persistent memory pool: ") + file + " (" + strerror(errno) + ")") {}
+        std::string("Error opening persistent memory pool: ") + file + " (" + strerror(error) + ")") {}
 
 // -------------------------------------------------------------------------------------------------
 

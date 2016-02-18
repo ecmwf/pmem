@@ -12,33 +12,42 @@
 
 
 #include "persistent/PersistentPool.h"
-
+#include "persistent/Exceptions.h"
 
 #include "eckit/filesystem/PathName.h"
+#include "eckit/log/Log.h"
 
 #include <unistd.h>
+
+using namespace eckit;
 
 namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
 
-PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name) {
+PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name) :
+    newPool_(false) {
 
     // If the persistent pool already exists, then open it. Otherwise create it.
     if (::access(path.localPath(), F_OK) == -1) {
+
+        Log::info() << "Creating persistent pool: " << path << std::endl;
 
         // TODO: Consider permissions. Currently this is world R/W-able.
         pop_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
         newPool_ = true;
 
+        if (!pop_)
+            throw PersistentCreateError(path, errno, Here());
+
     } else {
 
+        Log::info() << "Opening persistent pool: " << path << std::endl;
+
         pop_ = ::pmemobj_open(path.localPath(), name.c_str());
-        newPool_ = false;
 
-    }
-
-    if (!pop_) {
+        if (!pop_)
+            throw PersistentOpenError(path, errno, Here());
 
     }
 }

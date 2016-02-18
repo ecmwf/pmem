@@ -29,15 +29,15 @@ public:
 
 class PersistentCreateError : public PersistentError {
 public:
-    PersistentCreateError(const std::string&, int errno);
-    PersistentCreateError(const std::string&, int errno, const eckit::CodeLocation&);
+    PersistentCreateError(const std::string&, int error);
+    PersistentCreateError(const std::string&, int error, const eckit::CodeLocation&);
 };
 
 
 class PersistentOpenError : public PersistentError {
 public:
-    PersistentOpenError(const std::string&, int errno);
-    PersistentOpenError(const std::string&, int errno, const eckit::CodeLocation&);
+    PersistentOpenError(const std::string&, int error);
+    PersistentOpenError(const std::string&, int error, const eckit::CodeLocation&);
 };
 // -------------------------------------------------------------------------------------------------
 
