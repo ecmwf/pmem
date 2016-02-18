@@ -5,6 +5,10 @@ ecbuild_add_library(
     SOURCES
         PersistentPtr.h
         PersistentPtr.cc
+        PersistentPool.h
+        PersistentPool.cc
+        Exceptions.h
+        Exceptions.cc
 
 
     INCLUDES

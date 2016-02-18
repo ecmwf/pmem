@@ -12,10 +12,11 @@
 #include "eckit/filesystem/PathName.h"
 #include "eckit/runtime/Tool.h"
 
-#include "objserver/layout.h"
-#include "objserver/persistent_ptr.h"
+#include "persistent/PersistentPool.h"
+#include "persistent/PersistentPtr.h"
 
 using namespace eckit;
+using namespace pmem;
 
 namespace treetool {
 
@@ -53,6 +54,8 @@ TreeTool::~TreeTool() {}
 
 void TreeTool::run() {
     eckit::Log::info() << "Inside the run routine" << std::endl;
+
+    PersistentPool pool(pmemPath_, pmemLength_, "tree-exp");
 
 }
 
