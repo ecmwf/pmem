@@ -19,6 +19,7 @@
 #include "tree/TreeNode.h"
 
 #include "persistent/PolymorphicPersistentPtr.h"
+#include "persistent/PersistentVector.h"
 
 #include "eckit/types/FixedString.h"
 
@@ -39,7 +40,11 @@ public: // members
 
     eckit::FixedString<8> tag_;
 
-    pmem::PolymorphicPersistentPtr<TreeNode> root_;
+//    pmem::PolymorphicPersistentPtr<TreeNode> root_;
+
+    // TODO: This is just for testing.
+
+    pmem::PersistentPtr<TreeNode> node_;
 
 };
 

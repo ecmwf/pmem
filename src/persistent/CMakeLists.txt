@@ -12,6 +12,7 @@ ecbuild_add_library(
         Exceptions.h
         Exceptions.cc
         AtomicConstructor.h
+        PersistentVector.h
 
 
     INCLUDES

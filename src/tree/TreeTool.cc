@@ -10,6 +10,7 @@
 
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"
+#include "tree/TreeNode.h"
 
 #include "eckit/config/Resource.h"
 #include "eckit/filesystem/PathName.h"
@@ -65,6 +66,8 @@ void TreeTool::run() {
     Log::info() << "Root tag: " << root->tag_ << std::endl;
 
     Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
+
+    Log::info() << "Node: " << (root->node_.null() ? "null" : "init") << std::endl;
 
 }
 

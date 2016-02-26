@@ -10,28 +10,23 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
+
 #include "tree/TreeNode.h"
 
-
-#ifndef tree_TreeLeafNode_H
-#define tree_TreeLeafNode_H
 
 
 namespace treetool {
 
-
 // -------------------------------------------------------------------------------------------------
 
 
-class TreeLeafNode : public TreeNode {
-public: // methods
 
-    virtual TreeLeafNode * leaf(size_t idx) const;
+std::ostream& operator<< (std::ostream& os, const TreeNode& node) {
+    os << "TreeNode()";
+    return os;
+}
 
-};
 
 // -------------------------------------------------------------------------------------------------
 
 } // namespace treetool
-
-#endif // tree_TreeLeafNode_H

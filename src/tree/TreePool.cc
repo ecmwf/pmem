@@ -12,6 +12,7 @@
 
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"
+#include "tree/TreeNode.h"
 
 #include "persistent/PersistentPtr.h"
 #include "persistent/AtomicConstructor.h"
@@ -26,10 +27,27 @@ using namespace pmem;
 // TODO: Can we ensure that there are no type-conflicts?
 
 template<> int pmem::PersistentPtr<treetool::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> int pmem::PersistentPtr<treetool::TreeNode>::type_id = 1;
+template<> int pmem::PersistentPtr<pmem::PersistentVector<treetool::TreeNode> >::type_id = 2;
 
 
 
 namespace treetool {
+// -------------------------------------------------------------------------------------------------
+
+// TODO: Put this somewhere sane...
+
+class TreeNodeConstructor : public AtomicConstructor<TreeNode> {
+public:
+
+    virtual void make (TreeNode * object) const {
+        Log::info() << "In a tree node constructor!" << std::endl;
+
+        object->name_ = eckit::FixedString<12>("123456789012");
+        object->items_.nullify();
+    }
+};
+
 
 // -------------------------------------------------------------------------------------------------
 
@@ -47,6 +65,9 @@ public:
 
     virtual void make (TreeRoot * object) const {
         object->tag_ = TreeRootTag;
+
+        TreeNodeConstructor tnc;
+        object->node_.allocate(tnc);
     }
 };
 

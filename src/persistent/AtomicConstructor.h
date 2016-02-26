@@ -18,6 +18,8 @@
 
 #include <cstddef>
 
+#include "libpmemobj.h"
+
 namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
@@ -42,6 +44,8 @@ template <typename T>
 class AtomicConstructor : public AtomicConstructorBase {
 public:
 
+    // In general the "pop" argument should not be needed, but if the user desires to create
+    // a nested tree of objects, then they will need it.
     virtual void make (T * object) const = 0;
 
     virtual void build (void * obj) const {

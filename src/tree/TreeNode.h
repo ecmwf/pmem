@@ -14,7 +14,13 @@
 #ifndef tree_TreeNode_H
 #define tree_TreeNode_H
 
-#include <cstddef>
+
+#include "persistent/PersistentVector.h"
+
+#include "eckit/types/FixedString.h"
+
+#include <utility>
+#include <string>
 
 namespace treetool {
 
@@ -26,10 +32,23 @@ class TreeLeafNode;
 
 class TreeNode {
 
+public: // types
+
+    typedef std::pair<std::string, TreeNode> Item;
+
 public: // methods
 
-    virtual TreeLeafNode * leaf(size_t idx) const = 0;
 
+//protected: // members
+public: // TODO: Find a sensible way to get the atomic constructors working...
+
+    pmem::PersistentVector<Item> items_;
+
+    eckit::FixedString<12> name_;
+
+private:
+
+    friend std::ostream& operator<< (std::ostream&, const TreeNode&);
 };
 
 // -------------------------------------------------------------------------------------------------

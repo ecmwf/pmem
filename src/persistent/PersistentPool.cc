@@ -36,17 +36,14 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
         Log::info() << "Creating persistent pool: " << path << std::endl;
 
+        Log::info() << "Size: " << float(size) / (1024 * 1024) << std::endl << std::flush;
+
         // TODO: Consider permissions. Currently this is world R/W-able.
         pop_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
         newPool_ = true;
 
-        Log::info() << "Root size: " << ::pmemobj_root_size(pop_) << std::endl;
-
-
         if (!pop_)
             throw PersistentCreateError(path, errno, Here());
-
-        // We must initialise the root object without explicitly knowing its type
 
     } else {
 
@@ -60,7 +57,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
     }
 
     if (::pmemobj_root_size(pop_) == 0) {
-        Log::info() << "Initialising root element" << std::endl;
+        Log::info() << "Initialising root element" << std::endl << std::flush;
         ::pmemobj_root_construct(pop_, constructor.size(), persistentConstructor, &constructor);
     }
 }

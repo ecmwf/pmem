@@ -37,25 +37,25 @@ namespace pmem {
 //  i) Define a data type, data_type
 // ii) Provide a constructor initialised with persistent_ptr<T::data_type>
 
-template <typename T>
-class PolymorphicPersistentPtr : public PersistentPtr<T::data_type> {
-
-public: // methods
-
-    // We want an object type, and a data type.
-    typedef T object_type;
-    typedef T::data_type data_type;
-
-
-    // Accessors
-//    object_type * object() const;
-
-
-private: // members
-
-    // n.b. There is NO data here. Internally it is just a wrapper around the data pointer
-
-};
+///// template <typename T>
+///// class PolymorphicPersistentPtr : public PersistentPtr<T::data_type> {
+/////
+///// public: // methods
+/////
+/////     // We want an object type, and a data type.
+/////     typedef T object_type;
+/////     typedef T::data_type data_type;
+/////
+/////
+/////     // Accessors
+///// //    object_type * object() const;
+/////
+/////
+///// private: // members
+/////
+/////     // n.b. There is NO data here. Internally it is just a wrapper around the data pointer
+/////
+///// };
 
 
 // -------------------------------------------------------------------------------------------------

@@ -98,6 +98,17 @@ public: // methods
                         &persistentConstructor, &constructor);
     }
 
+    /// We should be able to allocate directly on an object. If we don't specify the pool, then
+    /// it will put the data into the same pool as the pointer is in
+    void allocate(AtomicConstructor<T>& constructor) {
+        PMEMobjpool * pop = ::pmemobj_pool_by_ptr(this);
+
+        if (pop == 0)
+            throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
+
+        allocate(pop, constructor);
+    }
+
     /// Deallocate the memory. Note that this atomically frees and sets oid_ == OID_NULL.
     void free() {
         ::pmemobj_free(&oid_);

@@ -9,10 +9,7 @@ ecbuild_add_executable(
         TreePool.h
         TreePool.cc
         TreeNode.h
-        TreeBinaryNode.h
-        TreeBinaryNode.cc
-        TreeLeafNode.h
-        TreeLeafNode.cc
+        TreeNode.cc
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}
