@@ -69,6 +69,12 @@ void TreeTool::run() {
 
     Log::info() << "Node: " << (root->node_.null() ? "null" : "init") << std::endl;
 
+    if (!root->node_.null()) {
+
+        Log::info() << "Child: " << root->node_->playtime_child() << std::endl;
+
+    }
+
 }
 
 // -------------------------------------------------------------------------------------------------

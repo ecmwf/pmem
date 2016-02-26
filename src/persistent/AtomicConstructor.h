@@ -48,6 +48,7 @@ public:
     // a nested tree of objects, then they will need it.
     virtual void make (T * object) const = 0;
 
+    // TODO: Should we pass a reference through to make instead?
     virtual void build (void * obj) const {
         T * object = reinterpret_cast<T*>(obj);
         make(object);

@@ -41,6 +41,62 @@ namespace pmem {
 template <typename T>
 class PersistentVector {
 
+public: // types
+
+    // This is the data that gets stored
+    //
+    // - It needs to be in a persistent pointer...
+    struct data_type {
+
+        size_t nelem_;
+        T data_[1];
+
+        size_t byte_size() const {
+            return size(nelem_);
+        }
+
+        static size_t byte_size(size_t nelem) {
+            return sizeof(data_type) + (sizeof(T) * (nelem-1));
+        }
+    };
+
+private: // types (atomic constructors)
+
+    // Define some actions that can be used on these data types.
+    class AppendConstructor : public AtomicConstructor<data_type> {
+
+    public: //methods
+
+        AppendConstructor(const data_type* original, const T& new_elem) :
+            original_(original),
+            newElem_(new_elem) {}
+
+        virtual void make(data_type* object) const {
+            eckit::Log::info() << "Append constructor" << std::endl << std::flush;
+            if (original_) {
+                object->nelem_ = original_->nelem_ + 1;
+                for (size_t i = 0; i < object->nelem_-1; i++) {
+                    object->data_[i] = original_->data_[i];
+                }
+            } else {
+                object->nelem_ = 1;
+            }
+            eckit::Log::info() << "Old copied" << std::endl << std::flush;
+
+            object->data_[object->nelem_-1] = newElem_;
+            eckit::Log::info() << "Done" << std::endl << std::flush;
+        }
+
+        virtual size_t size() const {
+            return data_type::byte_size((original_ ? original_->nelem_ : 0) + 1);
+        }
+
+    private: // members
+
+        const data_type* original_;
+        const T& newElem_;
+    };
+
 public:
 
     // TODO: This should only be used during construction. TODO.
@@ -48,9 +104,35 @@ public:
         items_.nullify();
     }
 
+
+    void push_back(const T& new_elem) {
+
+        // To extend the vector, we need to make a copy of an existing vector, add the item to
+        // the copy, swap the target pointer and only _then_ delete the original.
+
+        PersistentPtr<data_type> ptmp = items_;
+        const data_type * original = items_.null() ? 0 : items_.get();
+
+        AppendConstructor appendConstructor(original, new_elem);
+
+        items_.allocate(appendConstructor);
+
+        if (!ptmp.null()) {
+            ptmp.free();
+        }
+    }
+
+
+    size_t size() const {
+        if (items_.null()) {
+            return 0;
+        }
+        return items_->nelem_;
+    }
+
 protected:
 
-    PersistentPtr<T[]> items_;
+    PersistentPtr<data_type> items_;
 };
 
 

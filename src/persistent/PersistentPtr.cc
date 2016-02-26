@@ -16,6 +16,11 @@
 #include "persistent/PersistentPtr.h"
 #include "persistent/AtomicConstructor.h"
 
+#include "eckit/log/Log.h"
+
+
+using namespace eckit;
+
 
 namespace pmem {
 
@@ -27,6 +32,9 @@ namespace pmem {
 /// should be passed in as the functor AtomicConstructor<T>.
 void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg) {
     const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
+
+    Log::info() << "Constructing persistent object of " << constr_fn->size()
+                << " bytes at: " << obj << std::endl;
 
     constr_fn->build(obj);
     ::pmemobj_persist(pop, obj, constr_fn->size());

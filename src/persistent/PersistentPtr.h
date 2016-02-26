@@ -103,6 +103,8 @@ public: // methods
     void allocate(AtomicConstructor<T>& constructor) {
         PMEMobjpool * pop = ::pmemobj_pool_by_ptr(this);
 
+        eckit::Log::info() << "allocate: " << this << ", " << pop << std::endl << std::flush;
+
         if (pop == 0)
             throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
 

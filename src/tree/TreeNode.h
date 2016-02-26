@@ -16,6 +16,7 @@
 
 
 #include "persistent/PersistentVector.h"
+#include "persistent/PersistentPtr.h"
 
 #include "eckit/types/FixedString.h"
 
@@ -34,10 +35,11 @@ class TreeNode {
 
 public: // types
 
-    typedef std::pair<std::string, TreeNode> Item;
+    typedef std::pair<eckit::FixedString<12>, pmem::PersistentPtr<TreeNode> > Item;
 
 public: // methods
 
+    size_t playtime_child();
 
 //protected: // members
 public: // TODO: Find a sensible way to get the atomic constructors working...
