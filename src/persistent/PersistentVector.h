@@ -130,6 +130,11 @@ public:
         return items_->nelem_;
     }
 
+
+    const T& operator[] (size_t i) {
+        return items_->data_[i];
+    }
+
 protected:
 
     PersistentPtr<data_type> items_;

@@ -39,7 +39,10 @@ public: // types
 
 public: // methods
 
-    void addNode(const std::string& name);
+    /// Add a new node
+    /// @param key - The value used to select this sub-node from the current node
+    /// @param name - Select which key-value pair is examined to select sub-sub-nodes
+    void addNode(const std::string& key, const std::string& name);
 
     size_t nodeCount() const;
 

@@ -52,7 +52,7 @@ private:
 // -------------------------------------------------------------------------------------------------
 
 
-void TreeNode::addNode(const std::string& name) {
+void TreeNode::addNode(const std::string& key, const std::string& name) {
 
     PMEMobjpool* pop = ::pmemobj_pool_by_ptr(this);
 
@@ -63,9 +63,7 @@ void TreeNode::addNode(const std::string& name) {
     TreeNodeConstructor constructor(name);
     new_node.allocate(pop, constructor);
 
-    // TODO: Separate the "name" of a node (i.e. which field it will be selecting in the key-value
-    //       pair hashmap, and the value which applies to its parent map, which goes in here.
-    items_.push_back(std::make_pair(eckit::FixedString<12>(name), new_node));
+    items_.push_back(std::make_pair(eckit::FixedString<12>(key), new_node));
 }
 
 
