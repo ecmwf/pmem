@@ -39,7 +39,9 @@ public: // types
 
 public: // methods
 
-    size_t playtime_child();
+    void addNode(const std::string& name);
+
+    size_t nodeCount() const;
 
 //protected: // members
 public: // TODO: Find a sensible way to get the atomic constructors working...

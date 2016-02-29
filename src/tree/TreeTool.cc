@@ -69,9 +69,22 @@ void TreeTool::run() {
 
     Log::info() << "Node: " << (root->node_.null() ? "null" : "init") << std::endl;
 
+    std::string nodes[] = {
+        "node1",
+        "node2",
+        "node3",
+        "node4",
+        "node5",
+        "node6"
+    };
+
     if (!root->node_.null()) {
 
-        Log::info() << "Child: " << root->node_->playtime_child() << std::endl;
+        size_t cnt = root->node_->nodeCount();
+        Log::info() << "Subnodes: " << cnt << std::endl;
+
+        std::string name = cnt < 6 ? nodes[cnt] : "higher";
+        root->node_->addNode(name);
 
     }
 
