@@ -43,14 +43,20 @@ class PersistentVector {
 
 public: // types
 
-    // This is the data that gets stored
-    //
-    // - It needs to be in a persistent pointer...
+    /*
+     * The data stored in a persistent vector is stored inside a single data type, that
+     * is contained within a PersistentPtr
+     *
+     * --> In terms of memory layout, using a persistent vector is entirely equivalent to
+     *     using a PersistentPtr<data_type>, with some wrapper functionality.
+     *
+     * The allocated memory must vary depending on the number of elements stored in the
+     * vector. The byte_size routine calculates the total amount of space required, given
+     * the correct number of elements.
+     */
     struct data_type {
 
-        size_t nelem_;
-        T data_[1];
-
+        // methods
         size_t byte_size() const {
             return size(nelem_);
         }
@@ -58,7 +64,12 @@ public: // types
         static size_t byte_size(size_t nelem) {
             return sizeof(data_type) + (sizeof(T) * (nelem-1));
         }
+
+        // members
+        size_t nelem_;
+        T data_[1];
     };
+
 
 private: // types (atomic constructors)
 
@@ -71,20 +82,18 @@ private: // types (atomic constructors)
             original_(original),
             newElem_(new_elem) {}
 
+        // Construct a new data_type object to represent the data with the new element
+        // appended.
+        //  - If no previous data, create new data.
+        //  - Otherwise, copy all elements accross.
         virtual void make(data_type* object) const {
-            eckit::Log::info() << "Append constructor" << std::endl << std::flush;
-            if (original_) {
-                object->nelem_ = original_->nelem_ + 1;
-                for (size_t i = 0; i < object->nelem_-1; i++) {
-                    object->data_[i] = original_->data_[i];
-                }
-            } else {
-                object->nelem_ = 1;
+            size_t nelem = original_ ? original_->nelem_ : 0;
+            for (size_t i = 0; i < nelem; ++i) {
+                object->data_[i] = original_->data_[i];
             }
-            eckit::Log::info() << "Old copied" << std::endl << std::flush;
 
-            object->data_[object->nelem_-1] = newElem_;
-            eckit::Log::info() << "Done" << std::endl << std::flush;
+            object->data_[nelem] = newElem_;
+            object->nelem_ = nelem + 1;
         }
 
         virtual size_t size() const {
@@ -100,45 +109,59 @@ private: // types (atomic constructors)
 public:
 
     // TODO: This should only be used during construction. TODO.
-    void nullify() {
-        items_.nullify();
-    }
+    void nullify();
 
+    void push_back(const T& new_elem);
 
-    void push_back(const T& new_elem) {
+    size_t size() const;
 
-        // To extend the vector, we need to make a copy of an existing vector, add the item to
-        // the copy, swap the target pointer and only _then_ delete the original.
-
-        PersistentPtr<data_type> ptmp = items_;
-        const data_type * original = items_.null() ? 0 : items_.get();
-
-        AppendConstructor appendConstructor(original, new_elem);
-
-        items_.allocate(appendConstructor);
-
-        if (!ptmp.null()) {
-            ptmp.free();
-        }
-    }
-
-
-    size_t size() const {
-        if (items_.null()) {
-            return 0;
-        }
-        return items_->nelem_;
-    }
-
-
-    const T& operator[] (size_t i) {
-        return items_->data_[i];
-    }
+    const T& operator[] (size_t i) const;
 
 protected:
 
     PersistentPtr<data_type> items_;
 };
+
+
+// -------------------------------------------------------------------------------------------------
+
+
+template <typename T>
+void PersistentVector<T>::nullify() {
+    items_.nullify();
+}
+
+
+template <typename T>
+size_t PersistentVector<T>::size() const {
+
+    return items_.null() ? 0 : items_->nelem_;
+}
+
+
+template <typename T>
+const T& PersistentVector<T>::operator[] (size_t i) const {
+
+    return items_->data_[i];
+}
+
+template <typename T>
+void PersistentVector<T>::push_back(const T& new_elem) {
+
+    // To extend the vector, we need to make a copy of an existing vector, add the item to
+    // the copy, swap the target pointer and only _then_ delete the original.
+
+    PersistentPtr<data_type> ptmp = items_;
+    const data_type * original = items_.null() ? 0 : items_.get();
+
+    AppendConstructor appendConstructor(original, new_elem);
+
+    items_.allocate(appendConstructor);
+
+    if (!ptmp.null()) {
+        ptmp.free();
+    }
+}
 
 
 // -------------------------------------------------------------------------------------------------
