@@ -23,6 +23,10 @@
 
 using namespace eckit;
 
+namespace {
+    std::map<PMEMobjpool*, uint64_t> pool_uuid_map;
+}
+
 namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
@@ -44,6 +48,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
         if (!pop_)
             throw PersistentCreateError(path, errno, Here());
+        Log::info() << "Pool created: " << pop_ << std::endl;
 
     } else {
 
@@ -53,6 +58,8 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
         if (!pop_)
             throw PersistentOpenError(path, errno, Here());
+
+        Log::info() << "Pool opened: " << pop_ << std::endl;
 
     }
 
@@ -64,6 +71,30 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
 
 PersistentPool::~PersistentPool() {}
+
+
+uint64_t PersistentPool::poolUUID(PMEMobjpool * pop) {
+
+    std::map<PMEMobjpool*, uint64_t>::const_iterator uuid = pool_uuid_map.find(pop);
+
+    if (uuid == pool_uuid_map.end())
+        throw SeriousBug("Attempting to obtain UUID of unknown pool");
+
+    return uuid->second;
+}
+
+
+void PersistentPool::setUUID(uint64_t uuid) const {
+
+    std::map<PMEMobjpool*, uint64_t>::const_iterator it_uuid = pool_uuid_map.find(pop_);
+
+    if (it_uuid == pool_uuid_map.end()) {
+        pool_uuid_map[pop_] = uuid;
+    } else {
+        if (uuid != it_uuid->second)
+            throw SeriousBug("Two identical pools registered with differing UUIDs");
+    }
+}
 
 
 // -------------------------------------------------------------------------------------------------

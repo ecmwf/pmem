@@ -22,6 +22,8 @@
 
 #include <utility>
 #include <string>
+#include <vector>
+#include <map>
 
 namespace treetool {
 
@@ -45,6 +47,10 @@ public: // methods
     void addNode(const std::string& key, const std::string& name);
 
     size_t nodeCount() const;
+
+    // n.b. this is non-const. May return a reference to the current object, that can be
+    //      built on.
+    std::vector<pmem::PersistentPtr<TreeNode> > lookup(const std::map<eckit::FixedString<12>, eckit::FixedString<12> >&);
 
 //protected: // members
 public: // TODO: Find a sensible way to get the atomic constructors working...

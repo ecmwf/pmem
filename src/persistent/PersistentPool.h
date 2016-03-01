@@ -52,6 +52,10 @@ public: // methods
 
    const bool newPool() const;
 
+   /// Obtain the cached value for the pool's UUID.
+   static uint64_t poolUUID(PMEMobjpool*);
+
+   void setUUID(uint64_t uuid) const;
 
 protected: // methods
 
@@ -70,7 +74,9 @@ protected: // members
 
 template <typename T>
 PersistentPtr<T> PersistentPool::getRoot()  const {
-    return PersistentPtr<T>(::pmemobj_root(pop_, sizeof(T)));
+    PersistentPtr<T> tmp = PersistentPtr<T>(::pmemobj_root(pop_, sizeof(T)));
+    setUUID(tmp.oid_.pool_uuid_lo);
+    return tmp;
 }
 
 // -------------------------------------------------------------------------------------------------

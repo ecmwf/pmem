@@ -17,11 +17,11 @@
 #define persistent_PersistentPtr_H
 
 #include "persistent/AtomicConstructor.h"
+#include "persistent/PersistentPool.h"
 
 #include "eckit/exception/Exceptions.h"
 
 #include "libpmemobj.h"
-
 
 namespace pmem {
 
@@ -53,6 +53,31 @@ public: // methods
      */
     PersistentPtr() :
         oid_(OID_NULL) {}
+
+    /// Return a persistent pointer from the actual pointer in pmem space
+    /// --> This is reverse engineered from pmem.io
+    /// --> TODO: Test this. Test this. Test this.
+    PersistentPtr(void * object) {
+
+        eckit::Log::info() << "Inserting..." << std::endl;
+
+        PMEMobjpool * pop = ::pmemobj_pool_by_ptr(object);
+        eckit::Log::info() << "ppool: " << pop << std::endl << std::flush;
+
+        if (pop == 0) {
+            throw eckit::SeriousBug("Attempting to obtain persistent pointer to volatile memory", Here());
+        }
+
+        // N.b. the pool uuid is available, internally, as pop->uuid. This requires
+        //      libpmemobj/obj.h - but is intentionally NOT available in their C api
+        //      HOWEVER, we need a persistent of the *this* pointer for C++, so a
+        //      class __needs__ to be able access the UUID.
+        //
+        // --> Therefore we register the pool UUID when the root object is accessed.
+        // --> This might not work if we only have inter-pool access. TBD.
+        oid_.off = uintptr_t(object) - uintptr_t(pop);
+        oid_.pool_uuid_lo = PersistentPool::poolUUID(pop);
+    }
 
     /*
      * Access the stored object
@@ -126,7 +151,8 @@ private: // methods
         return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
     };
 
-private: // members
+//private: // members
+public:
 
     /*
      * N.B. There is only ONE data member here. This is a PMEMoid, and is the SAME data that

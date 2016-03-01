@@ -98,8 +98,20 @@ void TreeTool::run() {
         std::string name = cnt < 6 ? nodes[cnt] : "higher";
         root->node_->addNode(name, "12345");
 
-    }
+        // Do a lookup
+        std::map<FixedString<12>, FixedString<12> > lookup;
+        lookup["123456789012"] = std::string("node3");
 
+        Log::info() << lookup << std::endl;
+        std::vector<PersistentPtr<TreeNode> > nodes = root->node_->lookup(lookup);
+
+        Log::info() << "[";
+        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+             it != nodes.end(); ++it) {
+            Log::info() << (*it)->name_ << ", ";
+        }
+        Log::info() << "]" << std::endl;
+    }
 }
 
 // -------------------------------------------------------------------------------------------------
