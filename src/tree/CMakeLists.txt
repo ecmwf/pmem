@@ -10,6 +10,8 @@ ecbuild_add_executable(
         TreePool.cc
         TreeNode.h
         TreeNode.cc
+        PersistentBuffer.h
+        PersistentBuffer.cc
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}
