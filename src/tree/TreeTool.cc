@@ -106,10 +106,10 @@ void TreeTool::run() {
         std::vector<PersistentPtr<TreeNode> > nodes = root->node_->lookup(lookup);
 
         Log::info() << "[";
-        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
-             it != nodes.end(); ++it) {
-            Log::info() << (*it)->name_ << ", ";
-        }
+//        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+//             it != nodes.end(); ++it) {
+//            Log::info() << (*it)->name_ << ", ";
+//        }
         Log::info() << "]" << std::endl;
     }
 }

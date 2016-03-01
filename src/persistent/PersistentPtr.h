@@ -33,11 +33,66 @@ namespace pmem {
 void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg);
 
 
+// These forward declarations are just to make the templated friend class statement later happy
+template <typename T> class PersistentPtr;
+template <typename T> bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs);
+
+
+// -------------------------------------------------------------------------------------------------
+
+
+/*
+ * Include the non-templated functionality of PersistentPtr, so that it is only compiled in
+ * one place!
+ */
+
+class PersistentPtrBase {
+
+public: // methods
+
+    PersistentPtrBase();
+
+    /// Obtain a persistent pointer given an actual pointer to an object in virtual memory.
+    PersistentPtrBase(void* object);
+
+    /// Deallocate the memory. Note that this atomically frees and sets oid_ == OID_NULL.
+    void free();
+
+    /// Is the pointer null?
+    bool null() const;
+
+    /// Nullify the persistent pointer
+    void nullify();
+
+protected: // methods
+
+    /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
+    PersistentPtrBase(PMEMoid oid);
+
+protected: // members
+
+    /*
+     * N.B. There is only ONE data member here. This is a PMEMoid, and is the SAME data that
+     *      is held in the TOID() macro-enhanced data type in the C-bindings. (In C this is
+     *      actually a named union, with the only data being a PMEMoid). This means that PMEMoid,
+     *      TOID and PersistentPtr can be used interchangeably in the data format.
+     *
+     * N.B. 2 - Because we want to ensure the data stays the same, PersistentPtr MUST NOT be
+     *          a virtual class.
+     *
+     * TODO: Can we use boost::is_polymorphic / std::is_polymorphic?
+     */
+
+    PMEMoid oid_;
+
+};
+
+
 // -------------------------------------------------------------------------------------------------
 
 
 template <typename T>
-class PersistentPtr {
+class PersistentPtr : public PersistentPtrBase {
 
 public: // members
 
@@ -51,68 +106,34 @@ public: // methods
     /*
      * Constructors
      */
-    PersistentPtr() :
-        oid_(OID_NULL) {}
+    PersistentPtr();
 
-    /// Return a persistent pointer from the actual pointer in pmem space
-    /// --> This is reverse engineered from pmem.io
-    /// --> TODO: Test this. Test this. Test this.
-    PersistentPtr(void * object) {
-
-        eckit::Log::info() << "Inserting..." << std::endl;
-
-        PMEMobjpool * pop = ::pmemobj_pool_by_ptr(object);
-        eckit::Log::info() << "ppool: " << pop << std::endl << std::flush;
-
-        if (pop == 0) {
-            throw eckit::SeriousBug("Attempting to obtain persistent pointer to volatile memory", Here());
-        }
-
-        // N.b. the pool uuid is available, internally, as pop->uuid. This requires
-        //      libpmemobj/obj.h - but is intentionally NOT available in their C api
-        //      HOWEVER, we need a persistent of the *this* pointer for C++, so a
-        //      class __needs__ to be able access the UUID.
-        //
-        // --> Therefore we register the pool UUID when the root object is accessed.
-        // --> This might not work if we only have inter-pool access. TBD.
-        oid_.off = uintptr_t(object) - uintptr_t(pop);
-        oid_.pool_uuid_lo = PersistentPool::poolUUID(pop);
-    }
+    /// Obtain a persistent pointer given an actual pointer to an object in virtual memory.
+    PersistentPtr(void * object);
 
     /*
      * Access the stored object
      */
 
-    T& operator*() const {
-        *get();
-    }
+    T& operator*() const;
 
-    T* operator->() const {
-        return get();
-    };
+    T* operator->() const;
 
-    T* get() const {
-        ASSERT(valid());
-        return (T*)pmemobj_direct(oid_);
-    }
+    T* get() const;
 
     /*
      * Status testing?
      */
-    bool null() const {
-        return oid_.off == 0;
-    }
 
-    bool valid() const {
-        return pmemobj_type_num(oid_) == type_id;
-    }
+    // bool null() const; // Inherited
+
+    bool valid() const;
 
     /*
      * Modification
      */
-    void nullify() {
-        oid_ = OID_NULL;
-    }
+
+    // void nullify(); // Inherited
 
     /// Note that allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
@@ -136,41 +157,73 @@ public: // methods
         allocate(pop, constructor);
     }
 
-    /// Deallocate the memory. Note that this atomically frees and sets oid_ == OID_NULL.
-    void free() {
-        ::pmemobj_free(&oid_);
-    }
 
 private: // methods
 
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
-    PersistentPtr(PMEMoid oid) :
-        oid_(oid) {}
+    PersistentPtr(PMEMoid oid);
 
-    friend bool operator== (const PersistentPtr& lhs, const PersistentPtr& rhs) {
-        return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
-    };
+    friend bool operator== <> (const PersistentPtr& lhs, const PersistentPtr& rhs);
 
-//private: // members
-public:
-
-    /*
-     * N.B. There is only ONE data member here. This is a PMEMoid, and is the SAME data that
-     *      is held in the TOID() macro-enhanced data type in the C-bindings. (In C this is
-     *      actually a named union, with the only data being a PMEMoid). This means that PMEMoid,
-     *      TOID and PersistentPtr can be used interchangeably in the data format.
-     *
-     * N.B. 2 - Because we want to ensure the data stays the same, PersistentPtr MUST NOT be
-     *          a virtual class.
-     *
-     * TODO: Can we use boost::is_polymorphic / std::is_polymorphic?
-     */
-
-    PMEMoid oid_;
+private: // friends
 
     friend class PersistentPool;
 };
 
+
+
+// -------------------------------------------------------------------------------------------------
+
+// Templated member functions
+
+template <typename T>
+PersistentPtr<T>::PersistentPtr() :
+    PersistentPtrBase() {}
+
+
+template <typename T>
+PersistentPtr<T>::PersistentPtr(void* object) :
+    PersistentPtrBase(object) {}
+
+
+template <typename T>
+PersistentPtr<T>::PersistentPtr(PMEMoid oid) :
+    PersistentPtrBase(oid) {}
+
+
+template <typename T>
+T& PersistentPtr<T>::operator*() const {
+    *get();
+}
+
+
+template <typename T>
+T* PersistentPtr<T>::operator->() const {
+    return get();
+}
+
+
+template <typename T>
+T* PersistentPtr<T>::get() const {
+    ASSERT(valid());
+    return (T*)::pmemobj_direct(oid_);
+}
+
+
+#include "eckit/log/Log.h"
+
+
+template <typename T>
+bool PersistentPtr<T>::valid() const {
+    eckit::Log::info() << "Testing: " << oid_.off << type_id << std::endl << std::flush;
+    return ::pmemobj_type_num(oid_) == type_id;
+}
+
+
+template <typename T>
+bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs) {
+    return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
+}
 
 
 // -------------------------------------------------------------------------------------------------

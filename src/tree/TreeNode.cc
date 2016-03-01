@@ -93,7 +93,6 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
         FixedString<12> value = request.find(name_)->second;
         for (size_t i = 0; i < items_.size(); i++) {
             if (items_[i].first == value) {
-                Log::info() << "Iterating into: " << items_[i].second.oid_.off << ", " << items_[i].second.oid_.pool_uuid_lo << std::endl;
                 std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
                 result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
             }

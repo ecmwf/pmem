@@ -44,4 +44,53 @@ void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg) {
 // -------------------------------------------------------------------------------------------------
 
 
+PersistentPtrBase::PersistentPtrBase() :
+    oid_(OID_NULL) {}
+
+
+/// Return a persistent pointer from the actual pointer in pmem space
+/// --> This is reverse engineered from pmem.io
+/// --> TODO: Test this. Test this. Test this.
+PersistentPtrBase::PersistentPtrBase(void* object) {
+
+    PMEMobjpool * pop = ::pmemobj_pool_by_ptr(object);
+
+    if (pop == 0) {
+        throw eckit::SeriousBug("Attempting to obtain persistent pointer to volatile memory", Here());
+    }
+
+    // N.b. the pool uuid is available, internally, as pop->uuid. This requires
+    //      libpmemobj/obj.h - but is intentionally NOT available in their C api
+    //      HOWEVER, we need a persistent of the *this* pointer for C++, so a
+    //      class __needs__ to be able access the UUID.
+    //
+    // --> Therefore we register the pool UUID when the root object is accessed.
+    // --> This might not work if we only have inter-pool access. TBD.
+    oid_.off = uintptr_t(object) - uintptr_t(pop);
+    oid_.pool_uuid_lo = PersistentPool::poolUUID(pop);
+}
+
+
+PersistentPtrBase::PersistentPtrBase(PMEMoid oid) :
+    oid_(oid) {}
+
+
+void PersistentPtrBase::free() {
+    ::pmemobj_free(&oid_);
+}
+
+
+void PersistentPtrBase::nullify() {
+    oid_ = OID_NULL;
+}
+
+
+bool PersistentPtrBase::null() const {
+    return oid_.off == 0;
+}
+
+
+// -------------------------------------------------------------------------------------------------
+
+
 } // namespace pmem
