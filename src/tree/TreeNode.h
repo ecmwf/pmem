@@ -30,6 +30,8 @@ namespace treetool {
 
 // -------------------------------------------------------------------------------------------------
 
+class PersistentBuffer;
+
 
 class TreeNode {
 
@@ -54,6 +56,8 @@ public: // methods
 public: // TODO: Find a sensible way to get the atomic constructors working...
 
     pmem::PersistentVector<Item> items_;
+
+    pmem::PersistentPtr<PersistentBuffer> data_;
 
     eckit::FixedString<12> name_;
 
