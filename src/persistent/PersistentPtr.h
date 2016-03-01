@@ -215,7 +215,6 @@ T* PersistentPtr<T>::get() const {
 
 template <typename T>
 bool PersistentPtr<T>::valid() const {
-    eckit::Log::info() << "Testing: " << oid_.off << type_id << std::endl << std::flush;
     return ::pmemobj_type_num(oid_) == type_id;
 }
 
