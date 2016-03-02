@@ -11,6 +11,7 @@
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"
 #include "tree/TreeNode.h"
+#include "tree/PersistentBuffer.h"
 
 #include "eckit/config/Resource.h"
 #include "eckit/filesystem/PathName.h"
@@ -75,7 +76,13 @@ void TreeTool::run() {
         "node3",
         "node4",
         "node5",
-        "node6"
+        "node6",
+        "node7",
+        "node8",
+        "node9",
+        "node10",
+        "node11",
+        "node12"
     };
 
 
@@ -90,12 +97,18 @@ void TreeTool::run() {
         for (size_t i = 0; i < cnt; i++) {
             Log::info() << "  " << root->node_->items_[i].first
                         << " -- " << root->node_->items_[i].second->name_ << std::endl;
+
+            if (!root->node_->items_[i].second->data_.null()) {
+                std::string tmp(*root->node_->items_[i].second->data_,
+                                root->node_->items_[i].second->data_->size());
+                Log::info() << "STR: " << tmp << std::endl;
+            }
         }
 
         Log::info() << "===================================" << std::endl;
 
 
-        std::string name = cnt < 6 ? nodes[cnt] : "higher";
+        std::string name = cnt < 12 ? nodes[cnt] : "higher";
         root->node_->addNode(name, "12345");
 
         // Do a lookup

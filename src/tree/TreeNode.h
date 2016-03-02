@@ -35,6 +35,21 @@ class PersistentBuffer;
 
 class TreeNode {
 
+public: // Construction objects
+
+    class Constructor : public pmem::AtomicConstructor<TreeNode> {
+
+    public: // methods
+
+        Constructor(const std::string& name);
+
+        virtual void make (TreeNode * object) const;
+
+    private: // members
+
+        std::string name_;
+    };
+
 public: // types
 
     typedef std::pair<eckit::FixedString<12>, pmem::PersistentPtr<TreeNode> > Item;

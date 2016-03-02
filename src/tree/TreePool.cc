@@ -26,29 +26,19 @@ using namespace pmem;
 // Register this type with the type management
 // TODO: Can we ensure that there are no type-conflicts?
 
+namespace treetool {
+    class PersistentBuffer;
+}
+
+
 template<> int pmem::PersistentPtr<treetool::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
 template<> int pmem::PersistentPtr<treetool::TreeNode>::type_id = 1;
 template<> int pmem::PersistentPtr<pmem::PersistentVector<std::pair<eckit::FixedString<12>, pmem::PersistentPtr<treetool::TreeNode> > >::data_type>::type_id = 2;
+template<> int pmem::PersistentPtr<treetool::PersistentBuffer>::type_id = 3;
 
 
 
 namespace treetool {
-// -------------------------------------------------------------------------------------------------
-
-// TODO: Put this somewhere sane...
-
-class TreeNodeConstructor : public AtomicConstructor<TreeNode> {
-public:
-
-    virtual void make (TreeNode * object) const {
-        Log::info() << "In a tree node constructor!" << object << std::endl << std::flush;
-
-        object->name_ = eckit::FixedString<12>("123456789012");
-        object->items_.nullify();
-    }
-};
-
-
 // -------------------------------------------------------------------------------------------------
 
 /*
@@ -66,7 +56,7 @@ public:
     virtual void make (TreeRoot * object) const {
         object->tag_ = TreeRootTag;
 
-        TreeNodeConstructor tnc;
+        TreeNode::Constructor tnc("123456789012");
         object->node_.allocate(tnc);
     }
 };

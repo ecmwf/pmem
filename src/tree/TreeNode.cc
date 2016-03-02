@@ -27,28 +27,14 @@ namespace treetool {
 // -------------------------------------------------------------------------------------------------
 
 
-// Put constructor classes into an anonymous namespace, so they cannot pollute anything
-// outside the file.
-namespace {
+TreeNode::Constructor::Constructor(const std::string& name) :
+    name_(name) {}
 
-class TreeNodeConstructor : public AtomicConstructor<TreeNode> {
-public:
 
-    TreeNodeConstructor(const std::string& name) :
-        name_(name) {}
-
-    virtual void make (TreeNode * object) const {
-        Log::info() << "In a tree node constructor!" << std::endl << std::flush;
-
-        object->name_ = eckit::FixedString<12>(name_);
-        object->items_.nullify();
-        Log::info() << "Construction done" << std::endl << std::flush;
-    }
-
-private:
-    std::string name_;
-};
-
+void TreeNode::Constructor::make(TreeNode * object) const {
+    object->name_ = eckit::FixedString<12>(name_);
+    object->items_.nullify();
+    object->data_.nullify();
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -62,7 +48,7 @@ void TreeNode::addNode(const std::string& key, const std::string& name) {
     //       in to push_back!
 
     PersistentPtr<TreeNode> new_node;
-    TreeNodeConstructor constructor(name);
+    TreeNode::Constructor constructor(name);
     new_node.allocate(pop, constructor);
 
     items_.push_back(std::make_pair(eckit::FixedString<12>(key), new_node));
