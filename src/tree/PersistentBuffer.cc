@@ -27,24 +27,40 @@ namespace treetool {
 // -------------------------------------------------------------------------------------------------
 
 
-PersistentBuffer::Constructor::Constructor(const Buffer& buffer) :
-    buffer_(buffer) {}
+PersistentBuffer::Constructor::Constructor(const void* data, size_t length) :
+    data_(data),
+    length_(length) {}
 
 
 size_t PersistentBuffer::Constructor::size() const {
-    return sizeof(PersistentBuffer) - sizeof(char) + buffer_.size();
+    return sizeof(PersistentBuffer) - sizeof(char) + length_;
 }
 
 
 void PersistentBuffer::Constructor::make(PersistentBuffer* object) const {
 
-    object->length_ = buffer_.size();
+    object->length_ = length_;
 
-    ::memcpy(object->data_, buffer_, buffer_.size());
+    ::memcpy(object->data_, data_, length_);
 }
 
 
 // -------------------------------------------------------------------------------------------------
+
+
+size_t PersistentBuffer::size() const {
+    return length_;
+}
+
+
+PersistentBuffer::operator const char* () const {
+    return data_;
+}
+
+
+PersistentBuffer::operator const void* () const {
+    return data_;
+}
 
 // -------------------------------------------------------------------------------------------------
 

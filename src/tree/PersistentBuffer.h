@@ -36,7 +36,7 @@ public: // Construction objects
 
     public: // methods
 
-        Constructor(const eckit::Buffer&);
+        Constructor(const void* data, size_t length);
 
         virtual void make (PersistentBuffer* object) const;
 
@@ -44,8 +44,18 @@ public: // Construction objects
 
     private: // members
 
-        const eckit::Buffer& buffer_;
+        const void* data_;
+        size_t length_;
     };
+
+
+public: // methods
+
+    size_t size() const;
+
+    operator const char*() const;
+    operator const void*() const;
+
 
 
 private: // members
