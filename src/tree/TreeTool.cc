@@ -70,7 +70,7 @@ void TreeTool::run() {
 
     Log::info() << "Node: " << (root->node_.null() ? "null" : "init") << std::endl;
 
-    std::string nodes[] = {
+    std::string node_nms[] = {
         "node1",
         "node2",
         "node3",
@@ -90,25 +90,25 @@ void TreeTool::run() {
 
         size_t cnt = root->node_->nodeCount();
 
-        Log::info() << "===================================" << std::endl;
-        Log::info() << "Node name: " << root->node_->name_ << std::endl;
-        Log::info() << "Subnodes: " << cnt << std::endl;
+    //    Log::info() << "===================================" << std::endl;
+    //    Log::info() << "Node name: " << root->node_->name_ << std::endl;
+    //    Log::info() << "Subnodes: " << cnt << std::endl;
 
-        for (size_t i = 0; i < cnt; i++) {
-            Log::info() << "  " << root->node_->items_[i].first
-                        << " -- " << root->node_->items_[i].second->name_ << std::endl;
+    //    for (size_t i = 0; i < cnt; i++) {
+    //        Log::info() << "  " << root->node_->items_[i].first
+    //                    << " -- " << root->node_->items_[i].second->name_ << std::endl;
 
-            if (!root->node_->items_[i].second->data_.null()) {
-                std::string tmp(*root->node_->items_[i].second->data_,
-                                root->node_->items_[i].second->data_->size());
-                Log::info() << "STR: " << tmp << std::endl;
-            }
-        }
+    //        if (!root->node_->items_[i].second->data_.null()) {
+    //            std::string tmp(*root->node_->items_[i].second->data_,
+    //                            root->node_->items_[i].second->data_->size());
+    //            Log::info() << "STR: " << tmp << std::endl;
+    //        }
+    //    }
 
-        Log::info() << "===================================" << std::endl;
+    //    Log::info() << "===================================" << std::endl;
 
 
-        std::string name = cnt < 12 ? nodes[cnt] : "higher";
+        std::string name = cnt < 12 ? node_nms[cnt] : "higher";
         root->node_->addNode(name, "12345");
 
         // Do a lookup
@@ -121,7 +121,7 @@ void TreeTool::run() {
         Log::info() << "[";
         for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
              it != nodes.end(); ++it) {
-            Log::info() << (*it)->name_ << ", ";
+            Log::info() << (*it)->name() << ", ";
         }
         Log::info() << "]" << std::endl;
     }

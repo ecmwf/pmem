@@ -67,8 +67,9 @@ public: // methods
     //      built on.
     std::vector<pmem::PersistentPtr<TreeNode> > lookup(const std::map<eckit::FixedString<12>, eckit::FixedString<12> >&);
 
-//protected: // members
-public: // TODO: Find a sensible way to get the atomic constructors working...
+    std::string name() const;
+
+private: // members
 
     pmem::PersistentVector<Item> items_;
 
@@ -79,6 +80,8 @@ public: // TODO: Find a sensible way to get the atomic constructors working...
 private:
 
     friend std::ostream& operator<< (std::ostream&, const TreeNode&);
+
+    friend class TreeNode::Constructor;
 };
 
 // -------------------------------------------------------------------------------------------------

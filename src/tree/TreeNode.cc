@@ -60,6 +60,11 @@ size_t TreeNode::nodeCount() const {
 }
 
 
+std::string TreeNode::name() const {
+    return name_;
+}
+
+
 std::vector<PersistentPtr<TreeNode> >
 TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
 
