@@ -85,6 +85,21 @@ void TreeTool::run() {
     };
 
 
+    std::string key_list[] = {
+        "123456789012",
+        "key1",
+        "key2",
+        "key3",
+        "key4",
+        "key5",
+        "key6",
+        "key7",
+        "key8",
+        "key9",
+        "key10",
+        "key11"
+    };
+
     // Initialise random seed
     srand(time(NULL));
 
@@ -100,11 +115,11 @@ void TreeTool::run() {
         Log::info() << "===================================" << std::endl;
 
         std::string name = cnt < 12 ? node_nms[cnt] : "higher";
-        rootNode->addNode(name, "12345");
+        rootNode->addNode(name, key_list[rand() % 12]);
 
         // Do a lookup
         std::map<FixedString<12>, FixedString<12> > lookup;
-        lookup["123456789012"] = std::string("node3");
+        lookup[key_list[rand() % 12]] = std::string(node_nms[rand() % 12]);
 
         Log::info() << lookup << std::endl;
         std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
@@ -113,10 +128,13 @@ void TreeTool::run() {
         for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
              it != nodes.end(); ++it) {
             Log::info() << (*it)->name() << ", ";
-
-            (*it)->addNode(node_nms[rand() % 12], "99999");
         }
         Log::info() << "]" << std::endl;
+
+        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+             it != nodes.end(); ++it) {
+            (*it)->addNode(node_nms[rand() % 12], key_list[rand() % 12]);
+        }
     }
 }
 
