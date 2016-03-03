@@ -31,7 +31,7 @@ void TreeRoot::Constructor::make(TreeRoot* object) const {
 
     object->tag_ = TreeRootTag;
 
-    TreeNode::Constructor tnc("123456789012");
+    TreeNode::Constructor tnc("123456789012", 0, 0);
     object->node_.allocate(tnc);
 }
 

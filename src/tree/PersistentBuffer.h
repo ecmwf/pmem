@@ -32,7 +32,7 @@ class PersistentBuffer {
 
 public: // Construction objects
 
-    class Constructor : pmem::AtomicConstructor<PersistentBuffer> {
+    class Constructor : public pmem::AtomicConstructor<PersistentBuffer> {
 
     public: // methods
 

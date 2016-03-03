@@ -41,13 +41,15 @@ public: // Construction objects
 
     public: // methods
 
-        Constructor(const std::string& name);
+        Constructor(const std::string& name, const void * data, size_t length);
 
         virtual void make (TreeNode * object) const;
 
     private: // members
 
         std::string name_;
+        const void* data_;
+        size_t length_;
     };
 
 public: // types

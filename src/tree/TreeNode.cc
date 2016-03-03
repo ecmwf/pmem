@@ -12,6 +12,7 @@
 
 
 #include "tree/TreeNode.h"
+#include "tree/PersistentBuffer.h"
 #include "persistent/PersistentPtr.h"
 #include "persistent/AtomicConstructor.h"
 
@@ -27,14 +28,26 @@ namespace treetool {
 // -------------------------------------------------------------------------------------------------
 
 
-TreeNode::Constructor::Constructor(const std::string& name) :
-    name_(name) {}
+TreeNode::Constructor::Constructor(const std::string& name, const void* data, size_t length) :
+    name_(name),
+    data_(data),
+    length_(length) {
+
+    // Quick sanity check
+    ASSERT(data_ == 0 || length_ != 0);
+}
 
 
 void TreeNode::Constructor::make(TreeNode * object) const {
     object->name_ = eckit::FixedString<12>(name_);
     object->items_.nullify();
     object->data_.nullify();
+
+    // If there is data attached to this node, then store it.
+    if (data_ != 0) {
+        PersistentBuffer::Constructor ctr(data_, length_);
+        object->data_.allocate(ctr);
+    }
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -48,7 +61,7 @@ void TreeNode::addNode(const std::string& key, const std::string& name) {
     //       in to push_back!
 
     PersistentPtr<TreeNode> new_node;
-    TreeNode::Constructor constructor(name);
+    TreeNode::Constructor constructor(name, 0, 0);
     new_node.allocate(pop, constructor);
 
     items_.push_back(std::make_pair(eckit::FixedString<12>(key), new_node));
