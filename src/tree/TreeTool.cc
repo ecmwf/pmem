@@ -89,34 +89,12 @@ void TreeTool::run() {
 
         size_t cnt = rootNode->nodeCount();
 
-//        class TreePrintVisitor : public TreeNode::Visitor {
-//        public:
-//            void operator() (TreeNode& ) {
-//
-//
-//            }
-//        };
-
         Log::info() << *rootNode << std::endl;
 
-
-    //    Log::info() << "===================================" << std::endl;
-    //    Log::info() << "Node name: " << rootNode->name_ << std::endl;
-    //    Log::info() << "Subnodes: " << cnt << std::endl;
-
-    //    for (size_t i = 0; i < cnt; i++) {
-    //        Log::info() << "  " << rootNode->items_[i].first
-    //                    << " -- " << rootNode->items_[i].second->name_ << std::endl;
-
-    //        if (!rootNode->items_[i].second->data_.null()) {
-    //            std::string tmp(*rootNode->items_[i].second->data_,
-    //                            rootNode->items_[i].second->data_->size());
-    //            Log::info() << "STR: " << tmp << std::endl;
-    //        }
-    //    }
-
-    //    Log::info() << "===================================" << std::endl;
-
+        Log::info() << "===================================" << std::endl;
+        rootNode->printTree(Log::info());
+        Log::info() << std::endl;
+        Log::info() << "===================================" << std::endl;
 
         std::string name = cnt < 12 ? node_nms[cnt] : "higher";
         rootNode->addNode(name, "12345");

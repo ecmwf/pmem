@@ -108,6 +108,31 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
 }
 
 
+void TreeNode::printTree(std::ostream& os, std::string pad) const {
+
+    // n.b. the parent is responsible for indenting the opening brace.
+    os << "{" << std::endl;
+    std::string pad2(pad + "  ");
+    os << pad2 << "key: " << name_ << "," << std::endl;
+    os << pad2 << "data: " << (data_.null() ? "missing" : "present")
+       << "," << std::endl;
+    os << pad2 << "items: [";
+
+    std::string pad4(pad2 + "  ");
+    for (size_t i = 0; i < items_.size(); i++) {
+        if (i > 0) os << ",";
+        os << std::endl << pad4 << std::string(items_[i].first) << ": ";
+        items_[i].second->printTree(os, pad4);
+    }
+
+    if (items_.size() > 0) os << std::endl << pad2;
+    os << "]" << std::endl;
+
+    // The parent is responsible for terminating the final line if desired.
+    os << pad << "}";
+}
+
+
 std::ostream& operator<< (std::ostream& os, const TreeNode& node) {
     os << "TreeNode(key=" << node.name_
        << ", data=" << (node.data_.null() ? "missing" : "present")
