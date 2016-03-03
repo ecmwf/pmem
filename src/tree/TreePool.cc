@@ -48,23 +48,12 @@ namespace treetool {
  * --> In principle we don't need to use a TreePool class, we could use PersistentPool
  *     nakedly.
  * --> This is just a little cleaner.
+ * --> For some reason, it complains if we just use TreeRoot::Constructor()
  */
 
-class RootConstructor : public AtomicConstructor<TreeRoot> {
-public:
-
-    virtual void make (TreeRoot * object) const {
-        object->tag_ = TreeRootTag;
-
-        TreeNode::Constructor tnc("123456789012");
-        object->node_.allocate(tnc);
-    }
-};
-
-RootConstructor rootConstructor;
-
-// -------------------------------------------------------------------------------------------------
-
+namespace {
+    TreeRoot::Constructor rootConstructor;
+}
 
 TreePool::TreePool(const eckit::PathName &path, const size_t size) :
     PersistentPool(path, size, "tree-pool", rootConstructor) {}

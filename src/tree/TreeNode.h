@@ -54,6 +54,11 @@ public: // types
 
     typedef std::pair<eckit::FixedString<12>, pmem::PersistentPtr<TreeNode> > Item;
 
+//    class Visitor {
+//    public:
+//        void operator() (TreeNode& node);
+//    };
+
 public: // methods
 
     /// Add a new node

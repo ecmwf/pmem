@@ -109,7 +109,9 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
 
 
 std::ostream& operator<< (std::ostream& os, const TreeNode& node) {
-    os << "TreeNode(" << node.name_ << ")";
+    os << "TreeNode(key=" << node.name_
+       << ", data=" << (node.data_.null() ? "missing" : "present")
+       << ")";
     return os;
 }
 

@@ -28,21 +28,30 @@ namespace treetool {
 
 // -------------------------------------------------------------------------------------------------
 
-
 // N.B. This is to be stored in PersistentPtr --> NO virtual behaviour.
 
 class TreeRoot {
+
+public: // Construction objects
+
+    class Constructor : public pmem::AtomicConstructor<TreeRoot> {
+    public: // methods
+        Constructor();
+        virtual void make(TreeRoot * object) const;
+    };
+
+
 public: // methods
 
     bool valid() const;
 
-public: // members
+    pmem::PersistentPtr<TreeNode> rootNode() const;
+
+private: // members
 
     eckit::FixedString<8> tag_;
 
-//    pmem::PolymorphicPersistentPtr<TreeNode> root_;
-
-    // TODO: This is just for testing.
+// TODO:    pmem::PolymorphicPersistentPtr<TreeNode> root_;
 
     pmem::PersistentPtr<TreeNode> node_;
 

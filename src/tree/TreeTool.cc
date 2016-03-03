@@ -64,11 +64,10 @@ void TreeTool::run() {
 
     PersistentPtr<TreeRoot> root = pool.root();
 
-    Log::info() << "Root tag: " << root->tag_ << std::endl;
-
     Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
 
-    Log::info() << "Node: " << (root->node_.null() ? "null" : "init") << std::endl;
+    PersistentPtr<TreeNode> rootNode = root->rootNode();
+    Log::info() << "Node: " << (rootNode.null() ? "null" : "init") << std::endl;
 
     std::string node_nms[] = {
         "node1",
@@ -86,21 +85,32 @@ void TreeTool::run() {
     };
 
 
-    if (!root->node_.null()) {
+    if (!rootNode.null()) {
 
-        size_t cnt = root->node_->nodeCount();
+        size_t cnt = rootNode->nodeCount();
+
+//        class TreePrintVisitor : public TreeNode::Visitor {
+//        public:
+//            void operator() (TreeNode& ) {
+//
+//
+//            }
+//        };
+
+        Log::info() << *rootNode << std::endl;
+
 
     //    Log::info() << "===================================" << std::endl;
-    //    Log::info() << "Node name: " << root->node_->name_ << std::endl;
+    //    Log::info() << "Node name: " << rootNode->name_ << std::endl;
     //    Log::info() << "Subnodes: " << cnt << std::endl;
 
     //    for (size_t i = 0; i < cnt; i++) {
-    //        Log::info() << "  " << root->node_->items_[i].first
-    //                    << " -- " << root->node_->items_[i].second->name_ << std::endl;
+    //        Log::info() << "  " << rootNode->items_[i].first
+    //                    << " -- " << rootNode->items_[i].second->name_ << std::endl;
 
-    //        if (!root->node_->items_[i].second->data_.null()) {
-    //            std::string tmp(*root->node_->items_[i].second->data_,
-    //                            root->node_->items_[i].second->data_->size());
+    //        if (!rootNode->items_[i].second->data_.null()) {
+    //            std::string tmp(*rootNode->items_[i].second->data_,
+    //                            rootNode->items_[i].second->data_->size());
     //            Log::info() << "STR: " << tmp << std::endl;
     //        }
     //    }
@@ -109,14 +119,14 @@ void TreeTool::run() {
 
 
         std::string name = cnt < 12 ? node_nms[cnt] : "higher";
-        root->node_->addNode(name, "12345");
+        rootNode->addNode(name, "12345");
 
         // Do a lookup
         std::map<FixedString<12>, FixedString<12> > lookup;
         lookup["123456789012"] = std::string("node3");
 
         Log::info() << lookup << std::endl;
-        std::vector<PersistentPtr<TreeNode> > nodes = root->node_->lookup(lookup);
+        std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
 
         Log::info() << "[";
         for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();

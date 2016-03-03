@@ -11,14 +11,29 @@
 /// @date   Feb 2016
 
 #include "tree/TreeRoot.h"
+#include "tree/TreeNode.h"
 
 #include "eckit/log/Log.h"
 
 using namespace eckit;
-
+using namespace pmem;
 
 
 namespace treetool {
+
+// -------------------------------------------------------------------------------------------------
+
+
+TreeRoot::Constructor::Constructor() {}
+
+
+void TreeRoot::Constructor::make(TreeRoot* object) const {
+
+    object->tag_ = TreeRootTag;
+
+    TreeNode::Constructor tnc("123456789012");
+    object->node_.allocate(tnc);
+}
 
 // -------------------------------------------------------------------------------------------------
 
@@ -30,6 +45,12 @@ namespace treetool {
 bool TreeRoot::valid() const {
 
     return tag_ == TreeRootTag;
+}
+
+
+PersistentPtr<TreeNode> TreeRoot::rootNode() const {
+
+    return node_;
 }
 
 // -------------------------------------------------------------------------------------------------

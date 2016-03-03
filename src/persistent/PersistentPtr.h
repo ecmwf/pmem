@@ -193,7 +193,7 @@ PersistentPtr<T>::PersistentPtr(PMEMoid oid) :
 
 template <typename T>
 T& PersistentPtr<T>::operator*() const {
-    *get();
+    return *get();
 }
 
 
