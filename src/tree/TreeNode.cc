@@ -105,7 +105,6 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
     } else if (items_.size() == 0) {
 
    //     // Add self to the list --> We need the persistent ptr!!!
-        Log::info() << "Pushing this one: " << std::endl;
         result.push_back(PersistentPtr<TreeNode>(this));
 
     } else {

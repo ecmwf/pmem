@@ -85,6 +85,9 @@ void TreeTool::run() {
     };
 
 
+    // Initialise random seed
+    srand(time(NULL));
+
     if (!rootNode.null()) {
 
         size_t cnt = rootNode->nodeCount();
@@ -110,6 +113,8 @@ void TreeTool::run() {
         for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
              it != nodes.end(); ++it) {
             Log::info() << (*it)->name() << ", ";
+
+            (*it)->addNode(node_nms[rand() % 12], "99999");
         }
         Log::info() << "]" << std::endl;
     }
