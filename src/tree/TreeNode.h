@@ -88,6 +88,12 @@ public: // methods
 
     std::string name() const;
 
+    bool leaf() const;
+
+    const void * data() const;
+
+    size_t dataSize() const;
+
 private: // members
 
     pmem::PersistentVector<Item> items_;

@@ -53,12 +53,7 @@ size_t PersistentBuffer::size() const {
 }
 
 
-PersistentBuffer::operator const char* () const {
-    return data_;
-}
-
-
-PersistentBuffer::operator const void* () const {
+const void * PersistentBuffer::data () const {
     return data_;
 }
 

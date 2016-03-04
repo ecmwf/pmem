@@ -53,10 +53,7 @@ public: // methods
 
     size_t size() const;
 
-    operator const char*() const;
-    operator const void*() const;
-
-
+    const void* data() const;
 
 private: // members
 

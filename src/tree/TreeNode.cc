@@ -62,6 +62,9 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
     ASSERT(key.size() > 0);
     ASSERT(name_ == key[0].first);
 
+    // May not add subnodes to a leaf node.
+    ASSERT(data_.null());
+
     FixedString<12> value = key[0].second;
     for (size_t i = 0; i < items_.size(); i++) {
         if (items_[i].first == value) {
@@ -98,6 +101,9 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
 
 void TreeNode::addNode(const std::string& key, const std::string& name, const DataBlob& blob) {
 
+    // May not add subnodes to a leaf node.
+    ASSERT(data_.null());
+
     PMEMobjpool* pop = ::pmemobj_pool_by_ptr(this);
 
     // TODO: We should be able to create a constructor for the pair, and pass that
@@ -118,6 +124,21 @@ size_t TreeNode::nodeCount() const {
 
 std::string TreeNode::name() const {
     return name_;
+}
+
+
+bool TreeNode::leaf() const {
+    return !data_.null();
+}
+
+
+const void * TreeNode::data() const {
+    return data_.null() ? 0 : data_->data();
+}
+
+
+size_t TreeNode::dataSize() const {
+    return data_.null() ? 0 : data_->size();
 }
 
 
@@ -147,7 +168,7 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
 
     } else if (items_.size() == 0) {
 
-   //     // Add self to the list --> We need the persistent ptr!!!
+        // Add self to the list --> We need the persistent ptr!!!
         result.push_back(PersistentPtr<TreeNode>(this));
 
     } else {
