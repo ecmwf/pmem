@@ -130,7 +130,10 @@ void TreeTool::run() {
         Log::info() << std::endl;
         Log::info() << "===================================" << std::endl;
 
-        //// Do a lookup
+        // Do a lookup
+        // N.B. This is done with a _map_, whereas the insertion is done with a _vector_
+        // TODO: Decide how we want to do the data schema, otherwise this could end up with weird duplication
+        //       (e.g. keys with different orders looking the same on lookup).
         std::map<FixedString<12>, FixedString<12> > lookup;
         lookup["type"] = std::string("fc");
         lookup["param"] = std::string("2t");
