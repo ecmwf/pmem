@@ -14,6 +14,7 @@
 #include "tree/TreeNode.h"
 
 #include "eckit/log/Log.h"
+#include "eckit/io/DataBlob.h"
 
 using namespace eckit;
 using namespace pmem;
@@ -49,6 +50,25 @@ bool TreeRoot::valid() const {
 PersistentPtr<TreeNode> TreeRoot::rootNode() const {
 
     return node_;
+}
+
+
+void TreeRoot::addNode(const std::vector<std::pair<std::string, std::string> >& key,
+                       const eckit::DataBlob& blob) {
+
+    ASSERT(key.size() != 0);
+
+    // If we don't yet have a root node, we need to create it.
+    // n.b. This could in principle be done in the TreeRoot constructor, if we assumed we
+    //      knew the data schema in advance.
+    if (node_.null()) {
+        TreeNode::Constructor ctr(key[0].first, 0, 0);
+        node_.allocate(ctr);
+    } else {
+        ASSERT(node_->name() == key[0].first);
+    }
+
+    node_->addNode(key, blob);
 }
 
 // -------------------------------------------------------------------------------------------------

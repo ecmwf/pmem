@@ -17,6 +17,7 @@
 #include "eckit/filesystem/PathName.h"
 #include "eckit/runtime/Tool.h"
 #include "eckit/exception/Exceptions.h"
+#include "eckit/io/DataBlob.h"
 
 #include "persistent/PersistentPool.h"
 #include "persistent/PersistentPtr.h"
@@ -108,7 +109,42 @@ void TreeTool::run() {
     // Initialise random seed
     srand(time(NULL));
 
-    if (!rootNode.null()) {
+    if (rootNode.null()) {
+
+        // We have an empty tree. Initialise it!
+        std::vector<std::pair<std::string, std::string> > key;
+        key.push_back(std::make_pair("type", "fc"));
+        key.push_back(std::make_pair("param", "2t"));
+        key.push_back(std::make_pair("year", "2016"));
+        key.push_back(std::make_pair("month", "03"));
+        key.push_back(std::make_pair("day", "04"));
+
+        std::vector<std::pair<std::string, std::string> > key2;
+        key2.push_back(std::make_pair("type", "fc"));
+        key2.push_back(std::make_pair("param", "2t"));
+        key2.push_back(std::make_pair("year", "2016"));
+        key2.push_back(std::make_pair("month", "02"));
+        key2.push_back(std::make_pair("day", "04"));
+
+        std::vector<std::pair<std::string, std::string> > key3;
+        key3.push_back(std::make_pair("type", "fc"));
+        key3.push_back(std::make_pair("param", "2t"));
+        key3.push_back(std::make_pair("year", "2016"));
+        key3.push_back(std::make_pair("month", "03"));
+        key3.push_back(std::make_pair("day", "05"));
+
+        std::string data("{\"text\": \"This is an example. Wooooooo\"}");
+        DataBlobPtr blob(DataBlobFactory::build("json", data.c_str(), data.length()));
+
+        Log::info() << "Key: " << key << std::endl;
+        Log::info() << "Key2: " << key2 << std::endl;
+        Log::info() << "Key3: " << key3 << std::endl;
+
+        root->addNode(key, *blob);
+        root->addNode(key2, *blob);
+        root->addNode(key3, *blob);
+
+    } else {
 
         size_t cnt = rootNode->nodeCount();
 
@@ -119,27 +155,27 @@ void TreeTool::run() {
         Log::info() << std::endl;
         Log::info() << "===================================" << std::endl;
 
-        std::string name = cnt < 12 ? node_nms[cnt] : "higher";
-        rootNode->addNode(name, key_list[rand() % 12]);
+        //std::string name = cnt < 12 ? node_nms[cnt] : "higher";
+        //rootNode->addNode(name, key_list[rand() % 12]);
 
-        // Do a lookup
-        std::map<FixedString<12>, FixedString<12> > lookup;
-        lookup[key_list[rand() % 12]] = std::string(node_nms[rand() % 12]);
+        //// Do a lookup
+        //std::map<FixedString<12>, FixedString<12> > lookup;
+        //lookup[key_list[rand() % 12]] = std::string(node_nms[rand() % 12]);
 
-        Log::info() << lookup << std::endl;
-        std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
+        //Log::info() << lookup << std::endl;
+        //std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
 
-        Log::info() << "[";
-        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
-             it != nodes.end(); ++it) {
-            Log::info() << (*it)->name() << ", ";
-        }
-        Log::info() << "]" << std::endl;
+        //Log::info() << "[";
+        //for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+        //     it != nodes.end(); ++it) {
+        //    Log::info() << (*it)->name() << ", ";
+        //}
+        //Log::info() << "]" << std::endl;
 
-        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
-             it != nodes.end(); ++it) {
-            (*it)->addNode(node_nms[rand() % 12], key_list[rand() % 12]);
-        }
+        //for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+        //     it != nodes.end(); ++it) {
+        //    (*it)->addNode(node_nms[rand() % 12], key_list[rand() % 12]);
+        //}
     }
 }
 

@@ -24,6 +24,11 @@
 #include "eckit/types/FixedString.h"
 
 
+namespace eckit {
+    class DataBlob;
+}
+
+
 namespace treetool {
 
 // -------------------------------------------------------------------------------------------------
@@ -44,6 +49,9 @@ public: // Construction objects
 public: // methods
 
     bool valid() const;
+
+    void addNode(const std::vector<std::pair<std::string, std::string> >& key,
+                 const eckit::DataBlob& blob);
 
     pmem::PersistentPtr<TreeNode> rootNode() const;
 
