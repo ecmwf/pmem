@@ -16,6 +16,7 @@
 #include "eckit/config/Resource.h"
 #include "eckit/filesystem/PathName.h"
 #include "eckit/runtime/Tool.h"
+#include "eckit/exception/Exceptions.h"
 
 #include "persistent/PersistentPool.h"
 #include "persistent/PersistentPtr.h"
@@ -50,8 +51,12 @@ private: // members
 TreeTool::TreeTool(int argc, char** argv) :
     Tool(argc, argv),
     pmemPath_(Resource<std::string>("-path", "")),
-    pmemLength_(Resource<size_t>("-length", 4096 * 4096 * 20))
-    {}
+    pmemLength_(Resource<size_t>("-length", 4096 * 4096 * 20)) {
+
+    if (pmemPath_ == "") {
+        throw UserError("No pool specified. Use -path <pool_file>");
+    }
+}
 
 
 TreeTool::~TreeTool() {}
