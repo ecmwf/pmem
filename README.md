@@ -38,15 +38,17 @@
 
   3. PersistentPool class
 
-    The PersistentPool class manages the persistent memory pool(s). The most straightforward
-    way to use this is to define a....
-    ...
+    The PersistentPool class manages the persistent memory pool(s), and takes care of either
+    creating or allocating (with atomic initialisation of the root object) as appropriate.
+    The most straightforward way to use this is to define a derived type. This type would
+    know the type of the root object.
 
         class MyPool : public pmem::PersistentPool {
 
         public: // methods
 
-            MyPool(const eckit::PathName& path, const size_t size);
+            MyPool(const eckit::PathName& path, const size_t size) :
+                PesistentPool(path, size, "pool-id-name", RootType::Constructor()) {}
 
             pmem::PersistentPtr<TreeRoot> root() const { return getRoot<RootType>(); }
         };
