@@ -131,9 +131,9 @@
     may be stored as a normal member of any object stored in persistent memory. It provides
     normal routines as would be expected from a vector type:
 
-        * `size_t size() const` - return the number of elements in the list
-        * `const T& operator[] (size_t i) const` - Obtain the i'th element
-        * `push_back(const AtomicConstructor<T>& constructor)` - Append an item
+      * `size_t size() const` - return the number of elements in the list
+      * `const T& operator[] (size_t i) const` - Obtain the i'th element
+      * `push_back(const AtomicConstructor<T>& constructor)` - Append an item
 
     To make use of this, the data type stored internally in the PersistentVector must be
     assigned a unique type_id as part of the macroscopic type management system.
