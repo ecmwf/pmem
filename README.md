@@ -63,35 +63,35 @@
 
   4. Sample class definition
 
-      ~~~~ c++
-      class PersistentObject {
+    Build off this sample class definition
 
-      public: // Constructor function objects
+        class PersistentObject {
 
-          class Constructor : public pmem::AtomicConstructor<PersistentObject> {
-          };
+        public: // Constructor function objects
 
-      public: // methods
+            class Constructor : public pmem::AtomicConstructor<PersistentObject> {
+            };
 
-          // Methods to access the data, and manipulate overall data structures.
-          //
-          // i) All data access should be read-only.
+        public: // methods
 
-      private: // members
+            // Methods to access the data, and manipulate overall data structures.
+            //
+            // i) All data access should be read-only.
 
-          // All of the data members to be stored should be in this private section. They should
-          // not be public, to protect them from external modification.
+        private: // members
 
-      priavte: // friends
+            // All of the data members to be stored should be in this private section. They should
+            // not be public, to protect them from external modification.
 
-          // Constructor functors need  access to the internal data
-          friend class PersistentObject::Constructor;
-      };
+        priavte: // friends
+
+            // Constructor functors need  access to the internal data
+            friend class PersistentObject::Constructor;
+        };
 
 
-      // Somewhere in a global cpp file
-      template<> int pmem::PersistentPtr<treetool::PersistentBuffer>::type_id = <unique no>;
-      ~~~~
+        // Somewhere in a global cpp file
+        template<> int pmem::PersistentPtr<treetool::PersistentBuffer>::type_id = <unique no>;
 
 ## Useful classes
 
