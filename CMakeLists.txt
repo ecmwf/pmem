@@ -69,6 +69,7 @@ add_subdirectory( src )
 
 # install( DIRECTORY share DESTINATION ${CMAKE_INSTALL_PREFIX} )
 
+ecbuild_add_resources( TARGET top_files SOURCES README.md)
 #ecbuild_add_resources( TARGET top_files SOURCES TODO AUTHORS README.md NOTICE LICENSE INSTALL ChangeLog COPYING )
 
 ############################################################################################
