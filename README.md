@@ -63,7 +63,7 @@
 
   4. Sample class definition
 
-      ```c++
+      ~~~~ c++
       class PersistentObject {
 
       public: // Constructor function objects
@@ -91,7 +91,7 @@
 
       // Somewhere in a global cpp file
       template<> int pmem::PersistentPtr<treetool::PersistentBuffer>::type_id = <unique no>;
-      ```
+      ~~~~
 
 ## Useful classes
 
