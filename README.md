@@ -13,8 +13,6 @@
 ## Programming model
 
   1. Atomic operations
-  2. PersistentPtr class
-  3. Atomic constructor
 
     There are two possibilities to ensure consistency over arbitrary power failures. Either
     using transactions, or atomic operations. This set of persistent memory tools ensures
@@ -26,42 +24,74 @@
         pointer to the object.
 
     To make use of this, constructor _functors_ should be written in place of normal object
-    constructors. These should be of the form:
+    constructors.
 
-    ```
-    class Constructor : public pmem::AtomicConstructor<ObjectType> {
+    ...
 
-    public: // methods
+    Note that the consistency ensured in this library only applies to process/power failure.
+    No attempt is made at consistency with respect to concurrency. Threading/locking is
+    entirely the remit of the library user.
 
-        // User defined interface
-        // Any information that is required to encode the object must be passed in
-        // during construction of the Constructor functor.
-        Constructor(...);
+  2. Persistent object types and the PersistentPtr class
 
-        // This is the actual constructor method. It is passed a pointer to an uninitialised
-        // (but allocated) region of persistent memory.
-        virtual void make (ObjectType * object) const;
+    ... best place to put typeid is in the next section --- pool file
 
-        // (Optional)
-        // This routine is called to determine how much persistent memory should be allocated
-        // (and similarly how much should be persisted after make() is called). If this
-        // method is not provided the default implementation returns sizeof(ObjectType).
-        //
-        // This is primarily intended for allocating variable sized objects, such as buffers.
-        virtual size_t size() const;
+  3. PersistentPool class
 
-    private: // members
+    The PersistentPool class manages the persistent memory pool(s). The most straightforward
+    way to use this is to define a....
+    ...
 
-        // Information stored by the constructor, and required in the make()
-        // method should be stored here.
-    };
-    ```
+        class MyPool : public pmem::PersistentPool {
+
+        public: // methods
+
+            MyPool(const eckit::PathName& path, const size_t size);
+
+            pmem::PersistentPtr<TreeRoot> root() const { return getRoot<RootType>(); }
+        };
+
+  4. Atomic constructor
+
+    ...
+    These should be of the form:
+    ...
+
+        class Constructor : public pmem::AtomicConstructor<ObjectType> {
+
+        public: // methods
+
+            // User defined interface
+            // Any information that is required to encode the object must be passed in
+            // during construction of the Constructor functor.
+            Constructor(...);
+
+            // This is the actual constructor method. It is passed a pointer to an uninitialised
+            // (but allocated) region of persistent memory.
+            virtual void make (ObjectType * object) const;
+
+            // (Optional)
+            // This routine is called to determine how much persistent memory should be allocated
+            // (and similarly how much should be persisted after make() is called). If this
+            // method is not provided the default implementation returns sizeof(ObjectType).
+            //
+            // This is primarily intended for allocating variable sized objects, such as buffers.
+            virtual size_t size() const;
+
+        private: // members
+
+            // Information stored by the constructor, and required in the make()
+            // method should be stored here.
+        };
 
     Constructor objects should be passed into the allocate() method of a PersistentPtr object.
     The library will ensure that only constructors for the correct type of object are passed
     into PersistentPtrs of the appropriate type.
 
-  4. Sample class definition
+    The "root" object cannot be allocated in the normal way, as it must always be present.
+
+
+  5. Sample class definition
 
     Build off this sample class definition
 
@@ -95,8 +125,25 @@
 
 ## Useful classes
 
-  1. PersistentVector
+  1. PersistentVector<T>
+
+    This stores an extensible array of persistent pointers to a given object type. This object
+    may be stored as a normal member of any object stored in persistent memory. It provides
+    normal routines as would be expected from a vector type:
+
+        * ```size_t size() const``` - return the number of elements in the list
+        * ```const T& operator[] (size_t i) const``` - Obtain the i'th element
+        * ```push_back(const AtomicConstructor<T>& constructor)``` - Append an item
+
+    To make use of this, the data type stored internally in the PersistentVector must be
+    assigned a unique type_id as part of the macroscopic type management system.
+
+        template<> int pmem::PersistentPtr<pmem::PersistentVector<T>::data_type>::type_id = <unique no>;
+
   2. PersistentBuffer
+
+    This type does what it says on the tin. Its constructor object accepts a pointer to a
+    region of memory and a length. This data is then stored persistently.
 
 
 
