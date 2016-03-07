@@ -12,7 +12,22 @@
 
 ## Programming model
 
-  1. Atomic operations
+  1. Overview
+
+    Each memory pool (see PersistentPool below) can have only one persistent root object.
+    All other objects within the memory pool must ultimately be accessible exploration
+    of a network of connected objects within (or between) the memory pools. These
+    connections are described by PersistentPtrs within the objects.
+
+    This implies that the entire range of possible types that can be stored within the
+    memory pool can be described at compile time (as no pointer can be stored to an
+    unknown type). To ensure consistency over restart, the library stores a type tag
+    (type_id) along with each allocated object. This is checked against the expected
+    type every time that a PersistentPtr is resolved. This requires **unique** type_ids
+    to be defined for every storable object at compile time.
+
+    **It is strongly advised that these are stored in a single place, normally in the c++
+    file associated with the PersistentPool object***
 
     There are two possibilities to ensure consistency over arbitrary power failures. Either
     using transactions, or atomic operations. This set of persistent memory tools ensures
@@ -26,15 +41,54 @@
     To make use of this, constructor _functors_ should be written in place of normal object
     constructors.
 
-    ...
-
     Note that the consistency ensured in this library only applies to process/power failure.
     No attempt is made at consistency with respect to concurrency. Threading/locking is
     entirely the remit of the library user.
 
   2. Persistent object types and the PersistentPtr class
 
-    ... best place to put typeid is in the next section --- pool file
+    Objects that can be stored in persistent memory have a certain number of rules.
+
+      1. They must not contain mutable data, other than PersistentPtrs to other objects
+         which can be atomically allocated (or types that wrap such PersistentPtrs such
+         as PersistentVector).
+
+      2. They must not have any virtual methods, or derive from classes with virtual
+         methods. Virtual methods rely on having a vtable which maps the base class
+         methods to their actual implementation. This vtable contains actual poniters
+         to volatile memory, which are invalid when a pool is re-memory-mapped.
+
+      3. They must have constructors and destructors that do nothing, so that this
+         behaviour can be managed by the Constructor functor objects (see Atomic
+         Constructor section below), and the library.
+
+    Pointers to objects stored in persistent memory are of type PersistentPtr<ObjectType>.
+    This wraps the PMEMoid type in the underlying libpmemobj library, and contains a
+    pool uuid, and a memory offset. No further information is stored, and the data
+    structures stored are in principle accessible using the libpmemobj C API.
+
+    Each of the types available **must** have a globally unique type_id declared. This is
+    used for type checking on access to the persistent memory, which helps with
+    maintining long-term consistency. All type definitions should be placed in the same
+    place, to describe the ensemble behaviour of the persistent pool in consideration.
+    This should normally be in the .cc file associated with the local PersistentPool
+    definition:
+
+        template<> int pmem::PersistentPtr<PersistentObject>::type_id = <unique no>;
+
+    Further objects should be allocated by calling the `allocate()` method of the
+    persistent pointer. The library will ensure that this action is atomic, with
+    persisting the updated pointer being the last operation to occur. Memory can
+    be freed using the `free()` method.
+
+    If more complicated data structures are to be built (those that could not be written
+    as a branching tree, e.g. that contain loops of pointers, a great deal of care is
+    required. These *cannot* be built using single atomic operations, and so the loops
+    will need to be built in such a way that the state can be "recovered" and the desired
+    structure rebuilt on restart and reopening of the pool.
+
+    TODO: Add some utility functions for manipulating pointers to create more complex
+          data structures.
 
   3. PersistentPool class
 
@@ -123,7 +177,7 @@
 
 
         // Somewhere in a global cpp file
-        template<> int pmem::PersistentPtr<treetool::PersistentBuffer>::type_id = <unique no>;
+        template<> int pmem::PersistentPtr<PersistentObject::type_id = <unique no>;
 
 ## Useful classes
 
