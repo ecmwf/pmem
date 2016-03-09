@@ -1,6 +1,6 @@
 # Persistent memory tools
 
-## 1. Dependencies
+## Dependencies
 
   The persistent memory tools depend on a some external libraries
 
@@ -109,9 +109,7 @@
 
   4. Atomic constructor
 
-    ...
     These should be of the form:
-    ...
 
         class Constructor : public pmem::AtomicConstructor<ObjectType> {
 
