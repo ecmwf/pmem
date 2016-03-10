@@ -8,29 +8,27 @@
  * nor does it submit to any jurisdiction.
  */
 
-
 /// @author Simon Smart
 /// @date   Feb 2016
-
 
 #ifndef persistent_PersistentPtr_H
 #define persistent_PersistentPtr_H
 
-#include "persistent/AtomicConstructor.h"
-#include "persistent/PersistentPool.h"
+#include "libpmemobj.h"
 
 #include "eckit/exception/Exceptions.h"
 
-#include "libpmemobj.h"
+#include "persistent/AtomicConstructor.h"
+#include "persistent/PersistentPool.h"
 
 namespace pmem {
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg);
+void persistent_constructor(PMEMobjpool * pop, void * obj, void * arg);
 
 
 // These forward declarations are just to make the templated friend class statement later happy
@@ -38,13 +36,10 @@ template <typename T> class PersistentPtr;
 template <typename T> bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs);
 
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 
-/*
- * Include the non-templated functionality of PersistentPtr, so that it is only compiled in
- * one place!
- */
+/// Include the non-templated functionality of PersistentPtr, so that it is only compiled in one place!
 
 class PersistentPtrBase {
 
@@ -88,7 +83,7 @@ protected: // members
 };
 
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 
 template <typename T>
@@ -135,13 +130,13 @@ public: // methods
 
     // void nullify(); // Inherited
 
-    /// Note that allocation and setting of the pointer are atomic. The work of setting up the
+    /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
     void allocate(PMEMobjpool * pop, AtomicConstructor<T>& constructor) {
-        // n.b. We don't want to assert(null()). We may be updating, say, pointers in a chain of
-        //      objects, with atomic rearrangement. That is fine.
-        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id,
-                        &persistentConstructor, &constructor);
+
+        // We don't want to assert(null()). We may be updating, say, pointers in a chain of
+        // objects, with atomic rearrangement. That is fine.
+        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id, &persistent_constructor, &constructor);
     }
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
@@ -171,8 +166,7 @@ private: // friends
 };
 
 
-
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 // Templated member functions
 
@@ -221,8 +215,7 @@ bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs) {
     return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
 }
 
-
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 }
 

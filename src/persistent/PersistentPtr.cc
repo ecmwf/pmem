@@ -30,7 +30,7 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg) {
+void persistent_constructor(PMEMobjpool * pop, void * obj, void * arg) {
     const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
 
     Log::info() << "Constructing persistent object of " << constr_fn->size()
@@ -39,7 +39,6 @@ void persistentConstructor(PMEMobjpool * pop, void * obj, void * arg) {
     constr_fn->build(obj);
     ::pmemobj_persist(pop, obj, constr_fn->size());
 }
-
 
 // -------------------------------------------------------------------------------------------------
 

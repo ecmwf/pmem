@@ -51,8 +51,9 @@ private: // members
 
 TreeTool::TreeTool(int argc, char** argv) :
     Tool(argc, argv),
-    pmemPath_(Resource<std::string>("-path", "")),
-    pmemLength_(Resource<size_t>("-length", 4096 * 4096 * 20)) {
+    pmemLength_(Resource<size_t>("-length", 20 * 1024 * 1024)),
+    pmemPath_(Resource<std::string>("-path", ""))
+{
 
     if (pmemPath_ == "") {
         throw UserError("No pool specified. Use -path <pool_file>");
@@ -74,9 +75,6 @@ void TreeTool::run() {
 
     PersistentPtr<TreeNode> rootNode = root->rootNode();
     Log::info() << "Node: " << (rootNode.null() ? "null" : "init") << std::endl;
-
-    // Initialise random seed
-    srand(time(NULL));
 
     if (rootNode.null()) {
 
@@ -121,7 +119,7 @@ void TreeTool::run() {
 
     } else {
 
-        size_t cnt = rootNode->nodeCount();
+//        size_t cnt = rootNode->nodeCount();
 
         Log::info() << *rootNode << std::endl;
 

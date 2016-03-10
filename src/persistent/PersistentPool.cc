@@ -65,7 +65,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
     if (::pmemobj_root_size(pop_) == 0) {
         Log::info() << "Initialising root element" << std::endl << std::flush;
-        ::pmemobj_root_construct(pop_, constructor.size(), persistentConstructor, &constructor);
+        ::pmemobj_root_construct(pop_, constructor.size(), persistent_constructor, &constructor);
     }
 }
 
