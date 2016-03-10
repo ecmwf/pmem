@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 2.8.11 FATAL_ERROR )
 
-project( pmem_play C CXX )
+project( pmem C CXX )
 
 set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild/cmake")
 
@@ -38,14 +38,14 @@ ecbuild_declare_project()
 
 ### export package to other ecbuild packages
 
-set( PMEM_PLAY_INCLUDE_DIRS   ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src )
-set( PMEM_PLAY_LIBRARIES      multio_pmem pmemwrapper )
+set( PMEM_INCLUDE_DIRS   ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src )
+set( PMEM_LIBRARIES      multio_pmem pmemwrapper )
 
-get_directory_property( PMEM_PLAY_DEFINITIONS COMPILE_DEFINITIONS )
+get_directory_property( PMEM_DEFINITIONS COMPILE_DEFINITIONS )
 
 ### include directories
 
-include_directories( ${PMEM_PLAY_INCLUDE_DIRS} )
+include_directories( ${PMEM_INCLUDE_DIRS} )
 
 add_subdirectory( src )
 
@@ -54,7 +54,7 @@ add_subdirectory( src )
 ecbuild_add_resources( TARGET top_files SOURCES README.md)
 #ecbuild_add_resources( TARGET top_files SOURCES TODO AUTHORS README.md NOTICE LICENSE INSTALL ChangeLog COPYING )
 
-ecbuild_pkgconfig(NAME pmem_play
+ecbuild_pkgconfig(NAME pmem
                   DESCRIPTION "Use the persistent memory libs"
                   LIBRARIES multio_pmem pmemwrapper)
 
