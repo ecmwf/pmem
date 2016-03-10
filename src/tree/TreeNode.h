@@ -74,7 +74,7 @@ public: // methods
     /// @param name - Select which key-value pair is examined to select sub-sub-nodes
     void addNode(const std::string& key, const std::string& name, const eckit::DataBlob& blob);
 
-    void addNode(const std::vector<std::pair<std::string, std::string>> key,
+    void addNode(const std::vector<std::pair<std::string, std::string> > key,
                  const eckit::DataBlob& blob);
 
 
