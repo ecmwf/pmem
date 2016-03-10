@@ -12,11 +12,11 @@ ecbuild_requires_macro_version( 2.0 )
 
 ecbuild_use_package( PROJECT eckit VERSION  0.10  REQUIRED )
 
-ecbuild_add_option( FEATURE MULTIO
-                    DESCRIPTION "Add an interface to pass GRIB files to the object store from MultIO"
-                    REQUIRED_PACKAGES
-                      "PROJECT multio  VERSION 0.1 REQUIRED"
-                    )
+# ecbuild_add_option( FEATURE MULTIO
+#                     DESCRIPTION "Add an interface to pass GRIB files to the object store from MultIO"
+#                     REQUIRED_PACKAGES
+#                       "PROJECT multio  VERSION 0.1 REQUIRED"
+#                     )
 
 
 find_path(

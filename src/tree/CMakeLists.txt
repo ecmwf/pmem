@@ -27,22 +27,22 @@ ecbuild_add_executable(
         eckit
         ${PMEMOBJ_LIBS} )
 
-ecbuild_add_library(
+# ecbuild_add_library(
 
-    TARGET multio_pmem
+#     TARGET multio_pmem
 
-    SOURCES
-        TreeMultIO.cc
-        TreeMultIO.h
-        ${COMMON_FILES}
+#     SOURCES
+#         TreeMultIO.cc
+#         TreeMultIO.h
+#         ${COMMON_FILES}
 
-    PRIVATE_INCLUDES
-        ${MULTIO_INCLUDE_DIRS}
-        ${ECKIT_INCLUDE_DIRS}
-        ${PMEMOBJ_INCLUDE_DIRS}
+#     PRIVATE_INCLUDES
+#         ${MULTIO_INCLUDE_DIRS}
+#         ${ECKIT_INCLUDE_DIRS}
+#         ${PMEMOBJ_INCLUDE_DIRS}
 
-    LIBS
-        multio
-        pmemwrapper
-        eckit
-        ${PMEMOBJ_LIBS} )
+#     LIBS
+#         multio
+#         pmemwrapper
+#         eckit
+#         ${PMEMOBJ_LIBS} )

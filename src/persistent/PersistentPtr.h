@@ -210,9 +210,6 @@ T* PersistentPtr<T>::get() const {
 }
 
 
-#include "eckit/log/Log.h"
-
-
 template <typename T>
 bool PersistentPtr<T>::valid() const {
     return ::pmemobj_type_num(oid_) == type_id;
