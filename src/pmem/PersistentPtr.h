@@ -28,7 +28,7 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void pmem_constructor(PMEMobjpool * pop, void * obj, void * arg);
+void pmem_constructor(PMEMobjpool * pool, void * obj, void * arg);
 
 
 // These forward declarations are just to make the templated friend class statement later happy
@@ -132,24 +132,24 @@ public: // methods
 
     /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
-    void allocate(PMEMobjpool * pop, AtomicConstructor<T>& constructor) {
+    void allocate(PMEMobjpool * pool, AtomicConstructor<T>& constructor) {
 
         // We don't want to assert(null()). We may be updating, say, pointers in a chain of
         // objects, with atomic rearrangement. That is fine.
-        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id, &pmem_constructor, &constructor);
+        ::pmemobj_alloc(pool, &oid_, constructor.size(), type_id, &pmem_constructor, &constructor);
     }
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
     /// it will put the data into the same pool as the pointer is in
     void allocate(AtomicConstructor<T>& constructor) {
-        PMEMobjpool * pop = ::pmemobj_pool_by_ptr(this);
+        PMEMobjpool * pool = ::pmemobj_pool_by_ptr(this);
 
-        eckit::Log::info() << "allocate: " << this << ", " << pop << std::endl << std::flush;
+        eckit::Log::info() << "allocate: " << this << ", " << pool << std::endl << std::flush;
 
-        if (pop == 0)
+        if (pool == 0)
             throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
 
-        allocate(pop, constructor);
+        allocate(pool, constructor);
     }
 
 

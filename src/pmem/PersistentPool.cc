@@ -42,29 +42,29 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
         Log::info() << "Size: " << float(size) / (1024 * 1024) << std::endl << std::flush;
 
         // TODO: Consider permissions. Currently this is world R/W-able.
-        pop_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
+        pool_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
         newPool_ = true;
 
-        if (!pop_)
+        if (!pool_)
             throw PersistentCreateError(path, errno, Here());
-        Log::info() << "Pool created: " << pop_ << std::endl;
+        Log::info() << "Pool created: " << pool_ << std::endl;
 
     } else {
 
         Log::info() << "Opening persistent pool: " << path << std::endl;
 
-        pop_ = ::pmemobj_open(path.localPath(), name.c_str());
+        pool_ = ::pmemobj_open(path.localPath(), name.c_str());
 
-        if (!pop_)
+        if (!pool_)
             throw PersistentOpenError(path, errno, Here());
 
-        Log::info() << "Pool opened: " << pop_ << std::endl;
+        Log::info() << "Pool opened: " << pool_ << std::endl;
 
     }
 
-    if (::pmemobj_root_size(pop_) == 0) {
+    if (::pmemobj_root_size(pool_) == 0) {
         Log::info() << "Initialising root element" << std::endl << std::flush;
-        ::pmemobj_root_construct(pop_, constructor.size(), persistent_constructor, &constructor);
+        ::pmemobj_root_construct(pool_, constructor.size(), persistent_constructor, &constructor);
     }
 }
 
@@ -72,9 +72,9 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 PersistentPool::~PersistentPool() {}
 
 
-uint64_t PersistentPool::poolUUID(PMEMobjpool * pop) {
+uint64_t PersistentPool::poolUUID(PMEMobjpool * pool) {
 
-    std::map<PMEMobjpool*, uint64_t>::const_iterator uuid = pool_uuid_map.find(pop);
+    std::map<PMEMobjpool*, uint64_t>::const_iterator uuid = pool_uuid_map.find(pool);
 
     if (uuid == pool_uuid_map.end())
         throw SeriousBug("Attempting to obtain UUID of unknown pool");
@@ -85,10 +85,10 @@ uint64_t PersistentPool::poolUUID(PMEMobjpool * pop) {
 
 void PersistentPool::setUUID(uint64_t uuid) const {
 
-    std::map<PMEMobjpool*, uint64_t>::const_iterator it_uuid = pool_uuid_map.find(pop_);
+    std::map<PMEMobjpool*, uint64_t>::const_iterator it_uuid = pool_uuid_map.find(pool_);
 
     if (it_uuid == pool_uuid_map.end()) {
-        pool_uuid_map[pop_] = uuid;
+        pool_uuid_map[pool_] = uuid;
     } else {
         if (uuid != it_uuid->second)
             throw SeriousBug("Two identical pools registered with differing UUIDs");

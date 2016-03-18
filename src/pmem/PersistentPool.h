@@ -66,7 +66,7 @@ protected: // methods
 
 protected: // members
 
-    PMEMobjpool * pop_;
+    PMEMobjpool * pool_;
 
     bool newPool_;
 };
@@ -75,7 +75,7 @@ protected: // members
 
 template <typename T>
 PersistentPtr<T> PersistentPool::getRoot()  const {
-    PersistentPtr<T> tmp = PersistentPtr<T>(::pmemobj_root(pop_, sizeof(T)));
+    PersistentPtr<T> tmp = PersistentPtr<T>(::pmemobj_root(pool_, sizeof(T)));
     setUUID(tmp.oid_.pool_uuid_lo);
     return tmp;
 }

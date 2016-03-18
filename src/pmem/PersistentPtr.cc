@@ -30,14 +30,14 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void persistent_constructor(PMEMobjpool * pop, void * obj, void * arg) {
+void persistent_constructor(PMEMobjpool * pool, void * obj, void * arg) {
     const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
 
     Log::info() << "Constructing persistent object of " << constr_fn->size()
                 << " bytes at: " << obj << std::endl;
 
     constr_fn->build(obj);
-    ::pmemobj_persist(pop, obj, constr_fn->size());
+    ::pmemobj_persist(pool, obj, constr_fn->size());
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -52,21 +52,21 @@ PersistentPtrBase::PersistentPtrBase() :
 /// --> TODO: Test this. Test this. Test this.
 PersistentPtrBase::PersistentPtrBase(void* object) {
 
-    PMEMobjpool * pop = ::pmemobj_pool_by_ptr(object);
+    PMEMobjpool * pool = ::pmemobj_pool_by_ptr(object);
 
-    if (pop == 0) {
+    if (pool == 0) {
         throw eckit::SeriousBug("Attempting to obtain persistent pointer to volatile memory", Here());
     }
 
-    // N.b. the pool uuid is available, internally, as pop->uuid. This requires
+    // N.b. the pool uuid is available, internally, as pool->uuid. This requires
     //      libpmemobj/obj.h - but is intentionally NOT available in their C api
     //      HOWEVER, we need a persistent of the *this* pointer for C++, so a
     //      class __needs__ to be able access the UUID.
     //
     // --> Therefore we register the pool UUID when the root object is accessed.
     // --> This might not work if we only have inter-pool access. TBD.
-    oid_.off = uintptr_t(object) - uintptr_t(pop);
-    oid_.pool_uuid_lo = PersistentPool::poolUUID(pop);
+    oid_.off = uintptr_t(object) - uintptr_t(pool);
+    oid_.pool_uuid_lo = PersistentPool::poolUUID(pool);
 }
 
 

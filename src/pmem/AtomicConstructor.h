@@ -44,8 +44,7 @@ template <typename T>
 class AtomicConstructor : public AtomicConstructorBase {
 public:
 
-    // In general the "pop" argument should not be needed, but if the user desires to create
-    // a nested tree of objects, then they will need it.
+    /// Overload this to construct the specified object
     virtual void make (T * object) const = 0;
 
     // TODO: Should we pass a reference through to make instead?

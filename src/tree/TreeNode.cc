@@ -76,19 +76,19 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
     }
 
     // TODO: We should be passing this key into an overall constructor, and avoiding
-    //       extracting the pop, and the explicit stagewise building.
+    //       extracting the pool, and the explicit stagewise building.
 
-    PMEMobjpool* pop = ::pmemobj_pool_by_ptr(this);
+    PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
 
     // If we haven't found a key, then we need to insert it!
     // build the entire sub-tree before we insert it.
     PersistentPtr<TreeNode> new_node;
     if (key.size() == 1) {
         TreeNode::Constructor ctr("", blob.buffer(), blob.length());
-        new_node.allocate(pop, ctr);
+        new_node.allocate(pool, ctr);
     } else {
         TreeNode::Constructor ctr(key[1].first, 0, 0);
-        new_node.allocate(pop, ctr);
+        new_node.allocate(pool, ctr);
 
         new_node->addNode(
             std::vector<std::pair<std::string, std::string> >(key.begin()+1, key.end()),
@@ -103,14 +103,14 @@ void TreeNode::addNode(const std::string& key, const std::string& name, const Da
     // May not add subnodes to a leaf node.
     ASSERT(data_.null());
 
-    PMEMobjpool* pop = ::pmemobj_pool_by_ptr(this);
+    PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
 
     // TODO: We should be able to create a constructor for the pair, and pass that
     //       in to push_back!
 
     PersistentPtr<TreeNode> new_node;
     TreeNode::Constructor constructor(name, blob.buffer(), blob.length());
-    new_node.allocate(pop, constructor);
+    new_node.allocate(pool, constructor);
 
     items_.push_back(std::make_pair(eckit::FixedString<12>(key), new_node));
 }
