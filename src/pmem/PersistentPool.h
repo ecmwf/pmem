@@ -15,8 +15,8 @@
 #include <cstddef>
 #include <string>
 
-#ifndef persistent_PersistentPool_H
-#define persistent_PersistentPool_H
+#ifndef pmem_PersistentPool_H
+#define pmem_PersistentPool_H
 
 #include "persistent/AtomicConstructor.h"
 
@@ -83,4 +83,4 @@ PersistentPtr<T> PersistentPool::getRoot()  const {
 
 } // namespace pmem
 
-#endif // persistent_PersistentPool_H
+#endif // pmem_PersistentPool_H

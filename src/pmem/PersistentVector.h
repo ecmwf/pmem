@@ -16,8 +16,8 @@
 #include "persistent/PersistentPtr.h"
 
 
-#ifndef tree_PersistentVector_H
-#define tree_PersistentVector_H
+#ifndef pmem_PersistentVector_H
+#define pmem_PersistentVector_H
 
 /*
  * Modus-operandi:
@@ -169,5 +169,5 @@ void PersistentVector<T>::push_back(const T& new_elem) {
 
 } // namespace pmem
 
-#endif // tree_PersistentVector_H
+#endif // pmem_PersistentVector_H
 

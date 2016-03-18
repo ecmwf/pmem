@@ -13,8 +13,8 @@
 /// @date   Feb 2016
 
 
-#ifndef persistent_AtomicConstructor_H
-#define persistent_AtomicConstructor_H
+#ifndef pmem_AtomicConstructor_H
+#define pmem_AtomicConstructor_H
 
 #include <cstddef>
 
@@ -64,4 +64,4 @@ public:
 
 } // namespace pmem
 
-#endif // persistent_AtomicConstructor_H
+#endif // pmem_AtomicConstructor_H

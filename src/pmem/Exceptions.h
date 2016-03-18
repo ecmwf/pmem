@@ -11,8 +11,8 @@
 /// @date   Feb 2016
 
 
-#ifndef persistent_Exceptions_H
-#define persistent_Exceptions_H
+#ifndef pmem_Exceptions_H
+#define pmem_Exceptions_H
 
 #include "eckit/exception/Exceptions.h"
 
@@ -43,4 +43,4 @@ public:
 
 }
 
-#endif // persistent_Exceptions_H
+#endif // pmem_Exceptions_H

@@ -11,8 +11,8 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-#ifndef persistent_PersistentPtr_H
-#define persistent_PersistentPtr_H
+#ifndef pmem_PersistentPtr_H
+#define pmem_PersistentPtr_H
 
 #include "libpmemobj.h"
 
@@ -28,7 +28,7 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void persistent_constructor(PMEMobjpool * pop, void * obj, void * arg);
+void pmem_constructor(PMEMobjpool * pop, void * obj, void * arg);
 
 
 // These forward declarations are just to make the templated friend class statement later happy
@@ -136,7 +136,7 @@ public: // methods
 
         // We don't want to assert(null()). We may be updating, say, pointers in a chain of
         // objects, with atomic rearrangement. That is fine.
-        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id, &persistent_constructor, &constructor);
+        ::pmemobj_alloc(pop, &oid_, constructor.size(), type_id, &pmem_constructor, &constructor);
     }
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
@@ -219,4 +219,4 @@ bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs) {
 
 }
 
-#endif // persistent_PersistentPtr_H
+#endif // pmem_PersistentPtr_H

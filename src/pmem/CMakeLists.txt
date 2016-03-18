@@ -3,8 +3,6 @@ ecbuild_add_library(
     TARGET pmemwrapper
 
     SOURCES
-        PolymorphicPersistentPtr.h
-        PolymorphicPersistentPtr.cc
         PersistentPtr.h
         PersistentPtr.cc
         PersistentPool.h
