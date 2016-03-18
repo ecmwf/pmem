@@ -10,11 +10,11 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-#include "tree/TreeRoot.h"
-#include "tree/TreeNode.h"
-
 #include "eckit/log/Log.h"
 #include "eckit/io/DataBlob.h"
+
+#include "tree/TreeRoot.h"
+#include "tree/TreeNode.h"
 
 using namespace eckit;
 using namespace pmem;

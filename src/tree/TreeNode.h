@@ -14,17 +14,15 @@
 #ifndef tree_TreeNode_H
 #define tree_TreeNode_H
 
-
-#include "persistent/PersistentVector.h"
-#include "persistent/PersistentPtr.h"
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "eckit/types/FixedString.h"
 
-#include <utility>
-#include <string>
-#include <vector>
-#include <map>
-
+#include "pmem/PersistentPtr.h"
+#include "pmem/PersistentVector.h"
 
 namespace eckit {
     class DataBlob;

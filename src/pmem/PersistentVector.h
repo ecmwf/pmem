@@ -13,11 +13,12 @@
 /// @date   Feb 2016
 
 
-#include "persistent/PersistentPtr.h"
-
-
 #ifndef pmem_PersistentVector_H
 #define pmem_PersistentVector_H
+
+
+#include "pmem/PersistentPtr.h"
+
 
 /*
  * Modus-operandi:

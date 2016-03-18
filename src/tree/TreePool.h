@@ -11,11 +11,10 @@
 /// @date   Feb 2016
 
 
-#ifndef persistent_TreePool_H
-#define persistent_TreePool_H
+#ifndef tree_TreePool_H
+#define tree_TreePool_H
 
-
-#include "persistent/PersistentPool.h"
+#include "pmem/PersistentPool.h"
 
 
 // -------------------------------------------------------------------------------------------------
@@ -59,4 +58,4 @@ public: // methods
 }
 
 
-#endif // persistent_TreePool_H
+#endif // tree_TreePool_H

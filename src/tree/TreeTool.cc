@@ -8,19 +8,19 @@
  * nor does it submit to any jurisdiction.
  */
 
-#include "tree/TreePool.h"
-#include "tree/TreeRoot.h"
-#include "tree/TreeNode.h"
-#include "tree/PersistentBuffer.h"
-
 #include "eckit/config/Resource.h"
 #include "eckit/filesystem/PathName.h"
 #include "eckit/runtime/Tool.h"
 #include "eckit/exception/Exceptions.h"
 #include "eckit/io/DataBlob.h"
 
-#include "persistent/PersistentPool.h"
-#include "persistent/PersistentPtr.h"
+#include "pmem/PersistentPool.h"
+#include "pmem/PersistentPtr.h"
+
+#include "tree/TreePool.h"
+#include "tree/TreeRoot.h"
+#include "tree/TreeNode.h"
+#include "tree/PersistentBuffer.h"
 
 using namespace eckit;
 using namespace pmem;

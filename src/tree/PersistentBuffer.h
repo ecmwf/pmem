@@ -15,7 +15,7 @@
 #define tree_PersistentBuffer_H
 
 
-#include "persistent/AtomicConstructor.h"
+#include "pmem/AtomicConstructor.h"
 
 
 namespace eckit {

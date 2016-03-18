@@ -10,16 +10,15 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-
-#include "persistent/PersistentPool.h"
-#include "persistent/Exceptions.h"
-#include "persistent/AtomicConstructor.h"
-#include "persistent/PersistentPtr.h"
+#include <unistd.h>
 
 #include "eckit/filesystem/PathName.h"
 #include "eckit/log/Log.h"
 
-#include <unistd.h>
+#include "pmem/AtomicConstructor.h"
+#include "pmem/Exceptions.h"
+#include "pmem/PersistentPool.h"
+#include "pmem/PersistentPtr.h"
 
 using namespace eckit;
 

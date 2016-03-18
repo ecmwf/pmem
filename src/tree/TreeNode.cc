@@ -10,15 +10,14 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-
-#include "tree/TreeNode.h"
-#include "tree/PersistentBuffer.h"
-#include "persistent/PersistentPtr.h"
-#include "persistent/AtomicConstructor.h"
-
 #include "eckit/log/Log.h"
 #include "eckit/io/DataBlob.h"
 
+#include "pmem/PersistentPtr.h"
+#include "pmem/AtomicConstructor.h"
+
+#include "tree/TreeNode.h"
+#include "tree/PersistentBuffer.h"
 
 using namespace eckit;
 using namespace pmem;

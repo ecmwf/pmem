@@ -18,8 +18,8 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "persistent/AtomicConstructor.h"
-#include "persistent/PersistentPool.h"
+#include "pmem/AtomicConstructor.h"
+#include "pmem/PersistentPool.h"
 
 namespace pmem {
 

@@ -9,15 +9,15 @@
 
 /// @author Simon Smart
 /// @date   Feb 2016
+///
+#include "eckit/log/Log.h"
+
+#include "pmem/PersistentPtr.h"
+#include "pmem/AtomicConstructor.h"
 
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"
 #include "tree/TreeNode.h"
-
-#include "persistent/PersistentPtr.h"
-#include "persistent/AtomicConstructor.h"
-
-#include "eckit/log/Log.h"
 
 using namespace eckit;
 using namespace pmem;

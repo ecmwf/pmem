@@ -10,15 +10,16 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-#include "libpmemobj.h"
-
-#include <cstddef>
-#include <string>
 
 #ifndef pmem_PersistentPool_H
 #define pmem_PersistentPool_H
 
-#include "persistent/AtomicConstructor.h"
+#include <cstddef>
+#include <string>
+
+#include "libpmemobj.h"
+
+#include "pmem/AtomicConstructor.h"
 
 
 // -------------------------------------------------------------------------------------------------

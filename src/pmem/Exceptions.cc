@@ -10,10 +10,9 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-
-#include "persistent/Exceptions.h"
-
 #include <string>
+
+#include "pmem/Exceptions.h"
 
 using namespace eckit;
 
