@@ -35,7 +35,7 @@ namespace pmem {
 
 class AtomicConstructorBase {
 public:
-    virtual void build(void * obj) const = 0;
+    virtual int build(void * obj) const = 0;
     virtual size_t size() const = 0;
 };
 
@@ -44,13 +44,21 @@ template <typename T>
 class AtomicConstructor : public AtomicConstructorBase {
 public:
 
+    // Something to throw in a constructor, if necessary, to unwind allocations.
+    class AllocationError {};
+
     /// Overload this to construct the specified object
     virtual void make (T * object) const = 0;
 
     // TODO: Should we pass a reference through to make instead?
-    virtual void build (void * obj) const {
+    virtual int build (void * obj) const {
         T * object = reinterpret_cast<T*>(obj);
-        make(object);
+        try {
+            make(object);
+        } catch (AllocationError& e) {
+            return 1;
+        }
+        return 0;
     }
 
     /// N.b. This is virtual. This allows the constructor to actually allocate more memory

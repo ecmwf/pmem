@@ -28,7 +28,7 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void pmem_constructor(PMEMobjpool * pool, void * obj, void * arg);
+int pmem_constructor(PMEMobjpool * pool, void * obj, void * arg);
 
 
 // These forward declarations are just to make the templated friend class statement later happy

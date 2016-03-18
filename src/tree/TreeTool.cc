@@ -109,9 +109,10 @@ void TreeTool::run() {
         std::string data3("{\"text\": \"We are finally getting somewhere!\"}");
         DataBlobPtr blob3(DataBlobFactory::build("json", data3.c_str(), data3.length()));
 
-        Log::info() << "Key: " << key << std::endl;
-        Log::info() << "Key2: " << key2 << std::endl;
-        Log::info() << "Key3: " << key3 << std::endl;
+        // For now, we aren't assuming feature/print-vector
+//        Log::info() << "Key: " << key << std::endl;
+//        Log::info() << "Key2: " << key2 << std::endl;
+//        Log::info() << "Key3: " << key3 << std::endl;
 
         root->addNode(key, *blob);
         root->addNode(key2, *blob2);

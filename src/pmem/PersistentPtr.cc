@@ -12,12 +12,10 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-
-#include "persistent/PersistentPtr.h"
-#include "persistent/AtomicConstructor.h"
-
 #include "eckit/log/Log.h"
 
+#include "pmem/PersistentPtr.h"
+#include "pmem/AtomicConstructor.h"
 
 using namespace eckit;
 
@@ -30,14 +28,19 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
-void persistent_constructor(PMEMobjpool * pool, void * obj, void * arg) {
+int pmem_constructor(PMEMobjpool * pool, void * obj, void * arg) {
     const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
 
     Log::info() << "Constructing persistent object of " << constr_fn->size()
                 << " bytes at: " << obj << std::endl;
 
-    constr_fn->build(obj);
-    ::pmemobj_persist(pool, obj, constr_fn->size());
+    // The constructor should return zero for success. If it has failed (e.g. if a subobjects
+    // allocation has failed) this needs to be propagated upwards so that the block reservation
+    // can be correctly unwound.
+    int ret = constr_fn->build(obj);
+    if (ret != 0)
+        ::pmemobj_persist(pool, obj, constr_fn->size());
+    return ret;
 }
 
 // -------------------------------------------------------------------------------------------------
