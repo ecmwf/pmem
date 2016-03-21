@@ -17,8 +17,11 @@
 #define pmem_AtomicConstructor_H
 
 #include <cstddef>
+#include <string>
 
 #include "libpmemobj.h"
+
+#include "eckit/exception/Exceptions.h"
 
 namespace pmem {
 
@@ -35,6 +38,11 @@ namespace pmem {
 
 class AtomicConstructorBase {
 public:
+    // Something to throw in a constructor, if necessary, to unwind allocations.
+    struct AllocationError : public eckit::Exception {
+        AllocationError(const std::string& what) : Exception(what) {}
+    };
+
     virtual int build(void * obj) const = 0;
     virtual size_t size() const = 0;
 };
@@ -43,9 +51,6 @@ public:
 template <typename T>
 class AtomicConstructor : public AtomicConstructorBase {
 public:
-
-    // Something to throw in a constructor, if necessary, to unwind allocations.
-    class AllocationError {};
 
     /// Overload this to construct the specified object
     virtual void make (T * object) const = 0;

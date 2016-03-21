@@ -132,25 +132,11 @@ public: // methods
 
     /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
-    void allocate(PMEMobjpool * pool, AtomicConstructor<T>& constructor) {
-
-        // We don't want to assert(null()). We may be updating, say, pointers in a chain of
-        // objects, with atomic rearrangement. That is fine.
-        ::pmemobj_alloc(pool, &oid_, constructor.size(), type_id, &pmem_constructor, &constructor);
-    }
+    void allocate(PMEMobjpool * pool, AtomicConstructor<T>& constructor);
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
     /// it will put the data into the same pool as the pointer is in
-    void allocate(AtomicConstructor<T>& constructor) {
-        PMEMobjpool * pool = ::pmemobj_pool_by_ptr(this);
-
-        eckit::Log::info() << "allocate: " << this << ", " << pool << std::endl << std::flush;
-
-        if (pool == 0)
-            throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
-
-        allocate(pool, constructor);
-    }
+    void allocate(AtomicConstructor<T>& constructor);
 
 
 private: // methods
@@ -207,6 +193,30 @@ T* PersistentPtr<T>::get() const {
 template <typename T>
 bool PersistentPtr<T>::valid() const {
     return ::pmemobj_type_num(oid_) == type_id;
+}
+
+
+template <typename T>
+void PersistentPtr<T>::allocate(PMEMobjpool * pool, AtomicConstructor<T>& constructor) {
+
+    // We don't want to assert(null()). We may be updating, say, pointers in a chain of
+    // objects, with atomic rearrangement. That is fine.
+    if (::pmemobj_alloc(pool, &oid_, constructor.size(), type_id, &pmem_constructor, &constructor) != 0)
+        throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
+}
+
+
+template <typename T>
+void PersistentPtr<T>::allocate(AtomicConstructor<T>& constructor) {
+
+    // For allocating directly on an existing persistent object, we don't have to specify the pool manually. Get the
+    // pool by using the same one as the current persistent object.
+    PMEMobjpool * pool = ::pmemobj_pool_by_ptr(this);
+
+    if (pool == 0)
+        throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
+
+    allocate(pool, constructor);
 }
 
 
