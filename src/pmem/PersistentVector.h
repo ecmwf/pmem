@@ -50,16 +50,40 @@ public: // Constructors
 
     public: // methods
 
+        /// Normal constructor
         Constructor(size_t max_size) :
-            maxSize_(max_size) {}
+            maxSize_(max_size),
+            sourceVector_(0) {}
+
+        /// Copy constructor
+        Constructor(const PersistentVectorData<T>& source, size_t max_size) :
+            maxSize_(max_size),
+            sourceVector_(&source) {
+
+            ASSERT(max_size > source.nelem_);
+        }
 
         virtual void make(PersistentVectorData<T>& object) const {
+
             object.allocatedSize_ = maxSize_;
-            object.nelem_ = 0;
-            for (int i = 0; i < maxSize_; i++)
+
+            // If we are copying an existing vector, then transfer the data across
+            size_t i = 0;
+            if (sourceVector_) {
+                object.nelem_ = sourceVector_->nelem_;
+                for (; i < sourceVector_->nelem_; i++)
+                    object.elements_[i] = sourceVector_->elements_[i];
+            } else {
+                object.nelem_ = 0;
+            }
+
+            // And nullify the remaining elements.
+            for (; i < maxSize_; i++)
                 object.elements_[i].nullify();
         }
 
+        /// Return the size in bytes. This is variable depending on the number of elements
+        /// stored in the vector.
         virtual size_t size() const {
             return sizeof(PersistentVectorData<T>) + (maxSize_ - 1) * sizeof(PersistentPtr<T>);
         }
@@ -67,6 +91,7 @@ public: // Constructors
     private: // members
 
         size_t maxSize_;
+        const PersistentVectorData<T>* sourceVector_;
     };
 
 public: // methods
@@ -164,6 +189,14 @@ public:
 
     const T& operator[] (size_t i) const {
         return (*items_)[i];
+    }
+
+    void resize(size_t new_size) {
+        ASSERT(!items_.null());
+
+        // Atomically replace the data with a resized copy.
+        typename data_type::Constructor ctr(*items_, new_size);
+        items_.replace(ctr);
     }
 
 protected:
