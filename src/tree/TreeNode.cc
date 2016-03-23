@@ -185,6 +185,8 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
     // - name of current node is not a key --> return all subnodes
     // - name of current node is not a key, and no subnodes --> return this node.
 
+    ASSERT(!leaf());
+
     std::vector<PersistentPtr<TreeNode> > result;
 
     if (request.find(name_) != request.end()) {
@@ -193,22 +195,27 @@ TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
         FixedString<12> value = request.find(name_)->second;
         for (size_t i = 0; i < items_.size(); i++) {
             if (items_[i].first == value) {
-                std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
-                result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
+                if (items_[i].second->leaf()) {
+                    result.push_back(items_[i].second);
+
+                    // TODO: If we have unique names, this can exit the loop here.
+                } else {
+                    std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
+                    result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
+                }
             }
         }
-
-    } else if (items_.size() == 0) {
-
-        // Add self to the list --> We need the persistent ptr!!!
-        result.push_back(PersistentPtr<TreeNode>(this));
 
     } else {
 
         // Include all sub-nodes
         for (size_t i = 0; i < items_.size(); i++) {
-            std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
-            result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
+            if (items_[i].second->leaf()) {
+                result.push_back(items_[i].second);
+            } else {
+                std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
+                result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
+            }
         }
     }
 

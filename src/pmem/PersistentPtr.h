@@ -47,9 +47,6 @@ public: // methods
 
     PersistentPtrBase();
 
-    /// Obtain a persistent pointer given an actual pointer to an object in virtual memory.
-    PersistentPtrBase(void* object);
-
     /// Deallocate the memory. Note that this atomically frees and sets oid_ == OID_NULL.
     void free();
 
@@ -102,9 +99,6 @@ public: // methods
      * Constructors
      */
     PersistentPtr();
-
-    /// Obtain a persistent pointer given an actual pointer to an object in virtual memory.
-    PersistentPtr(void * object);
 
     /*
      * Access the stored object
@@ -159,11 +153,6 @@ private: // friends
 template <typename T>
 PersistentPtr<T>::PersistentPtr() :
     PersistentPtrBase() {}
-
-
-template <typename T>
-PersistentPtr<T>::PersistentPtr(void* object) :
-    PersistentPtrBase(object) {}
 
 
 template <typename T>

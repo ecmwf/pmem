@@ -24,10 +24,6 @@
 
 using namespace eckit;
 
-namespace {
-    std::map<PMEMobjpool*, uint64_t> pool_uuid_map;
-}
-
 namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
@@ -87,31 +83,6 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
 
 PersistentPool::~PersistentPool() {}
-
-
-uint64_t PersistentPool::poolUUID(PMEMobjpool * pool) {
-
-    std::map<PMEMobjpool*, uint64_t>::const_iterator uuid = pool_uuid_map.find(pool);
-
-    if (uuid == pool_uuid_map.end())
-        throw SeriousBug("Attempting to obtain UUID of unknown pool");
-
-    return uuid->second;
-}
-
-
-void PersistentPool::setUUID(uint64_t uuid) const {
-
-    std::map<PMEMobjpool*, uint64_t>::const_iterator it_uuid = pool_uuid_map.find(pool_);
-
-    if (it_uuid == pool_uuid_map.end()) {
-        pool_uuid_map[pool_] = uuid;
-    } else {
-        if (uuid != it_uuid->second)
-            throw SeriousBug("Two identical pools registered with differing UUIDs");
-    }
-}
-
 
 // -------------------------------------------------------------------------------------------------
 
