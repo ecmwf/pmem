@@ -1,3 +1,2 @@
 add_subdirectory( pmem )
 add_subdirectory( tree )
-add_subdirectory( tests )
