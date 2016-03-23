@@ -12,6 +12,7 @@
 
 #include "eckit/log/Log.h"
 #include "eckit/io/DataBlob.h"
+#include "eckit/types/Types.h"
 
 #include "pmem/PersistentPtr.h"
 #include "pmem/AtomicConstructor.h"
@@ -38,17 +39,60 @@ TreeNode::Constructor::Constructor(const std::string& name, const void* data, si
 }
 
 
-void TreeNode::Constructor::make(TreeNode * object) const {
-    object->name_ = eckit::FixedString<12>(name_);
-    object->items_.nullify();
-    object->data_.nullify();
+void TreeNode::Constructor::make(TreeNode& object) const {
+
+    object.name_ = eckit::FixedString<12>(name_);
+    object.items_.nullify();
+    object.data_.nullify();
 
     // If there is data attached to this node, then store it.
     if (data_ != 0) {
         PersistentBuffer::Constructor ctr(data_, length_);
-        object->data_.allocate(ctr);
+        object.data_.allocate(ctr);
     }
 }
+
+
+// -------------------------------------------------------------------------------------------------
+
+
+/// We actually store pairs of items in the vector, so here we create a constructor object for the
+/// _pairs_ of items that are going to be stored. This constructor internally constructs:
+///
+/// a) Any DataBuffers taht are required to hold the blobs
+/// b) A recursed tree of subnodes as required.
+
+class NodeItemConstructor : public AtomicConstructor<TreeNode::Item> {
+
+public: // methods
+
+    NodeItemConstructor(const eckit::FixedString<12>& value,
+                        const std::vector<std::pair<std::string, std::string> >& subkeys,
+                        const eckit::DataBlob& blob) :
+        value_(value),
+        subkeys_(subkeys),
+        blob_(blob) { }
+
+    virtual void make(TreeNode::Item &object) const {
+
+        object.first = value_;
+
+        if (subkeys_.size() == 0) {
+            TreeNode::Constructor ctr("", blob_.buffer(), blob_.length());
+            object.second.allocate(ctr);
+        } else {
+            TreeNode::Constructor ctr(subkeys_[0].first, 0, 0);
+            object.second.allocate(ctr);
+            object.second->addNode(subkeys_, blob_);
+        }
+    }
+
+private: // members
+
+    const eckit::FixedString<12>& value_;
+    const std::vector<std::pair<std::string, std::string> >& subkeys_;
+    const eckit::DataBlob& blob_;
+};
 
 // -------------------------------------------------------------------------------------------------
 
@@ -64,55 +108,23 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
     // May not add subnodes to a leaf node.
     ASSERT(data_.null());
 
+    // Find the sub-node, and recurse down into that to do the additions.
     FixedString<12> value = key[0].second;
     for (size_t i = 0; i < items_.size(); i++) {
         if (items_[i].first == value) {
 
-            items_[i].second->addNode(
-                std::vector<std::pair<std::string, std::string> >(key.begin()+1, key.end()),
-                blob);
+            std::vector<std::pair<std::string, std::string> > subkeys(key.begin()+1, key.end());
+            items_[i].second->addNode(subkeys, blob);
             return;
         }
     }
 
-    // TODO: We should be passing this key into an overall constructor, and avoiding
-    //       extracting the pool, and the explicit stagewise building.
+    // TODO: What happens if we are adding data in again...
 
-    PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
-
-    // If we haven't found a key, then we need to insert it!
-    // build the entire sub-tree before we insert it.
-    PersistentPtr<TreeNode> new_node;
-    if (key.size() == 1) {
-        TreeNode::Constructor ctr("", blob.buffer(), blob.length());
-        new_node.allocate(pool, ctr);
-    } else {
-        TreeNode::Constructor ctr(key[1].first, 0, 0);
-        new_node.allocate(pool, ctr);
-
-        new_node->addNode(
-            std::vector<std::pair<std::string, std::string> >(key.begin()+1, key.end()),
-            blob);
-    }
-
-    items_.push_back(std::make_pair(value, new_node));
-}
-
-void TreeNode::addNode(const std::string& key, const std::string& name, const DataBlob& blob) {
-
-    // May not add subnodes to a leaf node.
-    ASSERT(data_.null());
-
-    PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
-
-    // TODO: We should be able to create a constructor for the pair, and pass that
-    //       in to push_back!
-
-    PersistentPtr<TreeNode> new_node;
-    TreeNode::Constructor constructor(name, blob.buffer(), blob.length());
-    new_node.allocate(pool, constructor);
-
-    items_.push_back(std::make_pair(eckit::FixedString<12>(key), new_node));
+    // We have reached the bottom of the known tree. Create new nodes from here-on down.
+    std::vector<std::pair<std::string, std::string> > subkeys(key.begin()+1, key.end());
+    NodeItemConstructor ctr(value, subkeys, blob);
+    items_.push_back(ctr);
 }
 
 

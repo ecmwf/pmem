@@ -53,13 +53,17 @@ class AtomicConstructor : public AtomicConstructorBase {
 public:
 
     /// Overload this to construct the specified object
-    virtual void make (T * object) const = 0;
+    /// @note Throw an AtomicConstructorBase::Allocation error to cause the allocation to fail and the persistent
+    ///       memory to be freed. If further objects are allocated inside this make function, and the exception is
+    ///       allowed to escape, this will cause the allocation chain to unwind
+    virtual void make (T& object) const = 0;
 
     // TODO: Should we pass a reference through to make instead?
     virtual int build (void * obj) const {
         T * object = reinterpret_cast<T*>(obj);
+        ASSERT(object);
         try {
-            make(object);
+            make(*object);
         } catch (AllocationError& e) {
             return 1;
         }

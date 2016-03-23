@@ -47,7 +47,7 @@ public: // Construction objects
 
         Constructor(const std::string& name, const void * data, size_t length);
 
-        virtual void make (TreeNode * object) const;
+        virtual void make (TreeNode& object) const;
 
     private: // members
 
@@ -70,7 +70,7 @@ public: // methods
     /// Add a new node
     /// @param key - The value used to select this sub-node from the current node
     /// @param name - Select which key-value pair is examined to select sub-sub-nodes
-    void addNode(const std::string& key, const std::string& name, const eckit::DataBlob& blob);
+//    void addNode(const std::string& key, const std::string& name, const eckit::DataBlob& blob);
 
     void addNode(const std::vector<std::pair<std::string, std::string> > key,
                  const eckit::DataBlob& blob);

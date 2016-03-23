@@ -38,7 +38,7 @@ public: // Construction objects
 
         Constructor(const void* data, size_t length);
 
-        virtual void make (PersistentBuffer* object) const;
+        virtual void make (PersistentBuffer& object) const;
 
         virtual size_t size() const;
 

@@ -28,10 +28,10 @@ namespace treetool {
 TreeRoot::Constructor::Constructor() {}
 
 
-void TreeRoot::Constructor::make(TreeRoot* object) const {
+void TreeRoot::Constructor::make(TreeRoot& object) const {
 
-    object->tag_ = TreeRootTag;
-    object->node_.nullify();
+    object.tag_ = TreeRootTag;
+    object.node_.nullify();
 }
 
 // -------------------------------------------------------------------------------------------------

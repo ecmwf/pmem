@@ -40,7 +40,7 @@ public: // Construction objects
     class Constructor : public pmem::AtomicConstructor<TreeRoot> {
     public: // methods
         Constructor();
-        virtual void make(TreeRoot * object) const;
+        virtual void make(TreeRoot& object) const;
     };
 
 
