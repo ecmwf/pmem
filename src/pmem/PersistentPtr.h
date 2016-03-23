@@ -132,6 +132,11 @@ public: // methods
     /// it will put the data into the same pool as the pointer is in
     void allocate(const AtomicConstructor<T>& constructor);
 
+    /// Atomically replace the existing object with a new one. If anything fails in the chain of
+    /// construction, the original object is left unchanged.
+    void replace(PMEMobjpool* pool, const AtomicConstructor<T>& constructor);
+    void replace(const AtomicConstructor<T>& constructor);
+
 
 private: // methods
 
@@ -188,6 +193,8 @@ bool PersistentPtr<T>::valid() const {
 template <typename T>
 void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<T>& constructor) {
 
+    ASSERT(null());
+
     // We don't want to assert(null()). We may be updating, say, pointers in a chain of
     // objects, with atomic rearrangement. That is fine.
     /// @note ::pmemobj_alloc does not modify the contents of the final argument, which is passed through
@@ -213,6 +220,37 @@ void PersistentPtr<T>::allocate(const AtomicConstructor<T>& constructor) {
         throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
 
     allocate(pool, constructor);
+}
+
+
+template <typename T>
+void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<T> &constructor) {
+
+    ASSERT(!null());
+    PMEMoid oid_tmp = oid_;
+
+    if (::pmemobj_alloc(pool,
+                        &oid_,
+                        constructor.size(),
+                        type_id,
+                        &pmem_constructor,
+                        const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
+        throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
+    } else {
+        ::pmemobj_free(&oid_tmp);
+    }
+}
+
+
+template <typename T>
+void PersistentPtr<T>::replace(const AtomicConstructor<T> &constructor) {
+
+    PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
+
+    if (pool == 0)
+        throw eckit::SeriousBug("Replacing persistent memory alloction in non-persistent memory", Here());
+
+    replace(pool, constructor);
 }
 
 
