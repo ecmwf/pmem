@@ -63,7 +63,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
         Log::info() << "Opening persistent pool: " << path << std::endl;
         Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
-        if (stat_buf.st_size != size_t(size) && sizeSpecified)
+        if (size_t(stat_buf.st_size) != size && sizeSpecified)
             Log::warning() << "WARNING: Pool size does not match the manually specified size" << std::endl;
 
         pool_ = ::pmemobj_open(path.localPath(), name.c_str());
