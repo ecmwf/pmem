@@ -83,7 +83,7 @@ void TreeTool::run() {
     // ---------------------------------------------------------------------------------
     // Now start the tool.
 
-    TreePool pool(path, pool_size);
+    TreePool pool(path, pool_size, args.has("size"));
 
     PersistentPtr<TreeRoot> root = pool.root();
 

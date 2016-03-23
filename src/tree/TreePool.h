@@ -46,7 +46,7 @@ class TreePool : public pmem::PersistentPool {
 
 public: // methods
 
-    TreePool(const eckit::PathName& path, const size_t size);
+    TreePool(const eckit::PathName& path, const size_t size, bool sizeSpecified);
     ~TreePool();
 
     pmem::PersistentPtr<TreeRoot> root() const;

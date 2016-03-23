@@ -44,7 +44,7 @@ class PersistentPool {
 public: // methods
 
    PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
-                  AtomicConstructorBase& constructor);
+                  AtomicConstructorBase& constructor, bool sizeSpecified=false);
    ~PersistentPool();
 
    // TODO: Keep track of open objects, so they can be invalidated?

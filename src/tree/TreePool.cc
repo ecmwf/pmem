@@ -64,8 +64,8 @@ namespace {
     TreeRoot::Constructor rootConstructor;
 }
 
-TreePool::TreePool(const eckit::PathName &path, const size_t size) :
-    PersistentPool(path, size, "tree-pool", rootConstructor) {}
+TreePool::TreePool(const eckit::PathName &path, const size_t size, bool sizeSpecified) :
+    PersistentPool(path, size, "tree-pool", rootConstructor, sizeSpecified) {}
 
 
 TreePool::~TreePool() {}
