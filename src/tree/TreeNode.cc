@@ -49,6 +49,7 @@ public: // methods
     virtual void make(TreeNode::Item &object) const {
 
         object.first = value_;
+        object.second.nullify();
 
         if (subkeys_.size() == 0) {
             TreeNode::Constructor ctr(blob_);

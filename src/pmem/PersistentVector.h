@@ -70,16 +70,18 @@ public: // Constructors
             // If we are copying an existing vector, then transfer the data across
             size_t i = 0;
             if (sourceVector_) {
-                object.nelem_ = sourceVector_->nelem_;
-                for (; i < sourceVector_->nelem_; i++)
+                object.nelem_ = sourceVector_->size();  // n.b. enforces consistency check.
+                for (; i < sourceVector_->nelem_; i++) {
                     object.elements_[i] = sourceVector_->elements_[i];
+                }
             } else {
                 object.nelem_ = 0;
             }
 
             // And nullify the remaining elements.
-            for (; i < maxSize_; i++)
+            for (; i < maxSize_; i++) {
                 object.elements_[i].nullify();
+            }
         }
 
         /// Return the size in bytes. This is variable depending on the number of elements
@@ -99,7 +101,15 @@ public: // methods
     /// Number of elements in the list
     size_t size() const {
         consistency_check();
+        ASSERT(nelem_ <= allocatedSize_);
         return nelem_;
+    }
+
+    /// Returns true if the number of elements is equal to the available space
+    bool full() const {
+        consistency_check();
+        ASSERT(nelem_ <= allocatedSize_);
+        return (nelem_ == allocatedSize_);
     }
 
     /// Append an element to the list.
@@ -174,34 +184,37 @@ public:
     void push_back(const AtomicConstructor<T>& constructor) {
 
         // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
-        if (items_.null()) {
-            typename data_type::Constructor ctr(123);
-            items_.allocate(ctr);
+        if (PersistentPtr<data_type>::null()) {
+            typename data_type::Constructor ctr(1);
+            PersistentPtr<data_type>::allocate(ctr);
             ASSERT(size() == 0);
         }
 
-        items_->push_back(constructor);
+        // If all of the available space is full, then increase the space available (by factor of 2)
+        if (PersistentPtr<data_type>::get()->full()) {
+            size_t sz = size();
+            eckit::Log::info() << "Resizing vector from " << sz << " elements to " << 2*sz << std::endl;
+            resize(sz * 2);
+        }
+
+        PersistentPtr<data_type>::get()->push_back(constructor);
     }
 
     size_t size() const {
-        return items_.null() ? 0 : items_->size();
+        return PersistentPtr<data_type>::null() ? 0 : (*this)->size();
     }
 
     const T& operator[] (size_t i) const {
-        return (*items_)[i];
+        return (*PersistentPtr<data_type>::get())[i];
     }
 
     void resize(size_t new_size) {
-        ASSERT(!items_.null());
+        ASSERT(!PersistentPtr<data_type>::null());
 
         // Atomically replace the data with a resized copy.
-        typename data_type::Constructor ctr(*items_, new_size);
-        items_.replace(ctr);
+        typename data_type::Constructor ctr(**this, new_size);
+        PersistentPtr<data_type>::replace(ctr);
     }
-
-protected:
-
-    PersistentPtr<data_type> items_;
 };
 
 
