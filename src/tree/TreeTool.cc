@@ -9,10 +9,12 @@
  */
 
 #include "eckit/config/Resource.h"
-#include "eckit/filesystem/PathName.h"
-#include "eckit/runtime/Tool.h"
 #include "eckit/exception/Exceptions.h"
+#include "eckit/filesystem/PathName.h"
 #include "eckit/io/DataBlob.h"
+#include "eckit/runtime/Tool.h"
+#include "eckit/option/CmdArgs.h"
+#include "eckit/option/SimpleOption.h"
 
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
@@ -23,6 +25,7 @@
 #include "tree/PersistentBuffer.h"
 
 using namespace eckit;
+using namespace eckit::option;
 using namespace pmem;
 
 namespace treetool {
@@ -39,35 +42,48 @@ public: // methods
 
     virtual void run();
 
-private: // members
-
-    size_t pmemLength_;
-    
-    PathName pmemPath_;
+    static void usage(const std::string& tool);
 };
 
-// -------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------
 
 
 TreeTool::TreeTool(int argc, char** argv) :
-    Tool(argc, argv),
-    pmemLength_(Resource<size_t>("-length", 20 * 1024 * 1024)),
-    pmemPath_(Resource<std::string>("-path", ""))
-{
-
-    if (pmemPath_ == "") {
-        throw UserError("No pool specified. Use -path <pool_file>");
-    }
-}
+    Tool(argc, argv) {}
 
 
 TreeTool::~TreeTool() {}
 
 
-void TreeTool::run() {
-    eckit::Log::info() << "Inside the run routine" << std::endl;
+void TreeTool::usage(const std::string& tool) {
 
-    TreePool pool(pmemPath_, pmemLength_);
+    Log::info() << std::endl;
+    Log::info() << "Usage: " << tool << " [--key=value ...] <pool_file>" << std::endl;
+    Log::info() << std::flush;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
+
+void TreeTool::run() {
+
+    // Specify command line arguments
+
+    std::vector<Option*> options;
+    options.push_back(new SimpleOption<size_t>("size", "The size of the pool file to create"));
+
+    CmdArgs args(&usage, 1, options);
+
+    size_t pool_size = args.getLong("size", 20 * 1024 * 1024);
+    PathName path = args.args()[0];
+    Log::info() << "Specified pool: " << path << std::endl;
+
+    // ---------------------------------------------------------------------------------
+    // Now start the tool.
+
+    TreePool pool(path, pool_size);
 
     PersistentPtr<TreeRoot> root = pool.root();
 

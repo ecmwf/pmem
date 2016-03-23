@@ -25,7 +25,8 @@ ecbuild_add_executable(
     LIBS
         pmemwrapper
         eckit
-        ${PMEMOBJ_LIBS} )
+        ${PMEMOBJ_LIBS}
+        eckit_option )
 
 # ecbuild_add_library(
 
