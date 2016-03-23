@@ -26,34 +26,7 @@ using namespace pmem;
 
 namespace treetool {
 
-// -------------------------------------------------------------------------------------------------
-
-
-TreeNode::Constructor::Constructor(const std::string& name, const void* data, size_t length) :
-    name_(name),
-    data_(data),
-    length_(length) {
-
-    // Quick sanity check
-    ASSERT(data_ == 0 || length_ != 0);
-}
-
-
-void TreeNode::Constructor::make(TreeNode& object) const {
-
-    object.name_ = eckit::FixedString<12>(name_);
-    object.items_.nullify();
-    object.data_.nullify();
-
-    // If there is data attached to this node, then store it.
-    if (data_ != 0) {
-        PersistentBuffer::Constructor ctr(data_, length_);
-        object.data_.allocate(ctr);
-    }
-}
-
-
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 
 /// We actually store pairs of items in the vector, so here we create a constructor object for the
@@ -78,12 +51,11 @@ public: // methods
         object.first = value_;
 
         if (subkeys_.size() == 0) {
-            TreeNode::Constructor ctr("", blob_.buffer(), blob_.length());
+            TreeNode::Constructor ctr(blob_);
             object.second.allocate(ctr);
         } else {
-            TreeNode::Constructor ctr(subkeys_[0].first, 0, 0);
+            TreeNode::Constructor ctr(subkeys_[0].first, subkeys_, blob_);
             object.second.allocate(ctr);
-            object.second->addNode(subkeys_, blob_);
         }
     }
 
@@ -94,7 +66,56 @@ private: // members
     const eckit::DataBlob& blob_;
 };
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
+
+TreeNode::Constructor::Constructor(const DataBlob& blob) :
+    name_(""),
+    subkeys_(0),
+    blob_(blob) {
+
+    ASSERT(blob.length() != 0);
+}
+
+
+TreeNode::Constructor::Constructor(const std::string& name,
+                                   const std::vector<std::pair<std::string, std::string> >& subkeys,
+                                   const DataBlob& blob) :
+    name_(name),
+    subkeys_(NULL),
+    blob_(blob) {
+
+    if (subkeys.size() > 0)
+        subkeys_ = &subkeys;
+
+    ASSERT(blob.length() != 0);
+}
+
+
+void TreeNode::Constructor::make(TreeNode& object) const {
+
+    object.name_ = eckit::FixedString<12>(name_);
+    object.items_.nullify();
+    object.data_.nullify();
+
+    // If this is the final node in the chain, then we need to store the data! Otherwise we need to continue
+    // building the chain.
+    if (subkeys_) {
+        const std::vector<std::pair<std::string, std::string> >& sk(*subkeys_);
+
+        ASSERT(sk.size() > 0);
+        ASSERT(sk[0].first == name_);
+        std::vector<std::pair<std::string, std::string> > new_subkeys(sk.begin()+1, sk.end());
+        NodeItemConstructor ctr(sk[0].second, new_subkeys, blob_);
+        object.items_.push_back(ctr);
+    } else {
+        PersistentBuffer::Constructor ctr(blob_.buffer(), blob_.length());
+        object.data_.allocate(ctr);
+    }
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
 
 
 void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > key,

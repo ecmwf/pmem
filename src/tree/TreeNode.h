@@ -45,15 +45,23 @@ public: // Construction objects
 
     public: // methods
 
-        Constructor(const std::string& name, const void * data, size_t length);
+        /// Construct a leaf (data) node. Leaves do not have a name.
+        Constructor(const eckit::DataBlob& blob);
+
+        /// Construct a normal node, and its children.
+        Constructor(const std::string& name,
+                    const std::vector<std::pair<std::string, std::string> >& subkeys,
+                    const eckit::DataBlob& blob);
 
         virtual void make (TreeNode& object) const;
 
     private: // members
 
         std::string name_;
-        const void* data_;
-        size_t length_;
+
+        const std::vector<std::pair<std::string, std::string> >* subkeys_;
+
+        const eckit::DataBlob& blob_;
     };
 
 public: // types

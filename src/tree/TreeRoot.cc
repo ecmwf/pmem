@@ -12,6 +12,7 @@
 
 #include "eckit/log/Log.h"
 #include "eckit/io/DataBlob.h"
+#include "eckit/types/Types.h"
 
 #include "tree/TreeRoot.h"
 #include "tree/TreeNode.h"
@@ -62,13 +63,12 @@ void TreeRoot::addNode(const std::vector<std::pair<std::string, std::string> >& 
     // n.b. This could in principle be done in the TreeRoot constructor, if we assumed we
     //      knew the data schema in advance.
     if (node_.null()) {
-        TreeNode::Constructor ctr(key[0].first, 0, 0);
+        TreeNode::Constructor ctr(key[0].first, key, blob);
         node_.allocate(ctr);
     } else {
         ASSERT(node_->name() == key[0].first);
+        node_->addNode(key, blob);
     }
-
-    node_->addNode(key, blob);
 }
 
 // -------------------------------------------------------------------------------------------------
