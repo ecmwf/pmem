@@ -8,13 +8,21 @@
  * nor does it submit to any jurisdiction.
  */
 
+#include <iterator>
+
+#include "eckit/config/JSONConfiguration.h"
 #include "eckit/config/Resource.h"
 #include "eckit/exception/Exceptions.h"
 #include "eckit/filesystem/PathName.h"
 #include "eckit/io/DataBlob.h"
-#include "eckit/runtime/Tool.h"
+#include "eckit/io/FileHandle.h"
+#include "eckit/memory/ScopedPtr.h"
 #include "eckit/option/CmdArgs.h"
+#include "eckit/option/Separator.h"
 #include "eckit/option/SimpleOption.h"
+#include "eckit/parser/JSONDataBlob.h"
+#include "eckit/parser/JSONParser.h"
+#include "eckit/runtime/Tool.h"
 
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
@@ -74,6 +82,11 @@ void TreeTool::run() {
     std::vector<Option*> options;
     options.push_back(new SimpleOption<size_t>("size", "The size of the pool file to create"));
 
+    options.push_back(new Separator("Options for adding new leaves to the tree"));
+    options.push_back(new SimpleOption<bool>("insert", "Insert an element as specified by the pool and data keys"));
+    options.push_back(new SimpleOption<std::string>("key", "The key to insert. This is a json object of key-value pairs"));
+    options.push_back(new SimpleOption<PathName>("data", "The file containing the data to insert"));
+
     CmdArgs args(&usage, 1, options);
 
     size_t pool_size = args.getLong("size", 20 * 1024 * 1024);
@@ -89,12 +102,36 @@ void TreeTool::run() {
 
     Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
 
-    PersistentPtr<TreeNode> rootNode = root->rootNode();
-    Log::info() << "Node: " << (rootNode.null() ? "null" : "init") << std::endl;
+    // Deal with our special cases first
+    if (args.getBool("insert", false)) {
 
-    if (rootNode.null()) {
+        // TODO: We should have a cached in-memory tree object that is separate from the TreeRoot in persistent memory (this way it can
+        //       hold the decoded schema.
 
-        // We have an empty tree. Initialise it!
+        std::istringstream iss(args.getString("key"));
+        JSONParser parser(iss);
+        Value key_value = parser.parse();
+
+        ValueMap key_map(key_value);
+
+        // TODO: Send the parsed json via the schema to get a sorted key that should be inserted (this should be done inside the tree-object)
+        std::vector<std::pair<std::string, std::string> > insert_key;
+        for (ValueMap::const_iterator it = key_map.begin(); it != key_map.end(); ++it) {
+            insert_key.push_back(std::make_pair(std::string(it->first), std::string(it->second)));
+        }
+
+        // Get the data to store into a blob.
+        PathName data_path(args.getString("data"));
+        ScopedPtr<DataHandle> data_file(data_path.fileHandle());
+        Length len = data_file->openForRead();
+
+        JSONDataBlob blob(*data_file, len);
+        root->addNode(insert_key, blob);
+
+    } else if (root->rootNode().null()) {
+
+        // If the tree is empty, provide some default contents for demonstration purposes.
+
         std::vector<std::pair<std::string, std::string> > key;
         key.push_back(std::make_pair("type", "fc"));
         key.push_back(std::make_pair("param", "2t"));
@@ -117,59 +154,60 @@ void TreeTool::run() {
         key3.push_back(std::make_pair("day", "05"));
 
         std::string data("{\"text\": \"Example\"}");
-        DataBlobPtr blob(DataBlobFactory::build("json", data.c_str(), data.length()));
+        JSONDataBlob blob(data.c_str(), data.length());
 
         std::string data2("{\"text\": \"This is a second example\"}");
-        DataBlobPtr blob2(DataBlobFactory::build("json", data2.c_str(), data2.length()));
+        JSONDataBlob blob2(data2.c_str(), data2.length());
 
         std::string data3("{\"text\": \"We are finally getting somewhere!\"}");
-        DataBlobPtr blob3(DataBlobFactory::build("json", data3.c_str(), data3.length()));
+        JSONDataBlob blob3(data3.c_str(), data3.length());
 
         // For now, we aren't assuming feature/print-vector
-//        Log::info() << "Key: " << key << std::endl;
-//        Log::info() << "Key2: " << key2 << std::endl;
-//        Log::info() << "Key3: " << key3 << std::endl;
+        Log::info() << "Key: " << key << std::endl;
+        Log::info() << "Key2: " << key2 << std::endl;
+        Log::info() << "Key3: " << key3 << std::endl;
 
-        root->addNode(key, *blob);
-        root->addNode(key2, *blob2);
-        root->addNode(key3, *blob3);
+        root->addNode(key, blob);
+        root->addNode(key2, blob2);
+        root->addNode(key3, blob3);
 
-    } else {
-
-//        size_t cnt = rootNode->nodeCount();
-
-        Log::info() << *rootNode << std::endl;
-
-        Log::info() << "===================================" << std::endl;
-        rootNode->printTree(Log::info());
-        Log::info() << std::endl;
-        Log::info() << "===================================" << std::endl;
-
-        // Do a lookup
-        // N.B. This is done with a _map_, whereas the insertion is done with a _vector_
-        // TODO: Decide how we want to do the data schema, otherwise this could end up with weird duplication
-        //       (e.g. keys with different orders looking the same on lookup).
-        std::map<FixedString<12>, FixedString<12> > lookup;
-        lookup["type"] = std::string("fc");
-        lookup["param"] = std::string("2t");
-        lookup["year"] = std::string("2016");
-        lookup["month"] = std::string("03");
-
-        Log::info() << lookup << std::endl;
-        std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
-
-        Log::info() << "[";
-        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
-             it != nodes.end(); ++it) {
-            Log::info() << (*it)->name();
-            if ((*it)->leaf()) {
-                std::string tmp(static_cast<const char*>((*it)->data()), (*it)->dataSize());
-                Log::info() << " -- " << tmp << std::endl;
-            }
-            Log::info() << ", ";
-        }
-        Log::info() << "]" << std::endl;
     }
+
+
+    PersistentPtr<TreeNode> rootNode = root->rootNode();
+
+    Log::info() << *rootNode << std::endl;
+
+    Log::info() << "===================================" << std::endl;
+    rootNode->printTree(Log::info());
+    Log::info() << std::endl;
+    Log::info() << "===================================" << std::endl;
+
+    // Do a lookup
+    // N.B. This is done with a _map_, whereas the insertion is done with a _vector_
+    // TODO: Decide how we want to do the data schema, otherwise this could end up with weird duplication
+    //       (e.g. keys with different orders looking the same on lookup).
+    std::map<FixedString<12>, FixedString<12> > lookup;
+    lookup["type"] = std::string("fc");
+    lookup["param"] = std::string("2t");
+    lookup["year"] = std::string("2016");
+    lookup["month"] = std::string("03");
+
+    Log::info() << lookup << std::endl;
+    std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
+
+    Log::info() << "[";
+    for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+         it != nodes.end(); ++it) {
+        Log::info() << (*it)->name();
+        if ((*it)->leaf()) {
+            std::string tmp(static_cast<const char*>((*it)->data()), (*it)->dataSize());
+            Log::info() << " -- " << tmp << std::endl;
+        }
+        Log::info() << ", ";
+    }
+    Log::info() << "]" << std::endl;
+
 }
 
 // -------------------------------------------------------------------------------------------------
