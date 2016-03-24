@@ -27,7 +27,7 @@ namespace eckit {
 }
 
 
-namespace treetool {
+namespace tree {
 
 // -------------------------------------------------------------------------------------------------
 
@@ -68,6 +68,6 @@ const eckit::FixedString<8> TreeRootTag = "999TREE9";
 
 // -------------------------------------------------------------------------------------------------
 
-}
+} // namespace tree
 
 #endif // tree_TreeRoot_H

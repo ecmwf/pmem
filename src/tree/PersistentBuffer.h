@@ -23,7 +23,7 @@ namespace eckit {
 }
 
 
-namespace treetool {
+namespace tree {
 
 // -------------------------------------------------------------------------------------------------
 
@@ -72,6 +72,6 @@ private: // friends
 
 // -------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree
 
 #endif // tree_PersistentBuffer_H

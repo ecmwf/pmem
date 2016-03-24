@@ -21,7 +21,7 @@ using namespace eckit;
 using namespace pmem;
 
 
-namespace treetool {
+namespace tree {
 
 // -------------------------------------------------------------------------------------------------
 
@@ -73,4 +73,4 @@ void TreeRoot::addNode(const std::vector<std::pair<std::string, std::string> >& 
 
 // -------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree

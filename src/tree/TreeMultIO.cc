@@ -20,7 +20,7 @@
 using namespace eckit;
 using namespace multio;
 
-namespace treetool {
+namespace tree {
 
 // ------------------------------------------------------------------------------------------------
 
@@ -69,4 +69,4 @@ void TreeMultIO::print(std::ostream& os) const
 
 // ------------------------------------------------------------------------------------------------
 
-} // treetool
+} // tree

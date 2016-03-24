@@ -24,7 +24,7 @@ using namespace eckit;
 using namespace pmem;
 
 
-namespace treetool {
+namespace tree {
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -259,4 +259,4 @@ std::ostream& operator<< (std::ostream& os, const TreeNode& node) {
 
 // -------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree

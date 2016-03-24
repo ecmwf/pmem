@@ -26,28 +26,28 @@ using namespace pmem;
 // Register this type with the type management
 // TODO: Can we ensure that there are no type-conflicts?
 
-namespace treetool {
+namespace tree {
     class PersistentBuffer;
 }
 
 
-template<> int pmem::PersistentPtr<treetool::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> int pmem::PersistentPtr<treetool::TreeNode>::type_id = 1;
+template<> int pmem::PersistentPtr<tree::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> int pmem::PersistentPtr<tree::TreeNode>::type_id = 1;
 
 // Data types for the persistent vector. One holds the std::pairs, the other the vector holding them.
 //template<> int pmem::PersistentVector<
-//        std::pair<eckit::FixedString<12>, pmem::PersistentPtr<treetool::TreeNode> > >::type_id = 2;
+//        std::pair<eckit::FixedString<12>, pmem::PersistentPtr<tree::TreeNode> > >::type_id = 2;
 template<> int pmem::PersistentPtr<
-        pmem::PersistentVector<std::pair<eckit::FixedString<12>, pmem::PersistentPtr<treetool::TreeNode> > >::data_type
+        pmem::PersistentVector<std::pair<eckit::FixedString<12>, pmem::PersistentPtr<tree::TreeNode> > >::data_type
         >::type_id = 2;
 template<> int pmem::PersistentPtr<
-        std::pair<eckit::FixedString<12>, pmem::PersistentPtr<treetool::TreeNode> > >::type_id = 3;
+        std::pair<eckit::FixedString<12>, pmem::PersistentPtr<tree::TreeNode> > >::type_id = 3;
 
-template<> int pmem::PersistentPtr<treetool::PersistentBuffer>::type_id = 4;
+template<> int pmem::PersistentPtr<tree::PersistentBuffer>::type_id = 4;
 
 
 
-namespace treetool {
+namespace tree {
 // -------------------------------------------------------------------------------------------------
 
 /*
@@ -77,4 +77,4 @@ PersistentPtr<TreeRoot> TreePool::root() const {
 
 // -------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree

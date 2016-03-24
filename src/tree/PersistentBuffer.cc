@@ -22,7 +22,7 @@
 using namespace eckit;
 
 
-namespace treetool {
+namespace tree {
 
 // -------------------------------------------------------------------------------------------------
 
@@ -59,4 +59,4 @@ const void * PersistentBuffer::data () const {
 
 // -------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree

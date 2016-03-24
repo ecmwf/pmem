@@ -23,7 +23,7 @@
 
 #include "tree/TreePool.h"
 
-namespace treetool {
+namespace tree {
 
 // ------------------------------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ private: // members
 
 // ------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree
 
 #endif // tree_TreeNode_H
 

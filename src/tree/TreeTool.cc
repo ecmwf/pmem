@@ -28,7 +28,7 @@ using namespace eckit;
 using namespace eckit::option;
 using namespace pmem;
 
-namespace treetool {
+namespace tree {
 
 // -------------------------------------------------------------------------------------------------
 
@@ -174,12 +174,12 @@ void TreeTool::run() {
 
 // -------------------------------------------------------------------------------------------------
 
-} // namespace treetool
+} // namespace tree
 
 
 int main(int argc, char** argv) {
 
-    treetool::TreeTool app(argc, argv);
+    tree::TreeTool app(argc, argv);
 
     app.start();
 
