@@ -1,24 +1,18 @@
-list(APPEND COMMON_FILES
-    TreeRoot.h
-    TreeRoot.cc
-    TreePool.h
-    TreePool.cc
-    TreeNode.h
-    TreeNode.cc
-    TreeSchema.h
-    TreeSchema.cc
-    PersistentBuffer.h
-    PersistentBuffer.cc
-)
+ecbuild_add_library(
 
-
-ecbuild_add_executable(
-
-    TARGET treetool
+    TARGET pmem_tree
 
     SOURCES
-        TreeTool.cc
-        ${COMMON_FILES}
+        TreeRoot.h
+        TreeRoot.cc
+        TreePool.h
+        TreePool.cc
+        TreeNode.h
+        TreeNode.cc
+        TreeSchema.h
+        TreeSchema.cc
+        PersistentBuffer.h
+        PersistentBuffer.cc
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}
@@ -27,25 +21,21 @@ ecbuild_add_executable(
     LIBS
         pmemwrapper
         eckit
-        ${PMEMOBJ_LIBS}
+        ${PMEMOBJ_LIBS} )
+
+
+ecbuild_add_executable(
+
+    TARGET treetool
+
+    SOURCES
+        TreeTool.cc
+
+    INCLUDES
+        ${ECKIT_INCLUDE_DIRS}
+        ${PMEMOBJ_INCLUDE_DIRS}
+
+    LIBS
+        eckit
+        pmem_tree
         eckit_option )
-
-# ecbuild_add_library(
-
-#     TARGET multio_pmem
-
-#     SOURCES
-#         TreeMultIO.cc
-#         TreeMultIO.h
-#         ${COMMON_FILES}
-
-#     PRIVATE_INCLUDES
-#         ${MULTIO_INCLUDE_DIRS}
-#         ${ECKIT_INCLUDE_DIRS}
-#         ${PMEMOBJ_INCLUDE_DIRS}
-
-#     LIBS
-#         multio
-#         pmemwrapper
-#         eckit
-#         ${PMEMOBJ_LIBS} )
