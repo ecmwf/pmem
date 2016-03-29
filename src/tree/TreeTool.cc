@@ -28,10 +28,11 @@
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
 
+#include "tree/PersistentBuffer.h"
+#include "tree/TreeNode.h"
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"
-#include "tree/TreeNode.h"
-#include "tree/PersistentBuffer.h"
+#include "tree/TreeSchema.h"
 
 using namespace eckit;
 using namespace eckit::option;
@@ -81,7 +82,11 @@ void TreeTool::run() {
     // Specify command line arguments
 
     std::vector<Option*> options;
+
+    options.push_back(new Separator("Options for creating a new pool"));
+    options.push_back(new SimpleOption<bool>("create", "Insert an element as specified by the pool and data keys"));
     options.push_back(new SimpleOption<size_t>("size", "The size of the pool file to create"));
+    options.push_back(new SimpleOption<PathName>("schema", "The file containing the data schema"));
 
     options.push_back(new Separator("Options for adding new leaves to the tree"));
     options.push_back(new SimpleOption<bool>("insert", "Insert an element as specified by the pool and data keys"));
@@ -107,6 +112,17 @@ void TreeTool::run() {
 
         Log::status() << "Attempting to create new pool";
 
+        PathName schema_path(args.getString("schema"));
+        TreeSchema schema(schema_path);
+
+        StringDict inkey;
+        inkey["type"] = "fc";
+        inkey["param"] = "2t";
+        inkey["year"] = "2016";
+        inkey["month"] = "03";
+        inkey["subday"] = "04";
+
+        schema.processInsertKey(inkey);
     }
 
     // Deal with our special cases first

@@ -14,8 +14,14 @@
 #ifndef tree_TreeSchema_H
 #define tree_TreeSchema_H
 
+#include <vector>
+#include <utility>
+#include <string>
+
+#include "eckit/types/Types.h" // Can't forward declare StringDict, as it is a typedef
+
 namespace eckit {
-    class DataHandle;
+    class PathName;
 }
 
 namespace tree {
@@ -32,9 +38,14 @@ public: // methods
     // iv) Convert map --> vector for insertion
     // v) Check completeness of supplied queries.
 
-    TreeSchema(eckit::DataHandle& s);
+    TreeSchema(eckit::PathName& path);
     ~TreeSchema();
 
+    std::vector<std::pair<std::string, std::string> > processInsertKey(const eckit::StringDict& key) const;
+
+private: // members
+
+    std::vector<std::string> keys_;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
