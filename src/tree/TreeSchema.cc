@@ -36,25 +36,36 @@ TreeSchema::TreeSchema(PathName& path) {
     std::string json_str(buf, buf.size());
     std::istringstream iss(json_str);
 
+    init(iss);
+}
+
+TreeSchema::TreeSchema(std::istream& s) {
+    init(s);
+}
+
+TreeSchema::~TreeSchema() {}
+
+
+void TreeSchema::init(std::istream &s) {
+
     // Parse the data as a value
-    JSONParser parser(iss);
+    JSONParser parser(s);
     Value parsed(parser.parse());
 
     if (!parsed.isList())
         throw UserError("Supplied tree-schema must be a list", Here());
+
     ValueList schema_list(parsed.as<ValueList>());
 
+    // TODO: Increase the complexity of the scheme (e.g. max/min values, data types, ...)
+    keys_.clear();
     keys_.reserve(schema_list.size());
     for (ValueList::const_iterator it = schema_list.begin(); it != schema_list.end(); ++it) {
         keys_.push_back(std::string(*it));
     }
 
-    // TODO: Increase the complexity of the scheme (e.g. max/min values, data types, ...)
-
     Log::info() << "Initialised schema: " << keys_ << std::endl;
 }
-
-TreeSchema::~TreeSchema() {}
 
 
 std::vector<std::pair<std::string, std::string> > TreeSchema::processInsertKey(const StringDict& inkey) const {

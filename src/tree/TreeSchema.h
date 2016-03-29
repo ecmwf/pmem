@@ -39,9 +39,15 @@ public: // methods
     // v) Check completeness of supplied queries.
 
     TreeSchema(eckit::PathName& path);
+    TreeSchema(std::istream& s);
     ~TreeSchema();
 
     std::vector<std::pair<std::string, std::string> > processInsertKey(const eckit::StringDict& key) const;
+
+private: // methods
+
+    /// Do the work behind the constructors
+    void init(std::istream& s);
 
 private: // members
 
