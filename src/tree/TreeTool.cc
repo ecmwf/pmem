@@ -23,6 +23,7 @@
 #include "eckit/parser/JSONDataBlob.h"
 #include "eckit/parser/JSONParser.h"
 #include "eckit/runtime/Tool.h"
+#include "eckit/types/Types.h"
 
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
@@ -102,23 +103,25 @@ void TreeTool::run() {
 
     Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
 
-    TreeObject tree(*root);
+    if (args.getBool("create", false)) {
+
+        Log::status() << "Attempting to create new pool";
+
+    }
 
     // Deal with our special cases first
     if (args.getBool("insert", false)) {
+
+        TreeObject tree(*root);
 
         // TODO: We should have a cached in-memory tree object that is separate from the TreeRoot in persistent memory (this way it can
         //       hold the decoded schema.
 
         std::istringstream iss(args.getString("key"));
         JSONParser parser(iss);
-        Value key_value = parser.parse();
 
-        ValueMap key_map(key_value);
-        std::map<std::string, std::string> key;
-        for (ValueMap::const_iterator it = key_map.begin(); it != key_map.end(); ++it) {
-            key[std::string(it->first)] = std::string(it->second);
-        }
+        StringDict key;
+        JSONParser::toStrDict(parser.parse(), key);
 
         // Get the data to store into a blob.
         PathName data_path(args.getString("data"));

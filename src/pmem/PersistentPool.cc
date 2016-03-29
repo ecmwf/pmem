@@ -82,7 +82,10 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 }
 
 
-PersistentPool::~PersistentPool() {}
+PersistentPool::~PersistentPool() {
+    Log::info() << "Closing persistent pool." << std::endl;
+    ::pmemobj_close(pool_);
+}
 
 // -------------------------------------------------------------------------------------------------
 

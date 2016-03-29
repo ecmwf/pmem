@@ -5,6 +5,8 @@ list(APPEND COMMON_FILES
     TreePool.cc
     TreeNode.h
     TreeNode.cc
+    TreeSchema.h
+    TreeSchema.cc
     PersistentBuffer.h
     PersistentBuffer.cc
 )
