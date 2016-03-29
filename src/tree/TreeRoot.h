@@ -16,6 +16,7 @@
 #ifndef tree_TreeRoot_H
 #define tree_TreeRoot_H
 
+#include "eckit/memory/NonCopyable.h"
 #include "eckit/types/FixedString.h"
 
 #include "pmem/PersistentVector.h"
@@ -65,6 +66,36 @@ private: // members
 // A consistent definition of the tag for comparison purposes.
 const eckit::FixedString<8> TreeRootTag = "999TREE9";
 
+
+// -------------------------------------------------------------------------------------------------
+
+/// A volatile tree object, which wraps TreeRoot and allows it to perform in memory caching, schema management,
+/// etc. that is decoupled to some degree from the format of what is stored.
+
+class TreeObject : private eckit::NonCopyable {
+
+public: // methods
+
+    TreeObject(TreeRoot& root);
+    ~TreeObject();
+
+    void addNode(const std::map<std::string, std::string>& key, const eckit::DataBlob& blob);
+
+protected: // methods
+
+    void print(std::ostream&) const;
+
+private: // members
+
+    TreeRoot& root_;
+
+private: // friends
+
+    friend std::ostream& operator<<(std::ostream& os, const TreeObject& p) {
+        p.print(os);
+        return os;
+    }
+};
 
 // -------------------------------------------------------------------------------------------------
 

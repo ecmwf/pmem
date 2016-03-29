@@ -102,6 +102,8 @@ void TreeTool::run() {
 
     Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
 
+    TreeObject tree(*root);
+
     // Deal with our special cases first
     if (args.getBool("insert", false)) {
 
@@ -113,11 +115,9 @@ void TreeTool::run() {
         Value key_value = parser.parse();
 
         ValueMap key_map(key_value);
-
-        // TODO: Send the parsed json via the schema to get a sorted key that should be inserted (this should be done inside the tree-object)
-        std::vector<std::pair<std::string, std::string> > insert_key;
+        std::map<std::string, std::string> key;
         for (ValueMap::const_iterator it = key_map.begin(); it != key_map.end(); ++it) {
-            insert_key.push_back(std::make_pair(std::string(it->first), std::string(it->second)));
+            key[std::string(it->first)] = std::string(it->second);
         }
 
         // Get the data to store into a blob.
@@ -126,7 +126,7 @@ void TreeTool::run() {
         Length len = data_file->openForRead();
 
         JSONDataBlob blob(*data_file, len);
-        root->addNode(insert_key, blob);
+        tree.addNode(key, blob);
 
     } else if (root->rootNode().null()) {
 

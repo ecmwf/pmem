@@ -59,6 +59,8 @@ void TreeRoot::addNode(const std::vector<std::pair<std::string, std::string> >& 
 
     ASSERT(key.size() != 0);
 
+    Log::info() << "addNode: " << key << std::endl << std::flush;
+
     // If we don't yet have a root node, we need to create it.
     // n.b. This could in principle be done in the TreeRoot constructor, if we assumed we
     //      knew the data schema in advance.
@@ -69,6 +71,34 @@ void TreeRoot::addNode(const std::vector<std::pair<std::string, std::string> >& 
         ASSERT(node_->name() == key[0].first);
         node_->addNode(key, blob);
     }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+TreeObject::TreeObject(TreeRoot &root) :
+    root_(root) {}
+
+TreeObject::~TreeObject() {}
+
+void TreeObject::print(std::ostream& os) const {
+    os << "TreeObject [TreeRoot wrapper]";
+}
+
+void TreeObject::addNode(const std::map<std::string, std::string>& key, const DataBlob &blob) {
+
+    // Convert key into a list with order --> ...
+    // TODO: Insert schema-related stuff here
+
+    for (std::map<std::string, std::string>::const_iterator it = key.begin(); it != key.end(); ++it) {
+        Log::info() << "ELEM: " << it->first << ", " << it->second << std::endl;
+    }
+    //Log::info() << "Map key: " << key << std::endl;
+    std::vector<std::pair<std::string, std::string> > sorted_key;
+    sorted_key.reserve(key.size());
+    sorted_key.insert(sorted_key.begin(), key.begin(), key.end());
+    Log::info() << "Sorted key: " << sorted_key << std::endl;
+
+    root_.addNode(sorted_key, blob);
 }
 
 // -------------------------------------------------------------------------------------------------

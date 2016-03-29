@@ -124,6 +124,8 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
 
     // Check that this is supposed to be a subkey of this element.
     // TODO: What happens if we repeat eter a key --> should fail here. TEST.
+    Log::info() << "NM: " << name_ << std::endl;
+    Log::info() << "KY: " << key[0].first << std::endl;
     ASSERT(key.size() > 0);
     ASSERT(name_ == key[0].first);
 
