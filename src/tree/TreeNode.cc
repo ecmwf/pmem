@@ -40,7 +40,7 @@ class NodeItemConstructor : public AtomicConstructor<TreeNode::Item> {
 public: // methods
 
     NodeItemConstructor(const eckit::FixedString<12>& value,
-                        const std::vector<std::pair<std::string, std::string> >& subkeys,
+                        TreeNode::KeyType& subkeys,
                         const eckit::DataBlob& blob) :
         value_(value),
         subkeys_(subkeys),
@@ -63,7 +63,7 @@ public: // methods
 private: // members
 
     const eckit::FixedString<12>& value_;
-    const std::vector<std::pair<std::string, std::string> >& subkeys_;
+    const TreeNode::KeyType& subkeys_;
     const eckit::DataBlob& blob_;
 };
 
@@ -79,9 +79,7 @@ TreeNode::Constructor::Constructor(const DataBlob& blob) :
 }
 
 
-TreeNode::Constructor::Constructor(const std::string& name,
-                                   const std::vector<std::pair<std::string, std::string> >& subkeys,
-                                   const DataBlob& blob) :
+TreeNode::Constructor::Constructor(const std::string& name, const KeyType& subkeys, const DataBlob& blob) :
     name_(name),
     subkeys_(NULL),
     blob_(blob) {
@@ -102,7 +100,7 @@ void TreeNode::Constructor::make(TreeNode& object) const {
     // If this is the final node in the chain, then we need to store the data! Otherwise we need to continue
     // building the chain.
     if (subkeys_) {
-        const std::vector<std::pair<std::string, std::string> >& sk(*subkeys_);
+        const KeyType& sk(*subkeys_);
 
         ASSERT(sk.size() > 0);
         ASSERT(sk[0].first == name_);
@@ -119,8 +117,7 @@ void TreeNode::Constructor::make(TreeNode& object) const {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > key,
-                       const eckit::DataBlob& blob) {
+void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
 
     // Check that this is supposed to be a subkey of this element.
     // TODO: What happens if we repeat eter a key --> should fail here. TEST.
@@ -137,7 +134,7 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
     for (size_t i = 0; i < items_.size(); i++) {
         if (items_[i].first == value) {
 
-            std::vector<std::pair<std::string, std::string> > subkeys(key.begin()+1, key.end());
+            KeyType subkeys(key.begin()+1, key.end());
             items_[i].second->addNode(subkeys, blob);
             return;
         }
@@ -146,7 +143,7 @@ void TreeNode::addNode(const std::vector<std::pair<std::string, std::string> > k
     // TODO: What happens if we are adding data in again...
 
     // We have reached the bottom of the known tree. Create new nodes from here-on down.
-    std::vector<std::pair<std::string, std::string> > subkeys(key.begin()+1, key.end());
+    KeyType subkeys(key.begin()+1, key.end());
     NodeItemConstructor ctr(value, subkeys, blob);
     items_.push_back(ctr);
 }

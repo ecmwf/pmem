@@ -39,6 +39,12 @@ class PersistentBuffer;
 
 class TreeNode {
 
+public: // types
+
+    typedef std::pair<eckit::FixedString<12>, pmem::PersistentPtr<TreeNode> > Item;
+
+    typedef std::vector<std::pair<std::string, std::string> > KeyType;
+
 public: // Construction objects
 
     class Constructor : public pmem::AtomicConstructor<TreeNode> {
@@ -50,7 +56,7 @@ public: // Construction objects
 
         /// Construct a normal node, and its children.
         Constructor(const std::string& name,
-                    const std::vector<std::pair<std::string, std::string> >& subkeys,
+                    const KeyType& subkeys,
                     const eckit::DataBlob& blob);
 
         virtual void make (TreeNode& object) const;
@@ -59,19 +65,10 @@ public: // Construction objects
 
         std::string name_;
 
-        const std::vector<std::pair<std::string, std::string> >* subkeys_;
+        const KeyType* subkeys_;
 
         const eckit::DataBlob& blob_;
     };
-
-public: // types
-
-    typedef std::pair<eckit::FixedString<12>, pmem::PersistentPtr<TreeNode> > Item;
-
-//    class Visitor {
-//    public:
-//        void operator() (const TreeNode& node);
-//    };
 
 public: // methods
 
@@ -80,8 +77,7 @@ public: // methods
     /// @param name - Select which key-value pair is examined to select sub-sub-nodes
 //    void addNode(const std::string& key, const std::string& name, const eckit::DataBlob& blob);
 
-    void addNode(const std::vector<std::pair<std::string, std::string> > key,
-                 const eckit::DataBlob& blob);
+    void addNode(const KeyType& key, const eckit::DataBlob& blob);
 
 
     size_t nodeCount() const;

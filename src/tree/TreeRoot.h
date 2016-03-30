@@ -18,6 +18,7 @@
 
 #include "eckit/memory/NonCopyable.h"
 #include "eckit/types/FixedString.h"
+#include "eckit/types/Types.h"
 
 #include "pmem/PersistentVector.h"
 
@@ -36,6 +37,10 @@ namespace tree {
 
 class TreeRoot {
 
+public: // types
+
+    typedef TreeNode::KeyType KeyType;
+
 public: // Construction objects
 
     class Constructor : public pmem::AtomicConstructor<TreeRoot> {
@@ -49,8 +54,7 @@ public: // methods
 
     bool valid() const;
 
-    void addNode(const std::vector<std::pair<std::string, std::string> >& key,
-                 const eckit::DataBlob& blob);
+    void addNode(const KeyType& key, const eckit::DataBlob& blob);
 
     pmem::PersistentPtr<TreeNode> rootNode() const;
 
@@ -74,12 +78,16 @@ const eckit::FixedString<8> TreeRootTag = "999TREE9";
 
 class TreeObject : private eckit::NonCopyable {
 
+public: // types
+
+    typedef TreeRoot::KeyType KeyType;
+
 public: // methods
 
     TreeObject(TreeRoot& root);
     ~TreeObject();
 
-    void addNode(const std::map<std::string, std::string>& key, const eckit::DataBlob& blob);
+    void addNode(const eckit::StringDict& key, const eckit::DataBlob& blob);
 
 protected: // methods
 

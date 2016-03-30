@@ -54,8 +54,7 @@ PersistentPtr<TreeNode> TreeRoot::rootNode() const {
 }
 
 
-void TreeRoot::addNode(const std::vector<std::pair<std::string, std::string> >& key,
-                       const eckit::DataBlob& blob) {
+void TreeRoot::addNode(const KeyType& key, const eckit::DataBlob& blob) {
 
     ASSERT(key.size() != 0);
 
@@ -84,16 +83,16 @@ void TreeObject::print(std::ostream& os) const {
     os << "TreeObject [TreeRoot wrapper]";
 }
 
-void TreeObject::addNode(const std::map<std::string, std::string>& key, const DataBlob &blob) {
+void TreeObject::addNode(const StringDict& key, const DataBlob &blob) {
 
     // Convert key into a list with order --> ...
     // TODO: Insert schema-related stuff here
 
-    for (std::map<std::string, std::string>::const_iterator it = key.begin(); it != key.end(); ++it) {
+    for (StringDict::const_iterator it = key.begin(); it != key.end(); ++it) {
         Log::info() << "ELEM: " << it->first << ", " << it->second << std::endl;
     }
     //Log::info() << "Map key: " << key << std::endl;
-    std::vector<std::pair<std::string, std::string> > sorted_key;
+    KeyType sorted_key;
     sorted_key.reserve(key.size());
     sorted_key.insert(sorted_key.begin(), key.begin(), key.end());
     Log::info() << "Sorted key: " << sorted_key << std::endl;

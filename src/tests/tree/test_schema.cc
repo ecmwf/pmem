@@ -17,6 +17,7 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "tree/TreeSchema.h"
+#include "tree/TreeNode.h"
 
 using namespace std;
 using namespace eckit;
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE( test_schema_incorrect_key_count )
 
     // With the correct number of arguments, this should pass
     key["key2"] = "value2";
-    std::vector<std::pair<std::string, std::string> > k = schema.processInsertKey(key);
+    TreeNode::KeyType k = schema.processInsertKey(key);
     BOOST_CHECK_EQUAL(k.size(), 2);
 
     // And again it should
@@ -76,7 +77,7 @@ BOOST_AUTO_TEST_CASE( test_schema_key_ordering )
     key["key1"] = "value1";
     key["key2"] = "value2";
 
-    std::vector<std::pair<std::string, std::string> > k = schema.processInsertKey(key);
+    TreeNode::KeyType k = schema.processInsertKey(key);
     BOOST_CHECK_EQUAL(k.size(), 2);
 
     // Check that the keys are returned in the order specified in the schema
