@@ -99,66 +99,25 @@ public: // Constructors
 public: // methods
 
     /// Number of elements in the list
-    size_t size() const {
-        consistency_check();
-        ASSERT(nelem_ <= allocatedSize_);
-        return nelem_;
-    }
+    size_t size() const;
 
     /// Returns true if the number of elements is equal to the available space
-    bool full() const {
-        consistency_check();
-        ASSERT(nelem_ <= allocatedSize_);
-        return (nelem_ == allocatedSize_);
-    }
+    bool full() const;
 
     /// Append an element to the list.
-    void push_back(const AtomicConstructor<T>& constructor) {
-        consistency_check();
-        if (nelem_ == allocatedSize_)
-            throw eckit::OutOfRange("PersistentVector is full", Here());
-
-        elements_[nelem_].allocate(constructor);
-
-        // n.b. This update is NOT ATOMIC, and therefore creates the requirement to call consistency_check() to ensure
-        //      that we haven't had a power-off-power-on incident.
-        update_nelem(nelem_ + 1);
-    }
+    void push_back(const AtomicConstructor<T>& constructor);
 
     /// Return a given element in the list
-    const T& operator[] (size_t i) const {
-        return *elements_[i];
-    }
+    const T& operator[] (size_t i) const;
 
     /// As the nelem_ member is updated after allocation has taken place, and hence non-atomically, we need to
     /// be able to check that its value is correct.
-    void consistency_check() const {
-
-        if (nelem_ != 0)
-            ASSERT(!elements_[nelem_-1].null());
-
-        // Keep looping until the _next_ element is null (or we reach the end). At that point everything is correct.
-        bool updated = false;
-        size_t n;
-        for (n = nelem_; n < allocatedSize_; n++) {
-            if (elements_[n].null())
-                break;
-            updated = true;
-        }
-
-        // If we have modified nelem_, it needs to be persisted.
-        if (updated)
-            update_nelem(n);
-    }
+    void consistency_check() const;
 
 protected: // methods
 
     /// Update the number of elements, ensuring that the result is persisted
-    void update_nelem(size_t nelem) const {
-
-        nelem_ = nelem;
-        ::pmemobj_persist(::pmemobj_pool_by_ptr(&nelem_), &nelem_, sizeof(nelem_));
-    }
+    void update_nelem(size_t nelem) const;
 
 private: // members
 
@@ -200,26 +159,118 @@ public:
         PersistentPtr<data_type>::get()->push_back(constructor);
     }
 
-    size_t size() const {
-        return PersistentPtr<data_type>::null() ? 0 : (*this)->size();
-    }
+    size_t size() const;
 
-    const T& operator[] (size_t i) const {
-        return (*PersistentPtr<data_type>::get())[i];
-    }
+    const T& operator[] (size_t i) const;
 
-    void resize(size_t new_size) {
-        ASSERT(!PersistentPtr<data_type>::null());
-
-        // Atomically replace the data with a resized copy.
-        typename data_type::Constructor ctr(**this, new_size);
-        PersistentPtr<data_type>::replace(ctr);
-    }
+    void resize(size_t new_size);
 };
 
 
 //----------------------------------------------------------------------------------------------------------------------
 
+
+/// Number of elements in the list
+template <typename T>
+size_t PersistentVectorData<T>::size() const {
+
+    consistency_check();
+
+    ASSERT(nelem_ <= allocatedSize_);
+    return nelem_;
+}
+
+
+/// Returns true if the number of elements is equal to the available space
+template <typename T>
+bool PersistentVectorData<T>::full() const {
+
+    consistency_check();
+
+    ASSERT(nelem_ <= allocatedSize_);
+    return (nelem_ == allocatedSize_);
+}
+
+
+/// Append an element to the list.
+template<typename T>
+void PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor) {
+
+    consistency_check();
+
+    if (nelem_ == allocatedSize_)
+        throw eckit::OutOfRange("PersistentVector is full", Here());
+
+    elements_[nelem_].allocate(constructor);
+
+    // n.b. This update is NOT ATOMIC, and therefore creates the requirement to call consistency_check() to ensure
+    //      that we haven't had a power-off-power-on incident.
+    update_nelem(nelem_ + 1);
+}
+
+
+/// Return a given element in the list
+template<typename T>
+const T& PersistentVectorData<T>::operator[] (size_t i) const {
+    return *elements_[i];
+}
+
+
+/// As the nelem_ member is updated after allocation has taken place, and hence non-atomically, we need to
+/// be able to check that its value is correct.
+template<typename T>
+void PersistentVectorData<T>::consistency_check() const {
+
+    if (nelem_ != 0)
+        ASSERT(!elements_[nelem_-1].null());
+
+    // Keep looping until the _next_ element is null (or we reach the end). At that point everything is correct.
+    bool updated = false;
+    size_t n;
+    for (n = nelem_; n < allocatedSize_; n++) {
+        if (elements_[n].null())
+            break;
+        updated = true;
+    }
+
+    // If we have modified nelem_, it needs to be persisted.
+    if (updated)
+        update_nelem(n);
+}
+
+
+/// Update the number of elements, ensuring that the result is persisted
+template <typename T>
+void PersistentVectorData<T>::update_nelem(size_t nelem) const {
+
+    nelem_ = nelem;
+    ::pmemobj_persist(::pmemobj_pool_by_ptr(&nelem_), &nelem_, sizeof(nelem_));
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
+
+template <typename T>
+size_t PersistentVector<T>::size() const {
+    return PersistentPtr<data_type>::null() ? 0 : (*this)->size();
+}
+
+
+template <typename T>
+const T& PersistentVector<T>::operator[] (size_t i) const {
+    return (*PersistentPtr<data_type>::get())[i];
+}
+
+
+template <typename T>
+void PersistentVector<T>::resize(size_t new_size) {
+    ASSERT(!PersistentPtr<data_type>::null());
+
+    // Atomically replace the data with a resized copy.
+    typename data_type::Constructor ctr(**this, new_size);
+    PersistentPtr<data_type>::replace(ctr);
+}
 
 
 //----------------------------------------------------------------------------------------------------------------------
