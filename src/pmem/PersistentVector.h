@@ -51,44 +51,16 @@ public: // Constructors
     public: // methods
 
         /// Normal constructor
-        Constructor(size_t max_size) :
-            maxSize_(max_size),
-            sourceVector_(0) {}
+        Constructor(size_t max_size);
 
         /// Copy constructor
-        Constructor(const PersistentVectorData<T>& source, size_t max_size) :
-            maxSize_(max_size),
-            sourceVector_(&source) {
+        Constructor(const PersistentVectorData<T>& source, size_t max_size);
 
-            ASSERT(max_size > source.nelem_);
-        }
-
-        virtual void make(PersistentVectorData<T>& object) const {
-
-            object.allocatedSize_ = maxSize_;
-
-            // If we are copying an existing vector, then transfer the data across
-            size_t i = 0;
-            if (sourceVector_) {
-                object.nelem_ = sourceVector_->size();  // n.b. enforces consistency check.
-                for (; i < sourceVector_->nelem_; i++) {
-                    object.elements_[i] = sourceVector_->elements_[i];
-                }
-            } else {
-                object.nelem_ = 0;
-            }
-
-            // And nullify the remaining elements.
-            for (; i < maxSize_; i++) {
-                object.elements_[i].nullify();
-            }
-        }
+        virtual void make(PersistentVectorData<T>& object) const;
 
         /// Return the size in bytes. This is variable depending on the number of elements
         /// stored in the vector.
-        virtual size_t size() const {
-            return sizeof(PersistentVectorData<T>) + (maxSize_ - 1) * sizeof(PersistentPtr<T>);
-        }
+        virtual size_t size() const;
 
     private: // members
 
@@ -140,24 +112,7 @@ class PersistentVector : public PersistentPtr<PersistentVectorData<T> > {
 
 public:
 
-    void push_back(const AtomicConstructor<T>& constructor) {
-
-        // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
-        if (PersistentPtr<data_type>::null()) {
-            typename data_type::Constructor ctr(1);
-            PersistentPtr<data_type>::allocate(ctr);
-            ASSERT(size() == 0);
-        }
-
-        // If all of the available space is full, then increase the space available (by factor of 2)
-        if (PersistentPtr<data_type>::get()->full()) {
-            size_t sz = size();
-            eckit::Log::info() << "Resizing vector from " << sz << " elements to " << 2*sz << std::endl;
-            resize(sz * 2);
-        }
-
-        PersistentPtr<data_type>::get()->push_back(constructor);
-    }
+    void push_back(const AtomicConstructor<T>& constructor);
 
     size_t size() const;
 
@@ -168,6 +123,52 @@ public:
 
 
 //----------------------------------------------------------------------------------------------------------------------
+
+
+/// Normal data constructor
+template <typename T>
+PersistentVectorData<T>::Constructor::Constructor(size_t max_size) :
+    maxSize_(max_size),
+    sourceVector_(0) {}
+
+
+/// Copy constructor
+template <typename T>
+PersistentVectorData<T>::Constructor::Constructor(const PersistentVectorData<T>& source, size_t max_size) :
+    maxSize_(max_size),
+    sourceVector_(&source) {
+
+    ASSERT(max_size > source.nelem_);
+}
+
+
+template <typename T>
+void PersistentVectorData<T>::Constructor::make(PersistentVectorData<T>& object) const {
+
+    object.allocatedSize_ = maxSize_;
+
+    // If we are copying an existing vector, then transfer the data across
+    size_t i = 0;
+    if (sourceVector_) {
+        object.nelem_ = sourceVector_->size();  // n.b. enforces consistency check.
+        for (; i < sourceVector_->nelem_; i++) {
+            object.elements_[i] = sourceVector_->elements_[i];
+        }
+    } else {
+        object.nelem_ = 0;
+    }
+
+    // And nullify the remaining elements.
+    for (; i < maxSize_; i++) {
+        object.elements_[i].nullify();
+    }
+}
+
+
+template <typename T>
+size_t PersistentVectorData<T>::Constructor::size() const {
+    return sizeof(PersistentVectorData<T>) + (maxSize_ - 1) * sizeof(PersistentPtr<T>);
+}
 
 
 /// Number of elements in the list
@@ -250,6 +251,26 @@ void PersistentVectorData<T>::update_nelem(size_t nelem) const {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+
+template <typename T>
+void PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
+
+    // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
+    if (PersistentPtr<data_type>::null()) {
+        typename data_type::Constructor ctr(1);
+        PersistentPtr<data_type>::allocate(ctr);
+        ASSERT(size() == 0);
+    }
+
+    // If all of the available space is full, then increase the space available (by factor of 2)
+    if (PersistentPtr<data_type>::get()->full()) {
+        size_t sz = size();
+        eckit::Log::info() << "Resizing vector from " << sz << " elements to " << 2*sz << std::endl;
+        resize(sz * 2);
+    }
+
+    PersistentPtr<data_type>::get()->push_back(constructor);
+}
 
 template <typename T>
 size_t PersistentVector<T>::size() const {
