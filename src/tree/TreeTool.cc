@@ -186,6 +186,7 @@ void TreeTool::run() {
     }
 
     // How about a multi-request in a JSON file
+    // TODO: Some refactoring is needed here...
 
     std::string request_file = args.getString("request", "");
     if (request_file != "") {
@@ -217,6 +218,24 @@ void TreeTool::run() {
                 JSONDataBlob blob(data.c_str(), data.length());
 
                 tree.addNode(key, blob);
+
+            } else if (op  == "lookup") {
+
+                StringDict key;
+                JSONParser::toStrDict(request["key"], key);
+
+                std::vector<PersistentPtr<TreeNode> > nodes = tree.lookup(key);
+
+                Log::info() << "Matching data" << std::endl;
+                Log::info() << "=====================================" << std::endl;
+                // TODO: We should probably output the matching keys as well as the data.
+                for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+                     it != nodes.end(); ++it) {
+                    if ((*it)->leaf()) {
+                        std::string tmp(static_cast<const char*>((*it)->data()), (*it)->dataSize());
+                        Log::info() << tmp << std::endl;
+                    }
+                }
             }
         }
     }
