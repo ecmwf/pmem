@@ -106,19 +106,7 @@ void TreeObject::print(std::ostream& os) const {
 
 void TreeObject::addNode(const StringDict& key, const DataBlob &blob) {
 
-    // Convert key into a list with order --> ...
-    // TODO: Insert schema-related stuff here
-
-    for (StringDict::const_iterator it = key.begin(); it != key.end(); ++it) {
-        Log::info() << "ELEM: " << it->first << ", " << it->second << std::endl;
-    }
-    //Log::info() << "Map key: " << key << std::endl;
-    KeyType sorted_key;
-    sorted_key.reserve(key.size());
-    sorted_key.insert(sorted_key.begin(), key.begin(), key.end());
-    Log::info() << "Sorted key: " << sorted_key << std::endl;
-
-    root_.addNode(sorted_key, blob);
+    root_.addNode(schema_.processInsertKey(key), blob);
 }
 
 

@@ -83,6 +83,8 @@ void TreeTool::run() {
 
     std::vector<Option*> options;
 
+    options.push_back(new SimpleOption<std::string>("request", "Specify a (potentially complex) request in a file"));
+
     options.push_back(new Separator("Options for creating a new pool"));
     options.push_back(new SimpleOption<bool>("create", "Insert an element as specified by the pool and data keys"));
     options.push_back(new SimpleOption<size_t>("size", "The size of the pool file to create"));
@@ -129,11 +131,9 @@ void TreeTool::run() {
 
     TreeObject tree(*root);
 
-    // Deal with our special cases first
-    if (args.getBool("insert", false)) {
+    // Do an insertion request
 
-        // TODO: We should have a cached in-memory tree object that is separate from the TreeRoot in persistent memory (this way it can
-        //       hold the decoded schema.
+    if (args.getBool("insert", false)) {
 
         std::istringstream iss(args.getString("key"));
         JSONParser parser(iss);
@@ -149,55 +149,9 @@ void TreeTool::run() {
         JSONDataBlob blob(*data_file, len);
         tree.addNode(key, blob);
 
-    } else if (root->rootNode().null()) {
-
-        // If the tree is empty, provide some default contents for demonstration purposes.
-
-        std::vector<std::pair<std::string, std::string> > key;
-        key.push_back(std::make_pair("type", "fc"));
-        key.push_back(std::make_pair("param", "2t"));
-        key.push_back(std::make_pair("year", "2016"));
-        key.push_back(std::make_pair("month", "03"));
-        key.push_back(std::make_pair("day", "04"));
-
-        std::vector<std::pair<std::string, std::string> > key2;
-        key2.push_back(std::make_pair("type", "fc"));
-        key2.push_back(std::make_pair("param", "2t"));
-        key2.push_back(std::make_pair("year", "2016"));
-        key2.push_back(std::make_pair("month", "02"));
-        key2.push_back(std::make_pair("day", "04"));
-
-        std::vector<std::pair<std::string, std::string> > key3;
-        key3.push_back(std::make_pair("type", "fc"));
-        key3.push_back(std::make_pair("param", "2t"));
-        key3.push_back(std::make_pair("year", "2016"));
-        key3.push_back(std::make_pair("month", "03"));
-        key3.push_back(std::make_pair("day", "05"));
-
-        std::string data("{\"text\": \"Example\"}");
-        JSONDataBlob blob(data.c_str(), data.length());
-
-        std::string data2("{\"text\": \"This is a second example\"}");
-        JSONDataBlob blob2(data2.c_str(), data2.length());
-
-        std::string data3("{\"text\": \"We are finally getting somewhere!\"}");
-        JSONDataBlob blob3(data3.c_str(), data3.length());
-
-        // For now, we aren't assuming feature/print-vector
-        Log::info() << "Key: " << key << std::endl;
-        Log::info() << "Key2: " << key2 << std::endl;
-        Log::info() << "Key3: " << key3 << std::endl;
-
-        root->addNode(key, blob);
-        root->addNode(key2, blob2);
-        root->addNode(key3, blob3);
-
     }
 
-
-    PersistentPtr<TreeNode> rootNode = root->rootNode();
-
-    Log::info() << *rootNode << std::endl;
+    // Doing lookup requests
 
     if (args.getBool("print", false)) {
         Log::info() << "===================================" << std::endl;
@@ -205,6 +159,8 @@ void TreeTool::run() {
         Log::info() << std::endl;
         Log::info() << "===================================" << std::endl;
     }
+
+    // Doing lookup requests
 
     std::string lookup = args.getString("lookup", "");
     if (lookup != "") {
@@ -227,7 +183,42 @@ void TreeTool::run() {
                 Log::info() << tmp << std::endl;
             }
         }
+    }
 
+    // How about a multi-request in a JSON file
+
+    std::string request_file = args.getString("request", "");
+    if (request_file != "") {
+
+        Log::info() << "Using request file: " << request_file << std::endl;
+
+        PathName request_path(request_file);
+        ScopedPtr<DataHandle> file(request_path.fileHandle());
+        Length len = file->openForRead();
+
+        JSONDataBlob blob(*file, len);
+
+        std::string blob_str(blob.buffer(), blob.length());
+        std::istringstream iss(blob_str);
+        JSONParser parser(iss);
+
+        ValueList requests = parser.parse().as<ValueList>();
+        for (ValueList::const_iterator rq = requests.begin(); rq != requests.end(); ++rq) {
+
+            ValueMap request = *rq;
+
+            std::string op = request["operation"].as<std::string>();
+            if (op == "insert") {
+
+                StringDict key;
+                JSONParser::toStrDict(request["key"], key);
+
+                std::string data(request["data"]);
+                JSONDataBlob blob(data.c_str(), data.length());
+
+                tree.addNode(key, blob);
+            }
+        }
     }
 }
 
