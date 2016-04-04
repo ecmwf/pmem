@@ -8,24 +8,9 @@ include( ecbuild_system NO_POLICY_SCOPE )
 
 ecbuild_requires_macro_version( 2.0 )
 
-
-
 ecbuild_use_package( PROJECT eckit VERSION  0.10  REQUIRED )
 
-find_path(
-    PMEMOBJ_INCLUDE_DIRS
-    libpmemobj.h
-    PATHS ${PMEMOBJ_PATH}
-    PATH_SUFFIXES include
-)
-
-find_library(
-    PMEMOBJ_LIBS
-    pmemobj
-    PATHS ${PMEMOBJ_PATH}
-    PATH_SUFFIXES debug nondebug
-)
-
+find_package(pmemio REQUIRED)
 
 ecbuild_declare_project()
 

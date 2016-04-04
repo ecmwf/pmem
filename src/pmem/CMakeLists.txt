@@ -15,8 +15,8 @@ ecbuild_add_library(
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}
-        ${PMEMOBJ_INCLUDE_DIRS}
+        ${PMEMIO_INCLUDE_DIRS}
 
     LIBS
         eckit
-        ${PMEMOBJ_LIBS} )
+        ${PMEMIO_OBJ_LIBRARY} )
