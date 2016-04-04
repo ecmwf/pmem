@@ -28,6 +28,9 @@ namespace pmem {
 
 /// This is a static routine that can be passed to the atomic allocation routines. All the logic
 /// should be passed in as the functor AtomicConstructor<T>.
+///
+/// @note the void*arg argument MUST be interpreted as const, otherwise we break the ability to pass
+///       const references to constructor objects into allocate.
 int pmem_constructor(PMEMobjpool * pool, void * obj, void * arg) {
     const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
 

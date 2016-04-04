@@ -31,6 +31,8 @@ namespace eckit {
 
 namespace tree {
 
+class TreeSchema;
+
 // -------------------------------------------------------------------------------------------------
 
 // N.B. This is to be stored in PersistentPtr --> NO virtual behaviour.
@@ -45,8 +47,10 @@ public: // Construction objects
 
     class Constructor : public pmem::AtomicConstructor<TreeRoot> {
     public: // methods
-        Constructor();
+        Constructor(const TreeSchema& schema);
         virtual void make(TreeRoot& object) const;
+    private:
+        const TreeSchema& schema_;
     };
 
 
@@ -63,6 +67,8 @@ private: // members
     eckit::FixedString<8> tag_;
 
     pmem::PersistentPtr<TreeNode> node_;
+
+    pmem::PersistentPtr<PersistentBuffer> schema_;
 
 };
 

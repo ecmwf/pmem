@@ -43,21 +43,26 @@ class PersistentPool {
 
 public: // methods
 
-   PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
-                  AtomicConstructorBase& constructor, bool sizeSpecified=false);
-   ~PersistentPool();
+    /// Open existing persistent pool
+    PersistentPool(const eckit::PathName& path, const std::string& name);
 
-   // TODO: Keep track of open objects, so they can be invalidated?
+    /// Create new persistent pool
+    PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
+                   const AtomicConstructorBase& constructor);
 
-   // Query the status of the pool
+    ~PersistentPool();
 
-   const bool newPool() const;
+    // TODO: Keep track of open objects, so they can be invalidated?
+
+    // Query the status of the pool
+
+    const bool newPool() const;
 
 protected: // methods
 
-   // Get hold of the root object.
-   template <typename T>
-   PersistentPtr<T> getRoot() const;
+    // Get hold of the root object.
+    template <typename T>
+    PersistentPtr<T> getRoot() const;
 
 protected: // members
 

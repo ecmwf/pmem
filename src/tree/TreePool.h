@@ -29,6 +29,7 @@ namespace pmem {
 namespace tree {
 
 class TreeRoot;
+class TreeSchema;
 
 // -------------------------------------------------------------------------------------------------
 
@@ -46,7 +47,8 @@ class TreePool : public pmem::PersistentPool {
 
 public: // methods
 
-    TreePool(const eckit::PathName& path, const size_t size, bool sizeSpecified);
+    TreePool(const eckit::PathName& path, const size_t size, TreeSchema& schema);
+    TreePool(const eckit::PathName& path);
     ~TreePool();
 
     pmem::PersistentPtr<TreeRoot> root() const;

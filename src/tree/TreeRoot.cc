@@ -26,13 +26,17 @@ namespace tree {
 // -------------------------------------------------------------------------------------------------
 
 
-TreeRoot::Constructor::Constructor() {}
+TreeRoot::Constructor::Constructor(const TreeSchema& schema) :
+    schema_(schema) {}
 
 
 void TreeRoot::Constructor::make(TreeRoot& object) const {
 
     object.tag_ = TreeRootTag;
     object.node_.nullify();
+
+    object.schema_.nullify();
+    // TODO: Add the schema
 }
 
 // -------------------------------------------------------------------------------------------------

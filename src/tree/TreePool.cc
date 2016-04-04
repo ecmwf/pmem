@@ -60,12 +60,12 @@ namespace tree {
  * --> For some reason, it complains if we just use TreeRoot::Constructor()
  */
 
-namespace {
-    TreeRoot::Constructor rootConstructor;
-}
+TreePool::TreePool(const eckit::PathName &path, const size_t size, TreeSchema& schema) :
+    PersistentPool(path, size, "tree-pool", TreeRoot::Constructor(schema)) {}
 
-TreePool::TreePool(const eckit::PathName &path, const size_t size, bool sizeSpecified) :
-    PersistentPool(path, size, "tree-pool", rootConstructor, sizeSpecified) {}
+
+TreePool::TreePool(const eckit::PathName &path) :
+    PersistentPool(path, "tree-pool") {}
 
 
 TreePool::~TreePool() {}

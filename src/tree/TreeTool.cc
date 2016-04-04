@@ -102,11 +102,7 @@ void TreeTool::run() {
     // ---------------------------------------------------------------------------------
     // Now start the tool.
 
-    TreePool pool(path, pool_size, args.has("size"));
-
-    PersistentPtr<TreeRoot> root = pool.root();
-
-    Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
+    ScopedPtr<TreePool> pool;
 
     if (args.getBool("create", false)) {
 
@@ -115,15 +111,18 @@ void TreeTool::run() {
         PathName schema_path(args.getString("schema"));
         TreeSchema schema(schema_path);
 
-        StringDict inkey;
-        inkey["type"] = "fc";
-        inkey["param"] = "2t";
-        inkey["year"] = "2016";
-        inkey["month"] = "03";
-        inkey["subday"] = "04";
+        pool.reset(new TreePool(path, pool_size, schema));
 
-        schema.processInsertKey(inkey);
+    } else {
+
+        // If we aren't creating a pool, then open it instead.
+        pool.reset(new TreePool(path));
     }
+
+    PersistentPtr<TreeRoot> root = pool->root();
+
+    Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
+
 
     // Deal with our special cases first
     if (args.getBool("insert", false)) {

@@ -28,57 +28,57 @@ namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
 
+/// Open an existing persistent pool.
+///
+/// \param path The pool file to use
+/// \param name The name to associate with the pool.
+PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& name) :
+    newPool_(false) {
+
+    // Get the pool size from the system
+    struct stat stat_buf;
+    int rc = stat(path.asString().c_str(), &stat_buf);
+    ASSERT(rc == 0);
+
+    Log::info() << "Opening persistent pool: " << path << std::endl;
+    Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
+
+    pool_ = ::pmemobj_open(path.localPath(), name.c_str());
+
+    if (!pool_)
+        throw PersistentOpenError(path, errno, Here());
+
+    Log::info() << "Pool opened: " << pool_ << std::endl;
+}
+
 /// Constructs or opens a persistent pool
 ///
 /// \param path The pool file to use
 /// \param size The size in bytes to use if the pool is being created.
 /// \param name The name to associate with the pool.
 /// \param constructor Constructor object for the root node.
-/// \param sizeSpecified true if the size was manually specified (not default). [default = false]
 PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
-                               AtomicConstructorBase& constructor, bool sizeSpecified) :
+                               const AtomicConstructorBase& constructor) :
     newPool_(false) {
 
-    // If the persistent pool already exists, then open it. Otherwise create it.
-    if (::access(path.localPath(), F_OK) == -1) {
+    Log::info() << "Creating persistent pool: " << path << std::endl;
 
-        Log::info() << "Creating persistent pool: " << path << std::endl;
+    Log::info() << "Size: " << Bytes(size) << std::endl;
 
-        Log::info() << "Size: " << Bytes(size) << std::endl;
+    // TODO: Consider permissions. Currently this is world R/W-able.
+    pool_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
+    newPool_ = true;
 
-        // TODO: Consider permissions. Currently this is world R/W-able.
-        pool_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
-        newPool_ = true;
+    if (!pool_)
+        throw PersistentCreateError(path, errno, Here());
+    Log::info() << "Pool created: " << pool_ << std::endl;
 
-        if (!pool_)
-            throw PersistentCreateError(path, errno, Here());
-        Log::info() << "Pool created: " << pool_ << std::endl;
+    Log::info() << "Initialising root element" << std::endl;
 
-    } else {
-
-        // Get the pool size from the system
-        struct stat stat_buf;
-        int rc = stat(path.asString().c_str(), &stat_buf);
-        ASSERT(rc == 0);
-
-        Log::info() << "Opening persistent pool: " << path << std::endl;
-        Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
-        if (size_t(stat_buf.st_size) != size && sizeSpecified)
-            Log::warning() << "WARNING: Pool size does not match the manually specified size" << std::endl;
-
-        pool_ = ::pmemobj_open(path.localPath(), name.c_str());
-
-        if (!pool_)
-            throw PersistentOpenError(path, errno, Here());
-
-        Log::info() << "Pool opened: " << pool_ << std::endl;
-
-    }
-
-    if (::pmemobj_root_size(pool_) == 0) {
-        Log::info() << "Initialising root element" << std::endl;
-        ::pmemobj_root_construct(pool_, constructor.size(), pmem_constructor, &constructor);
-    }
+    // The const cast in this expression is due to the interface to ::pmemobj_root_construct. This is immediately
+    // recast to const AtomicConstructorBase* inside ::pmem_constructor.
+    ::pmemobj_root_construct(pool_, constructor.size(), pmem_constructor,
+                             const_cast<AtomicConstructorBase*>(&constructor));
 }
 
 
