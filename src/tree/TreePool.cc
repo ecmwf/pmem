@@ -34,16 +34,9 @@ namespace tree {
 template<> int pmem::PersistentPtr<tree::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
 template<> int pmem::PersistentPtr<tree::TreeNode>::type_id = 1;
 
-// Data types for the persistent vector. One holds the std::pairs, the other the vector holding them.
-//template<> int pmem::PersistentVector<
-//        std::pair<eckit::FixedString<12>, pmem::PersistentPtr<tree::TreeNode> > >::type_id = 2;
-template<> int pmem::PersistentPtr<
-        pmem::PersistentVector<std::pair<eckit::FixedString<12>, pmem::PersistentPtr<tree::TreeNode> > >::data_type
-        >::type_id = 2;
-template<> int pmem::PersistentPtr<
-        std::pair<eckit::FixedString<12>, pmem::PersistentPtr<tree::TreeNode> > >::type_id = 3;
+template<> int pmem::PersistentPtr<pmem::PersistentVectorData<tree::TreeNode> >::type_id = 2;
 
-template<> int pmem::PersistentPtr<tree::PersistentBuffer>::type_id = 4;
+template<> int pmem::PersistentPtr<tree::PersistentBuffer>::type_id = 3;
 
 
 

@@ -80,7 +80,7 @@ public: // methods
     void push_back(const AtomicConstructor<T>& constructor);
 
     /// Return a given element in the list
-    const T& operator[] (size_t i) const;
+    const PersistentPtr<T>& operator[] (size_t i) const;
 
     /// As the nelem_ member is updated after allocation has taken place, and hence non-atomically, we need to
     /// be able to check that its value is correct.
@@ -116,7 +116,7 @@ public:
 
     size_t size() const;
 
-    const T& operator[] (size_t i) const;
+    const PersistentPtr<T>& operator[] (size_t i) const;
 
     void resize(size_t new_size);
 };
@@ -212,8 +212,8 @@ void PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor)
 
 /// Return a given element in the list
 template<typename T>
-const T& PersistentVectorData<T>::operator[] (size_t i) const {
-    return *elements_[i];
+const PersistentPtr<T>& PersistentVectorData<T>::operator[] (size_t i) const {
+    return elements_[i];
 }
 
 
@@ -279,7 +279,7 @@ size_t PersistentVector<T>::size() const {
 
 
 template <typename T>
-const T& PersistentVector<T>::operator[] (size_t i) const {
+const PersistentPtr<T>& PersistentVector<T>::operator[] (size_t i) const {
     return (*PersistentPtr<data_type>::get())[i];
 }
 

@@ -29,49 +29,8 @@ namespace tree {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-/// We actually store pairs of items in the vector, so here we create a constructor object for the
-/// _pairs_ of items that are going to be stored. This constructor internally constructs:
-///
-/// a) Any DataBuffers taht are required to hold the blobs
-/// b) A recursed tree of subnodes as required.
-
-class NodeItemConstructor : public AtomicConstructor<TreeNode::Item> {
-
-public: // methods
-
-    NodeItemConstructor(const eckit::FixedString<12>& value,
-                        TreeNode::KeyType& subkeys,
-                        const eckit::DataBlob& blob) :
-        value_(value),
-        subkeys_(subkeys),
-        blob_(blob) { }
-
-    virtual void make(TreeNode::Item &object) const {
-
-        object.first = value_;
-        object.second.nullify();
-
-        if (subkeys_.size() == 0) {
-            TreeNode::Constructor ctr(blob_);
-            object.second.allocate(ctr);
-        } else {
-            TreeNode::Constructor ctr(subkeys_[0].first, subkeys_, blob_);
-            object.second.allocate(ctr);
-        }
-    }
-
-private: // members
-
-    const eckit::FixedString<12>& value_;
-    const TreeNode::KeyType& subkeys_;
-    const eckit::DataBlob& blob_;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-
-
-TreeNode::Constructor::Constructor(const DataBlob& blob) :
-    name_(""),
+TreeNode::Constructor::Constructor(const std::string& value, const DataBlob& blob) :
+    value_(value),
     subkeys_(0),
     blob_(blob) {
 
@@ -79,8 +38,8 @@ TreeNode::Constructor::Constructor(const DataBlob& blob) :
 }
 
 
-TreeNode::Constructor::Constructor(const std::string& name, const KeyType& subkeys, const DataBlob& blob) :
-    name_(name),
+TreeNode::Constructor::Constructor(const std::string& value, const KeyType& subkeys, const DataBlob& blob) :
+    value_(value),
     subkeys_(NULL),
     blob_(blob) {
 
@@ -93,7 +52,8 @@ TreeNode::Constructor::Constructor(const std::string& name, const KeyType& subke
 
 void TreeNode::Constructor::make(TreeNode& object) const {
 
-    object.name_ = eckit::FixedString<12>(name_);
+    object.value_ = eckit::FixedString<12>(value_);
+    object.key_ = subkeys_ ? (*subkeys_)[0].first : "";
     object.items_.nullify();
     object.data_.nullify();
 
@@ -103,9 +63,8 @@ void TreeNode::Constructor::make(TreeNode& object) const {
         const KeyType& sk(*subkeys_);
 
         ASSERT(sk.size() > 0);
-        ASSERT(sk[0].first == name_);
         std::vector<std::pair<std::string, std::string> > new_subkeys(sk.begin()+1, sk.end());
-        NodeItemConstructor ctr(sk[0].second, new_subkeys, blob_);
+        TreeNode::Constructor ctr(sk[0].second, new_subkeys, blob_);
         object.items_.push_back(ctr);
     } else {
         PersistentBuffer::Constructor ctr(blob_.buffer(), blob_.length());
@@ -122,7 +81,7 @@ void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
     // Check that this is supposed to be a subkey of this element.
     // TODO: What happens if we repeat eter a key --> should fail here. TEST.
     ASSERT(key.size() > 0);
-    ASSERT(name_ == key[0].first);
+    ASSERT(key_ == key[0].first);
 
     // May not add subnodes to a leaf node.
     ASSERT(data_.null());
@@ -130,10 +89,10 @@ void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
     // Find the sub-node, and recurse down into that to do the additions.
     FixedString<12> value = key[0].second;
     for (size_t i = 0; i < items_.size(); i++) {
-        if (items_[i].first == value) {
+        if (items_[i]->value() == value) {
 
             KeyType subkeys(key.begin()+1, key.end());
-            items_[i].second->addNode(subkeys, blob);
+            items_[i]->addNode(subkeys, blob);
             return;
         }
     }
@@ -142,7 +101,7 @@ void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
 
     // We have reached the bottom of the known tree. Create new nodes from here-on down.
     KeyType subkeys(key.begin()+1, key.end());
-    NodeItemConstructor ctr(value, subkeys, blob);
+    TreeNode::Constructor ctr(value, subkeys, blob);
     items_.push_back(ctr);
 }
 
@@ -152,8 +111,13 @@ size_t TreeNode::nodeCount() const {
 }
 
 
-std::string TreeNode::name() const {
-    return name_;
+const eckit::FixedString<12>& TreeNode::key() const {
+    return key_;
+}
+
+
+const eckit::FixedString<12>& TreeNode::value() const {
+    return value_;
 }
 
 
@@ -187,18 +151,18 @@ TreeNode::lookup(const StringDict& request) {
 
     std::vector<PersistentPtr<TreeNode> > result;
 
-    if (request.find(name_) != request.end()) {
+    if (request.find(key_) != request.end()) {
 
         // Test subnodes, and include those that match.
-        FixedString<12> value = request.find(name_)->second;
+        FixedString<12> value = request.find(key_)->second;
         for (size_t i = 0; i < items_.size(); i++) {
-            if (items_[i].first == value) {
-                if (items_[i].second->leaf()) {
-                    result.push_back(items_[i].second);
+            if (items_[i]->value() == value) {
+                if (items_[i]->leaf()) {
+                    result.push_back(items_[i]);
 
                     // TODO: If we have unique names, this can exit the loop here.
                 } else {
-                    std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
+                    std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i]->lookup(request);
                     result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
                 }
             }
@@ -208,10 +172,10 @@ TreeNode::lookup(const StringDict& request) {
 
         // Include all sub-nodes
         for (size_t i = 0; i < items_.size(); i++) {
-            if (items_[i].second->leaf()) {
-                result.push_back(items_[i].second);
+            if (items_[i]->leaf()) {
+                result.push_back(items_[i]);
             } else {
-                std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i].second->lookup(request);
+                std::vector<PersistentPtr<TreeNode> > tmp_nodes = items_[i]->lookup(request);
                 result.insert(result.end(), tmp_nodes.begin(), tmp_nodes.end());
             }
         }
@@ -226,7 +190,7 @@ void TreeNode::printTree(std::ostream& os, std::string pad) const {
     // n.b. the parent is responsible for indenting the opening brace.
     os << "{" << std::endl;
     std::string pad2(pad + "  ");
-    os << pad2 << "key: " << name_ << "," << std::endl;
+    os << pad2 << "key: " << key_ << "," << std::endl;
     os << pad2 << "data: " << (data_.null() ? "missing" : "present")
        << "," << std::endl;
     os << pad2 << "items: [";
@@ -234,8 +198,8 @@ void TreeNode::printTree(std::ostream& os, std::string pad) const {
     std::string pad4(pad2 + "  ");
     for (size_t i = 0; i < items_.size(); i++) {
         if (i > 0) os << ",";
-        os << std::endl << pad4 << std::string(items_[i].first) << ": ";
-        items_[i].second->printTree(os, pad4);
+        os << std::endl << pad4 << std::string(items_[i]->key()) << ": ";
+        items_[i]->printTree(os, pad4);
     }
 
     if (items_.size() > 0) os << std::endl << pad2;
@@ -247,7 +211,7 @@ void TreeNode::printTree(std::ostream& os, std::string pad) const {
 
 
 std::ostream& operator<< (std::ostream& os, const TreeNode& node) {
-    os << "TreeNode(key=" << node.name_
+    os << "TreeNode(key=" << node.key()
        << ", data=" << (node.data_.null() ? "missing" : "present")
        << ")";
     return os;

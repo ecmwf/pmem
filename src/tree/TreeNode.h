@@ -41,8 +41,6 @@ class TreeNode {
 
 public: // types
 
-    typedef std::pair<eckit::FixedString<12>, pmem::PersistentPtr<TreeNode> > Item;
-
     typedef std::vector<std::pair<std::string, std::string> > KeyType;
 
 public: // Construction objects
@@ -52,18 +50,16 @@ public: // Construction objects
     public: // methods
 
         /// Construct a leaf (data) node. Leaves do not have a name.
-        Constructor(const eckit::DataBlob& blob);
+        Constructor(const std::string& value, const eckit::DataBlob& blob);
 
         /// Construct a normal node, and its children.
-        Constructor(const std::string& name,
-                    const KeyType& subkeys,
-                    const eckit::DataBlob& blob);
+        Constructor(const std::string& value, const KeyType& subkeys, const eckit::DataBlob& blob);
 
         virtual void make (TreeNode& object) const;
 
     private: // members
 
-        std::string name_;
+        std::string value_;
 
         const KeyType* subkeys_;
 
@@ -88,7 +84,11 @@ public: // methods
 
     void printTree(std::ostream& os, std::string pad="") const;
 
-    std::string name() const;
+    /// The value by which this node is associated to its _parent's_ key.
+    const eckit::FixedString<12>& value() const;
+
+    /// The key by which child nodes are selected
+    const eckit::FixedString<12>& key() const;
 
     bool leaf() const;
 
@@ -98,11 +98,13 @@ public: // methods
 
 private: // members
 
-    pmem::PersistentVector<Item> items_;
+    pmem::PersistentVector<TreeNode> items_;
 
     pmem::PersistentPtr<PersistentBuffer> data_;
 
-    eckit::FixedString<12> name_;
+    eckit::FixedString<12> value_;
+
+    eckit::FixedString<12> key_;
 
 private:
 

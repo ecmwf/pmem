@@ -80,7 +80,7 @@ void TreeRoot::addNode(const KeyType& key, const eckit::DataBlob& blob) {
         TreeNode::Constructor ctr(key[0].first, key, blob);
         node_.allocate(ctr);
     } else {
-        ASSERT(node_->name() == key[0].first);
+        ASSERT(node_->key() == key[0].first);
         node_->addNode(key, blob);
     }
 }
