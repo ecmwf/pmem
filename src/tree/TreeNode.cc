@@ -175,7 +175,7 @@ size_t TreeNode::dataSize() const {
 
 
 std::vector<PersistentPtr<TreeNode> >
-TreeNode::lookup(const std::map<FixedString<12>, FixedString<12> >& request) {
+TreeNode::lookup(const StringDict& request) {
 
 //    Log::info() << "Node lookup: " << request << std::endl;
 

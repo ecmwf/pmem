@@ -93,6 +93,10 @@ void TreeTool::run() {
     options.push_back(new SimpleOption<std::string>("key", "The key to insert. This is a json object of key-value pairs"));
     options.push_back(new SimpleOption<PathName>("data", "The file containing the data to insert"));
 
+    options.push_back(new Separator("Options for inspecting the tree"));
+    options.push_back(new SimpleOption<bool>("print", "Prints the tree in its entirety to stdout"));
+    options.push_back(new SimpleOption<std::string>("lookup", "Specify a (partial) key (as JSON) to perform a lookup"));
+
     CmdArgs args(&usage, 1, options);
 
     size_t pool_size = args.getLong("size", 20 * 1024 * 1024);
@@ -123,11 +127,10 @@ void TreeTool::run() {
 
     Log::info() << "Valid: " << (root->valid() ? "true" : "false") << std::endl;
 
+    TreeObject tree(*root);
 
     // Deal with our special cases first
     if (args.getBool("insert", false)) {
-
-        TreeObject tree(*root);
 
         // TODO: We should have a cached in-memory tree object that is separate from the TreeRoot in persistent memory (this way it can
         //       hold the decoded schema.
@@ -196,36 +199,36 @@ void TreeTool::run() {
 
     Log::info() << *rootNode << std::endl;
 
-    Log::info() << "===================================" << std::endl;
-    rootNode->printTree(Log::info());
-    Log::info() << std::endl;
-    Log::info() << "===================================" << std::endl;
-
-    // Do a lookup
-    // N.B. This is done with a _map_, whereas the insertion is done with a _vector_
-    // TODO: Decide how we want to do the data schema, otherwise this could end up with weird duplication
-    //       (e.g. keys with different orders looking the same on lookup).
-    std::map<FixedString<12>, FixedString<12> > lookup;
-    lookup["type"] = std::string("fc");
-    lookup["param"] = std::string("2t");
-    lookup["year"] = std::string("2016");
-    lookup["month"] = std::string("03");
-
-    Log::info() << lookup << std::endl;
-    std::vector<PersistentPtr<TreeNode> > nodes = rootNode->lookup(lookup);
-
-    Log::info() << "[";
-    for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
-         it != nodes.end(); ++it) {
-        Log::info() << (*it)->name();
-        if ((*it)->leaf()) {
-            std::string tmp(static_cast<const char*>((*it)->data()), (*it)->dataSize());
-            Log::info() << " -- " << tmp << std::endl;
-        }
-        Log::info() << ", ";
+    if (args.getBool("print", false)) {
+        Log::info() << "===================================" << std::endl;
+        tree.printTree(Log::info());
+        Log::info() << std::endl;
+        Log::info() << "===================================" << std::endl;
     }
-    Log::info() << "]" << std::endl;
 
+    std::string lookup = args.getString("lookup", "");
+    if (lookup != "") {
+
+        std::istringstream iss(lookup);
+        JSONParser parser(iss);
+
+        StringDict key;
+        JSONParser::toStrDict(parser.parse(), key);
+
+        std::vector<PersistentPtr<TreeNode> > nodes = tree.lookup(key);
+
+        Log::info() << "Matching data" << std::endl;
+        Log::info() << "=============" << std::endl;
+        // TODO: We should probably output the matching keys as well as the data.
+        for (std::vector<PersistentPtr<TreeNode> >::const_iterator it = nodes.begin();
+             it != nodes.end(); ++it) {
+            if ((*it)->leaf()) {
+                std::string tmp(static_cast<const char*>((*it)->data()), (*it)->dataSize());
+                Log::info() << tmp << std::endl;
+            }
+        }
+
+    }
 }
 
 // -------------------------------------------------------------------------------------------------

@@ -38,13 +38,18 @@ public: // methods
     // iv) Convert map --> vector for insertion
     // v) Check completeness of supplied queries.
 
+    TreeSchema();
     TreeSchema(eckit::PathName& path);
     TreeSchema(std::istream& s);
     ~TreeSchema();
 
+    std::string json_str() const;
+
     std::vector<std::pair<std::string, std::string> > processInsertKey(const eckit::StringDict& key) const;
 
-private: // methods
+protected: // methods
+
+    void print(std::ostream&) const;
 
     /// Do the work behind the constructors
     void init(std::istream& s);
@@ -52,6 +57,13 @@ private: // methods
 private: // members
 
     std::vector<std::string> keys_;
+
+private: // friends
+
+    friend std::ostream& operator<<(std::ostream& os, const TreeSchema& p) {
+        p.print(os);
+        return os;
+    }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

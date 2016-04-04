@@ -84,7 +84,7 @@ public: // methods
 
     // n.b. this is non-const. May return a reference to the current object, that can be
     //      built on.
-    std::vector<pmem::PersistentPtr<TreeNode> > lookup(const std::map<eckit::FixedString<12>, eckit::FixedString<12> >&);
+    std::vector<pmem::PersistentPtr<TreeNode> > lookup(const eckit::StringDict& key);
 
     void printTree(std::ostream& os, std::string pad="") const;
 

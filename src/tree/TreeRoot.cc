@@ -10,12 +10,15 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-#include "eckit/log/Log.h"
 #include "eckit/io/DataBlob.h"
+#include "eckit/log/Log.h"
+#include "eckit/parser/JSONDataBlob.h"
 #include "eckit/types/Types.h"
 
-#include "tree/TreeRoot.h"
+#include "tree/PersistentBuffer.h"
 #include "tree/TreeNode.h"
+#include "tree/TreeRoot.h"
+#include "tree/TreeSchema.h"
 
 using namespace eckit;
 using namespace pmem;
@@ -34,9 +37,14 @@ void TreeRoot::Constructor::make(TreeRoot& object) const {
 
     object.tag_ = TreeRootTag;
     object.node_.nullify();
-
     object.schema_.nullify();
-    // TODO: Add the schema
+
+    // Creata a data blob from the schema, so we can store it
+    std::string json = schema_.json_str();
+
+    PersistentBuffer::Constructor ctr(json.c_str(), json.length());
+
+    object.schema_.allocate(ctr);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -48,7 +56,8 @@ void TreeRoot::Constructor::make(TreeRoot& object) const {
  */
 bool TreeRoot::valid() const {
 
-    return tag_ == TreeRootTag;
+    return ( tag_ == TreeRootTag &&
+             !schema_.null() );
 }
 
 
@@ -79,7 +88,15 @@ void TreeRoot::addNode(const KeyType& key, const eckit::DataBlob& blob) {
 // -------------------------------------------------------------------------------------------------
 
 TreeObject::TreeObject(TreeRoot &root) :
-    root_(root) {}
+    root_(root) {
+
+    std::string str_schema(reinterpret_cast<const char*>(root_.schema_->data()), root_.schema_->size());
+    std::istringstream iss(str_schema);
+    schema_ = TreeSchema(iss);
+
+    Log::info() << "Created TreeObject wrapper." << std::endl;
+    Log::info() << "Schema: " << schema_ << std::endl;
+}
 
 TreeObject::~TreeObject() {}
 
@@ -102,6 +119,23 @@ void TreeObject::addNode(const StringDict& key, const DataBlob &blob) {
     Log::info() << "Sorted key: " << sorted_key << std::endl;
 
     root_.addNode(sorted_key, blob);
+}
+
+
+void TreeObject::printTree(std::ostream& os) const {
+
+    PersistentPtr<TreeNode> rootNode = root_.rootNode();
+    if (!rootNode.null())
+        rootNode->printTree(os);
+}
+
+
+std::vector<PersistentPtr<TreeNode> > TreeObject::lookup(const StringDict &key) {
+    PersistentPtr<TreeNode> rootNode = root_.rootNode();
+    if (!rootNode.null())
+        return rootNode->lookup(key);
+    else
+        return std::vector<PersistentPtr<TreeNode> >();
 }
 
 // -------------------------------------------------------------------------------------------------

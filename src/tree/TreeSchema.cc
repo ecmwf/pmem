@@ -14,6 +14,7 @@
 #include "eckit/io/Buffer.h"
 #include "eckit/io/DataHandle.h"
 #include "eckit/memory/ScopedPtr.h"
+#include "eckit/parser/JSON.h"
 #include "eckit/parser/JSONParser.h"
 #include "eckit/value/Value.h"
 
@@ -42,6 +43,8 @@ TreeSchema::TreeSchema(PathName& path) {
 TreeSchema::TreeSchema(std::istream& s) {
     init(s);
 }
+
+TreeSchema::TreeSchema() {}
 
 TreeSchema::~TreeSchema() {}
 
@@ -87,6 +90,22 @@ std::vector<std::pair<std::string, std::string> > TreeSchema::processInsertKey(c
 
     Log::info() << "Processed key: " << key << std::endl;
     return key;
+}
+
+
+std::string TreeSchema::json_str() const {
+
+    std::stringstream json_stream;
+    JSON json(json_stream);
+
+    json << makeVectorValue(keys_);
+    return json_stream.str();
+}
+
+
+void TreeSchema::print(std::ostream& os) const {
+
+    os << "TreeSchema(" << keys_ << ")";
 }
 
 //----------------------------------------------------------------------------------------------------------------------

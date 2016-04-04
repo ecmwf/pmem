@@ -23,6 +23,7 @@
 #include "pmem/PersistentVector.h"
 
 #include "tree/TreeNode.h"
+#include "tree/TreeSchema.h"
 
 namespace eckit {
     class DataBlob;
@@ -70,6 +71,9 @@ private: // members
 
     pmem::PersistentPtr<PersistentBuffer> schema_;
 
+private: // friends
+
+    friend class TreeObject;
 };
 
 
@@ -95,6 +99,10 @@ public: // methods
 
     void addNode(const eckit::StringDict& key, const eckit::DataBlob& blob);
 
+    void printTree(std::ostream& os) const;
+
+    std::vector<pmem::PersistentPtr<TreeNode> > lookup(const eckit::StringDict& key);
+
 protected: // methods
 
     void print(std::ostream&) const;
@@ -102,6 +110,7 @@ protected: // methods
 private: // members
 
     TreeRoot& root_;
+    TreeSchema schema_;
 
 private: // friends
 
