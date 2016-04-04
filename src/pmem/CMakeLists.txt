@@ -1,6 +1,6 @@
 ecbuild_add_library(
 
-    TARGET pmemwrapper
+    TARGET pmem
 
     SOURCES
         PersistentPtr.h

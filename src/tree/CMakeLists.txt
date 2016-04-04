@@ -19,9 +19,8 @@ ecbuild_add_library(
         ${PMEMOBJ_INCLUDE_DIRS}
 
     LIBS
-        pmemwrapper
-        eckit
-        ${PMEMOBJ_LIBS} )
+        pmem
+        eckit )
 
 
 ecbuild_add_executable(

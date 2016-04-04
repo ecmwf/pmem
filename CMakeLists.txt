@@ -12,13 +12,6 @@ ecbuild_requires_macro_version( 2.0 )
 
 ecbuild_use_package( PROJECT eckit VERSION  0.10  REQUIRED )
 
-# ecbuild_add_option( FEATURE MULTIO
-#                     DESCRIPTION "Add an interface to pass GRIB files to the object store from MultIO"
-#                     REQUIRED_PACKAGES
-#                       "PROJECT multio  VERSION 0.1 REQUIRED"
-#                     )
-
-
 find_path(
     PMEMOBJ_INCLUDE_DIRS
     libpmemobj.h
@@ -39,7 +32,7 @@ ecbuild_declare_project()
 ### export package to other ecbuild packages
 
 set( PMEM_INCLUDE_DIRS   ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src )
-set( PMEM_LIBRARIES      multio_pmem pmemwrapper )
+set( PMEM_LIBRARIES      pmemwrapper )
 
 get_directory_property( PMEM_DEFINITIONS COMPILE_DEFINITIONS )
 
