@@ -33,6 +33,7 @@ namespace pmem {
 /// \param path The pool file to use
 /// \param name The name to associate with the pool.
 PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& name) :
+    path_(path),
     newPool_(false) {
 
     // Get the pool size from the system
@@ -59,6 +60,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
 /// \param constructor Constructor object for the root node.
 PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
                                const AtomicConstructorBase& constructor) :
+    path_(path),
     newPool_(false) {
 
     Log::info() << "Creating persistent pool: " << path << std::endl;
@@ -83,8 +85,28 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
 
 PersistentPool::~PersistentPool() {
+
+    // Note that we don`t need to close the pool if it has been nullified
+    if (pool_)
+        close();
+}
+
+
+void PersistentPool::close() {
+
     Log::info() << "Closing persistent pool." << std::endl;
+    ASSERT(pool_);
+
     ::pmemobj_close(pool_);
+    pool_ = 0;
+}
+
+void PersistentPool::remove() {
+
+    close();
+
+    Log::info() << "Deleting persistent pool: " << path_ << std::endl;
+    ::remove(path_.asString().c_str());
 }
 
 // -------------------------------------------------------------------------------------------------

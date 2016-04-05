@@ -19,25 +19,19 @@
 
 #include "libpmemobj.h"
 
+#include "eckit/filesystem/PathName.h"
+
 #include "pmem/AtomicConstructor.h"
 
 
-// -------------------------------------------------------------------------------------------------
-
-// Forward declarations
-namespace eckit {
-    class PathName;
-}
-
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 namespace pmem {
 
 // Forward declarations
 template <typename T> class PersistentPtr;
 
-
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 class PersistentPool {
 
@@ -51,6 +45,13 @@ public: // methods
                    const AtomicConstructorBase& constructor);
 
     ~PersistentPool();
+
+    /// Close the pool
+    void close();
+
+    /// Delete the pool file, removing all traces to the pool
+    /// @note This permanently invalidates any access, and any pointers/PersistentPtrs.
+    void remove();
 
     // TODO: Keep track of open objects, so they can be invalidated?
 
@@ -66,19 +67,21 @@ protected: // methods
 
 protected: // members
 
+    eckit::PathName path_;
+
     PMEMobjpool * pool_;
 
     bool newPool_;
 };
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
 PersistentPtr<T> PersistentPool::getRoot()  const {
     return PersistentPtr<T>(::pmemobj_root(pool_, sizeof(T)));
 }
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 } // namespace pmem
 
