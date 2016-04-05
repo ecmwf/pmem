@@ -26,7 +26,7 @@ using namespace pmem;
 // Register this type with the type management
 // TODO: Can we ensure that there are no type-conflicts?
 
-namespace tree {
+namespace pmem {
     class PersistentBuffer;
 }
 
@@ -36,7 +36,7 @@ template<> int pmem::PersistentPtr<tree::TreeNode>::type_id = 1;
 
 template<> int pmem::PersistentPtr<pmem::PersistentVectorData<tree::TreeNode> >::type_id = 2;
 
-template<> int pmem::PersistentPtr<tree::PersistentBuffer>::type_id = 3;
+template<> int pmem::PersistentPtr<pmem::PersistentBuffer>::type_id = 3;
 
 
 

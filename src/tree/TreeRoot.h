@@ -29,6 +29,10 @@ namespace eckit {
     class DataBlob;
 }
 
+namespace pmem {
+    class PersistentBuffer;
+}
+
 
 namespace tree {
 
@@ -69,7 +73,7 @@ private: // members
 
     pmem::PersistentPtr<TreeNode> node_;
 
-    pmem::PersistentPtr<PersistentBuffer> schema_;
+    pmem::PersistentPtr<pmem::PersistentBuffer> schema_;
 
 private: // friends
 

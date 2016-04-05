@@ -3,16 +3,14 @@ ecbuild_add_library(
     TARGET pmem_tree
 
     SOURCES
-        TreeRoot.h
-        TreeRoot.cc
-        TreePool.h
-        TreePool.cc
-        TreeNode.h
         TreeNode.cc
-        TreeSchema.h
+        TreeNode.h
+        TreePool.cc
+        TreePool.h
+        TreeRoot.cc
+        TreeRoot.h
         TreeSchema.cc
-        PersistentBuffer.h
-        PersistentBuffer.cc
+        TreeSchema.h
 
     INCLUDES
         ${ECKIT_INCLUDE_DIRS}

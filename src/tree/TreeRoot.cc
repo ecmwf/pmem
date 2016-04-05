@@ -15,7 +15,8 @@
 #include "eckit/parser/JSONDataBlob.h"
 #include "eckit/types/Types.h"
 
-#include "tree/PersistentBuffer.h"
+#include "pmem/PersistentBuffer.h"
+
 #include "tree/TreeNode.h"
 #include "tree/TreeRoot.h"
 #include "tree/TreeSchema.h"

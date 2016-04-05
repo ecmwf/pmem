@@ -23,16 +23,15 @@ namespace eckit {
 }
 
 
-namespace tree {
+namespace pmem {
 
-// -------------------------------------------------------------------------------------------------
-
+//----------------------------------------------------------------------------------------------------------------------
 
 class PersistentBuffer {
 
 public: // Construction objects
 
-    class Constructor : public pmem::AtomicConstructor<PersistentBuffer> {
+    class Constructor : public AtomicConstructor<PersistentBuffer> {
 
     public: // methods
 
@@ -69,8 +68,7 @@ private: // friends
 
 };
 
-
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 } // namespace tree
 

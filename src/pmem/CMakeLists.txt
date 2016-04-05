@@ -3,13 +3,15 @@ ecbuild_add_library(
     TARGET pmem
 
     SOURCES
-        PersistentPtr.h
-        PersistentPtr.cc
-        PersistentPool.h
-        PersistentPool.cc
-        Exceptions.h
-        Exceptions.cc
         AtomicConstructor.h
+        Exceptions.cc
+        Exceptions.h
+        PersistentBuffer.cc
+        PersistentBuffer.h
+        PersistentPool.cc
+        PersistentPool.h
+        PersistentPtr.cc
+        PersistentPtr.h
         PersistentVector.h
 
 

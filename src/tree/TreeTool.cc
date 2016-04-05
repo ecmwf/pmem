@@ -28,7 +28,6 @@
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
 
-#include "tree/PersistentBuffer.h"
 #include "tree/TreeNode.h"
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"

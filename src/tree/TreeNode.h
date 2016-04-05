@@ -28,14 +28,14 @@ namespace eckit {
     class DataBlob;
 }
 
+namespace pmem{
+    class PersistentBuffer;
+}
+
 
 namespace tree {
 
-
-// -------------------------------------------------------------------------------------------------
-
-class PersistentBuffer;
-
+//----------------------------------------------------------------------------------------------------------------------
 
 class TreeNode {
 
@@ -100,7 +100,7 @@ private: // members
 
     pmem::PersistentVector<TreeNode> items_;
 
-    pmem::PersistentPtr<PersistentBuffer> data_;
+    pmem::PersistentPtr<pmem::PersistentBuffer> data_;
 
     eckit::FixedString<12> value_;
 
@@ -113,7 +113,7 @@ private:
     friend class TreeNode::Constructor;
 };
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 } // namespace tree
 

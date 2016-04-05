@@ -8,23 +8,21 @@
  * nor does it submit to any jurisdiction.
  */
 
-
 /// @author Simon Smart
 /// @date   Feb 2016
 
 
-#include "tree/PersistentBuffer.h"
-
-
 #include "eckit/io/Buffer.h"
+
+#include "pmem/PersistentBuffer.h"
 
 
 using namespace eckit;
 
 
-namespace tree {
+namespace pmem {
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 
 PersistentBuffer::Constructor::Constructor(const void* data, size_t length) :
@@ -45,7 +43,7 @@ void PersistentBuffer::Constructor::make(PersistentBuffer& object) const {
 }
 
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 
 size_t PersistentBuffer::size() const {
@@ -57,6 +55,6 @@ const void * PersistentBuffer::data () const {
     return data_;
 }
 
-// -------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 } // namespace tree

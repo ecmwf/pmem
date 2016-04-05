@@ -14,11 +14,11 @@
 #include "eckit/io/DataBlob.h"
 #include "eckit/types/Types.h"
 
+#include "pmem/PersistentBuffer.h"
 #include "pmem/PersistentPtr.h"
 #include "pmem/AtomicConstructor.h"
 
 #include "tree/TreeNode.h"
-#include "tree/PersistentBuffer.h"
 
 using namespace eckit;
 using namespace pmem;
