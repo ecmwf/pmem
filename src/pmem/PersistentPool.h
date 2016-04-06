@@ -53,15 +53,13 @@ public: // methods
     /// @note This permanently invalidates any access, and any pointers/PersistentPtrs.
     void remove();
 
-    // TODO: Keep track of open objects, so they can be invalidated?
+    /// What is the on-disk size of this pool?
+    size_t size() const;
 
-    // Query the status of the pool
+    /// Is this pool new?
+    bool newPool() const;
 
-    const bool newPool() const;
-
-protected: // methods
-
-    // Get hold of the root object.
+    /// Get hold of the root object.
     template <typename T>
     PersistentPtr<T> getRoot() const;
 
@@ -72,9 +70,14 @@ protected: // members
     PMEMobjpool * pool_;
 
     bool newPool_;
+
+    size_t size_;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+
+/// Get the root object. In any derived classes, this should be explicitly overridden as a non-template method.
+/// (So the user doesn't need to provide the template parameters).
 
 template <typename T>
 PersistentPtr<T> PersistentPool::getRoot()  const {

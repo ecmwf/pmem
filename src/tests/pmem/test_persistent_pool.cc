@@ -20,6 +20,7 @@
 
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPtr.h"
+#include "pmem/Exceptions.h"
 
 using namespace std;
 using namespace pmem;
@@ -76,7 +77,24 @@ struct UniquePool {
     }
     ~UniquePool() {}
 
-    eckit::PathName path_;
+    PathName path_;
+};
+
+const size_t auto_pool_size = 1024 * 1024 * 20;
+const std::string auto_pool_name = "pool-name";
+
+/// A structure to automatically create and clean up a pool (used except in the tests where this
+/// functionality is being directly tested
+
+struct AutoPool {
+
+    AutoPool() :
+        path_(UniquePool().path_),
+        pool_(path_, auto_pool_size, auto_pool_name, RootType::Constructor()) {}
+    ~AutoPool() { pool_.remove(); }
+
+    PathName path_;
+    PersistentPool pool_;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,17 +109,63 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_create )
     // Check that the file has been created
     BOOST_CHECK_EQUAL(::access(p.path_.asString().c_str(), R_OK | W_OK), 0);
 
+    BOOST_CHECK(pool.newPool());
+
     // Check that the file is correctly deleted when specified.
     pool.remove();
     BOOST_CHECK_EQUAL(::access(p.path_.asString().c_str(), F_OK), -1);
 }
 
 
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_init_root )
+{
+    AutoPool ap;
 
-// Test can retrieve pool size
-// Test can retrieve space available
-// We can get hold of the root object, even if it is the wrong type?
-// Determine new/old pool status
+    PersistentPtr<RootType> root = ap.pool_.getRoot<RootType>();
+    BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_open )
+{
+    UniquePool p;
+
+    // Create and close the pool
+    PersistentPool pool(p.path_, 1024 * 1024 * 20, "pool-name", RootType::Constructor());
+    BOOST_CHECK(pool.newPool());
+    pool.close();
+
+    // Reopen the pool
+    PersistentPool pool2(p.path_, "pool-name");
+
+    // Check that this is not a new pool (i.e. it is opened)
+    BOOST_CHECK(!pool2.newPool());
+
+    // Check that we have got a pool of the correct size, with a correctly initialised root.
+    BOOST_CHECK_EQUAL(pool2.size(), 1024 * 1024 * 20);
+
+    PersistentPtr<RootType> root = pool2.getRoot<RootType>();
+    BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
+
+    // And cleanup after ourselves
+    pool2.remove();
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_check_pool_name )
+{
+    AutoPool p;
+
+    // Functor to make constructor amenable to BOOST_CHECK_THROW
+    struct open_fail {
+        void operator()(const PathName& path, const std::string& name) {
+            PersistentPool opened_pool(path, name);
+        }
+    };
+
+    // Attempt to open pool again...
+    BOOST_CHECK_THROW(open_fail()(p.path_, "WRONG-NAME"), PersistentOpenError);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 

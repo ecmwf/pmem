@@ -34,7 +34,8 @@ namespace pmem {
 /// \param name The name to associate with the pool.
 PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& name) :
     path_(path),
-    newPool_(false) {
+    newPool_(false),
+    size_(0) {
 
     // Get the pool size from the system
     struct stat stat_buf;
@@ -43,6 +44,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
 
     Log::info() << "Opening persistent pool: " << path << std::endl;
     Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
+    size_ = stat_buf.st_size;
 
     pool_ = ::pmemobj_open(path.localPath(), name.c_str());
 
@@ -52,7 +54,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
     Log::info() << "Pool opened: " << pool_ << std::endl;
 }
 
-/// Constructs or opens a persistent pool
+/// Constructs a new persistent pool
 ///
 /// \param path The pool file to use
 /// \param size The size in bytes to use if the pool is being created.
@@ -61,7 +63,8 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
 PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
                                const AtomicConstructorBase& constructor) :
     path_(path),
-    newPool_(false) {
+    newPool_(true),
+    size_(size) {
 
     Log::info() << "Creating persistent pool: " << path << std::endl;
 
@@ -69,7 +72,6 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
     // TODO: Consider permissions. Currently this is world R/W-able.
     pool_ = ::pmemobj_create(path.localPath(), name.c_str(), size, 0666);
-    newPool_ = true;
 
     if (!pool_)
         throw PersistentCreateError(path, errno, Here());
@@ -92,6 +94,11 @@ PersistentPool::~PersistentPool() {
 }
 
 
+bool PersistentPool::newPool() const {
+    return newPool_;
+}
+
+
 void PersistentPool::close() {
 
     Log::info() << "Closing persistent pool." << std::endl;
@@ -101,12 +108,18 @@ void PersistentPool::close() {
     pool_ = 0;
 }
 
+
 void PersistentPool::remove() {
 
     close();
 
     Log::info() << "Deleting persistent pool: " << path_ << std::endl;
     ::remove(path_.asString().c_str());
+}
+
+
+size_t PersistentPool::size() const {
+    return size_;
 }
 
 // -------------------------------------------------------------------------------------------------
