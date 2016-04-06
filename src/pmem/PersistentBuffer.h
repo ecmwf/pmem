@@ -11,8 +11,8 @@
 /// @date   Feb 2016
 
 
-#ifndef tree_PersistentBuffer_H
-#define tree_PersistentBuffer_H
+#ifndef pmem_PersistentBuffer_H
+#define pmem_PersistentBuffer_H
 
 
 #include "pmem/AtomicConstructor.h"
@@ -60,7 +60,7 @@ private: // members
 
     // Accessor to the data.
     // Data is VARIABLY SIZED following on from this location.
-    char data_[1];
+    char data_[0];
 
 private: // friends
 
@@ -72,4 +72,4 @@ private: // friends
 
 } // namespace tree
 
-#endif // tree_PersistentBuffer_H
+#endif // pmem_PersistentBuffer_H

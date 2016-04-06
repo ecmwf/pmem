@@ -31,7 +31,7 @@ PersistentBuffer::Constructor::Constructor(const void* data, size_t length) :
 
 
 size_t PersistentBuffer::Constructor::size() const {
-    return sizeof(PersistentBuffer) - sizeof(char) + length_;
+    return sizeof(PersistentBuffer) + length_;
 }
 
 
@@ -39,7 +39,8 @@ void PersistentBuffer::Constructor::make(PersistentBuffer& object) const {
 
     object.length_ = length_;
 
-    ::memcpy(object.data_, data_, length_);
+    if (length_ != 0 && data_ != 0)
+        ::memcpy(object.data_, data_, length_);
 }
 
 
