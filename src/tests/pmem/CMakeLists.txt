@@ -6,6 +6,6 @@ ecbuild_add_test( TARGET test_pmem_persistent_pool
 
 ecbuild_add_test( TARGET test_pmem_persistent_buffer
                   BOOST
-                  SOURCES test_persistent_buffer.cc test_persistent_helpers.h
+                  SOURCES test_persistent_buffer.cc
                   INCLUDES ${ECKIT_INCLUDE_DIRS}
                   LIBS pmem )

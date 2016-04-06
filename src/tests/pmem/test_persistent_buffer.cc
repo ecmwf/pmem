@@ -21,8 +21,6 @@
 
 #include "pmem/PersistentBuffer.h"
 
-#include "test_persistent_helpers.h"
-
 using namespace std;
 using namespace pmem;
 using namespace eckit;
