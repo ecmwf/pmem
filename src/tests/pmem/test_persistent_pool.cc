@@ -18,16 +18,15 @@
 #include "eckit/memory/NonCopyable.h"
 #include "eckit/types/FixedString.h"
 
-#include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPtr.h"
 #include "pmem/Exceptions.h"
+
+#include "test_persistent_helpers.h"
 
 using namespace std;
 using namespace pmem;
 using namespace eckit;
 
-
-// TODO: Are we going to automatically clean up any file that are left accidentally?
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -59,46 +58,6 @@ template <> int pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-/// A fixture to obtain a unique name for this pool.
-
-struct UniquePool {
-
-    UniquePool() :
-        path_("") {
-
-        const char* tmpdir = ::getenv("TMPDIR");
-        if (!tmpdir)
-            tmpdir = ::getenv("SCRATCHDIR");
-        if (!tmpdir)
-            tmpdir = "/tmp";
-
-        PathName basepath(std::string(tmpdir) + "/pool");
-        path_ = PathName::unique(basepath);
-    }
-    ~UniquePool() {}
-
-    PathName path_;
-};
-
-const size_t auto_pool_size = 1024 * 1024 * 20;
-const std::string auto_pool_name = "pool-name";
-
-/// A structure to automatically create and clean up a pool (used except in the tests where this
-/// functionality is being directly tested
-
-struct AutoPool {
-
-    AutoPool() :
-        path_(UniquePool().path_),
-        pool_(path_, auto_pool_size, auto_pool_name, RootType::Constructor()) {}
-    ~AutoPool() { pool_.remove(); }
-
-    PathName path_;
-    PersistentPool pool_;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-
 BOOST_AUTO_TEST_SUITE( test_pmem_persistent_pool )
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_create )
@@ -119,7 +78,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_create )
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_init_root )
 {
-    AutoPool ap;
+    AutoPool ap((RootType::Constructor()));
 
     PersistentPtr<RootType> root = ap.pool_.getRoot<RootType>();
     BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
@@ -154,7 +113,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_open )
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_check_pool_name )
 {
-    AutoPool p;
+    AutoPool ap((RootType::Constructor()));
 
     // Functor to make constructor amenable to BOOST_CHECK_THROW
     struct open_fail {
@@ -164,7 +123,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_check_pool_name )
     };
 
     // Attempt to open pool again...
-    BOOST_CHECK_THROW(open_fail()(p.path_, "WRONG-NAME"), PersistentOpenError);
+    BOOST_CHECK_THROW(open_fail()(ap.path_, "WRONG-NAME"), PersistentOpenError);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
