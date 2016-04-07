@@ -304,11 +304,19 @@ const PersistentPtr<T>& PersistentVector<T>::operator[] (size_t i) const {
 
 template <typename T>
 void PersistentVector<T>::resize(size_t new_size) {
-    ASSERT(!PersistentPtr<data_type>::null());
 
-    // Atomically replace the data with a resized copy.
-    typename data_type::Constructor ctr(**this, new_size);
-    PersistentPtr<data_type>::replace(ctr);
+    if (PersistentPtr<data_type>::null()) {
+
+        // Reserve space as specified
+        typename data_type::Constructor ctr(new_size);
+        PersistentPtr<data_type>::allocate(ctr);
+
+    } else {
+
+        // Atomically replace the data with a resized copy.
+        typename data_type::Constructor ctr(**this, new_size);
+        PersistentPtr<data_type>::replace(ctr);
+    }
 }
 
 

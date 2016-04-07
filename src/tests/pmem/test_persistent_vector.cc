@@ -22,13 +22,7 @@ using namespace eckit;
 
 // TODO:
 //
-// - Test that it just wraps PersistentPtr (i.e. it is the same size!!!)
-// - Test size(), full(), available() [max size]
 // - Check explicit call to resize(). Should work from empty, and allready allocated.
-// - Test push_back
-//   - On empty list
-//   - On list with a size that equals maxSize
-//   - On list with available space
 // - Test consistency check
 // - test operator[]
 
@@ -61,7 +55,7 @@ public: // members
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 3;
+const size_t root_elems = 2;
 
 
 class RootType {
@@ -206,6 +200,81 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
     BOOST_CHECK(pd2 != pd0);
     BOOST_CHECK(pd2 != pd1);
     BOOST_CHECK(pd2 == pd3); // The vectors data member is not extended when it isn't full.
+}
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_resize )
+{
+    PersistentVector<CustomType>& pv(global_root->data_[1]);
+
+    // Run resize on an empty vector, should allocate initial space.
+
+    BOOST_CHECK(pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), 0);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 0);
+
+    pv.resize(4);
+
+    BOOST_CHECK(!pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), 0);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+
+    // Part-fill the available space
+
+    pv.push_back(CustomType::Constructor(9999));      PersistentPtr<CustomType> p0 = pv[0];
+    pv.push_back(CustomType::Constructor(8888));      PersistentPtr<CustomType> p1 = pv[1];
+    pv.push_back(CustomType::Constructor(7777));      PersistentPtr<CustomType> p2 = pv[2];
+
+    BOOST_CHECK_EQUAL(pv.size(), 3);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+
+    // Resize the vector
+
+    pv.resize(6);
+
+    BOOST_CHECK_EQUAL(pv.size(), 3);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 6);
+
+    // Fill the vector completely
+
+    pv.push_back(CustomType::Constructor(6666));      PersistentPtr<CustomType> p3 = pv[3];
+    pv.push_back(CustomType::Constructor(5555));      PersistentPtr<CustomType> p4 = pv[4];
+    pv.push_back(CustomType::Constructor(4444));      PersistentPtr<CustomType> p5 = pv[5];
+
+    // Resize the vector again now that it is full
+
+    pv.resize(8);
+
+    BOOST_CHECK_EQUAL(pv.size(), 6);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 8);
+
+    pv.push_back(CustomType::Constructor(3333));      PersistentPtr<CustomType> p6 = pv[6];
+
+    BOOST_CHECK_EQUAL(pv.size(), 7);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 8);
+
+    // Check that all the data has been preserved throughout
+
+    BOOST_CHECK_EQUAL(pv[0]->data1_, 9999);
+    BOOST_CHECK_EQUAL(pv[1]->data1_, 8888);
+    BOOST_CHECK_EQUAL(pv[2]->data1_, 7777);
+    BOOST_CHECK_EQUAL(pv[3]->data1_, 6666);
+    BOOST_CHECK_EQUAL(pv[4]->data1_, 5555);
+    BOOST_CHECK_EQUAL(pv[5]->data1_, 4444);
+    BOOST_CHECK_EQUAL(pv[6]->data1_, 3333);
+
+    // Check that none of the _data_ has been moved during the reallocation of the vectors internal data
+    // (i.e. check the persistent pointers returned by the vector are the same as they were immediately
+    // after they were stored).
+
+    BOOST_CHECK_EQUAL(p0, pv[0]);
+    BOOST_CHECK_EQUAL(p1, pv[1]);
+    BOOST_CHECK_EQUAL(p2, pv[2]);
+    BOOST_CHECK_EQUAL(p3, pv[3]);
+    BOOST_CHECK_EQUAL(p4, pv[4]);
+    BOOST_CHECK_EQUAL(p5, pv[5]);
+    BOOST_CHECK_EQUAL(p6, pv[6]);
+
+
 }
 
 //----------------------------------------------------------------------------------------------------------------------
