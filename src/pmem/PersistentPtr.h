@@ -14,6 +14,8 @@
 #ifndef pmem_PersistentPtr_H
 #define pmem_PersistentPtr_H
 
+#include <iosfwd>
+
 #include "libpmemobj.h"
 
 #include "eckit/exception/Exceptions.h"
@@ -34,6 +36,8 @@ int pmem_constructor(PMEMobjpool * pool, void * obj, void * arg);
 // These forward declarations are just to make the templated friend class statement later happy
 template <typename T> class PersistentPtr;
 template <typename T> bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs);
+template <typename T> bool operator!= (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs);
+template <typename T> std::ostream& operator<< (std::ostream&, const PersistentPtr<T>&);
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,15 +141,21 @@ public: // methods
     void replace(PMEMobjpool* pool, const AtomicConstructor<T>& constructor);
     void replace(const AtomicConstructor<T>& constructor);
 
+protected: // methods
+
+    void print(std::ostream&) const;
 
 private: // methods
 
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
     PersistentPtr(PMEMoid oid);
 
-    friend bool operator== <> (const PersistentPtr& lhs, const PersistentPtr& rhs);
-
 private: // friends
+
+    friend bool operator== <> (const PersistentPtr& lhs, const PersistentPtr& rhs);
+    friend bool operator!= <> (const PersistentPtr& lhs, const PersistentPtr& rhs);
+
+    friend std::ostream& operator<< <> (std::ostream&, const PersistentPtr&);
 
     friend class PersistentPool;
 };
@@ -255,8 +265,25 @@ void PersistentPtr<T>::replace(const AtomicConstructor<T> &constructor) {
 
 
 template <typename T>
+void PersistentPtr<T>::print(std::ostream& os) const {
+    os << "PersistentPtr(" << std::hex << oid_.pool_uuid_lo << ":" << oid_.off << ")";
+}
+
+
+template <typename T>
 bool operator== (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs) {
     return ((lhs.oid_.off == rhs.oid_.off) && (lhs.oid_.pool_uuid_lo == rhs.oid_.pool_uuid_lo));
+}
+
+template <typename T>
+bool operator!= (const PersistentPtr<T>& lhs, const PersistentPtr<T>& rhs) {
+    return ((lhs.oid_.off != rhs.oid_.off) || (lhs.oid_.pool_uuid_lo != rhs.oid_.pool_uuid_lo));
+}
+
+template <typename T>
+std::ostream& operator<< (std::ostream& os, const PersistentPtr<T>& p) {
+    p.print(os);
+    return os;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

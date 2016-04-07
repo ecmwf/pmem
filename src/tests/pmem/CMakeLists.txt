@@ -10,6 +10,12 @@ ecbuild_add_test( TARGET test_pmem_persistent_buffer
                   INCLUDES ${ECKIT_INCLUDE_DIRS}
                   LIBS pmem )
 
+ecbuild_add_test( TARGET test_pmem_persistent_ptr
+                  BOOST
+                  SOURCES test_persistent_ptr.cc
+                  INCLUDES ${ECKIT_INCLUDE_DIRS}
+                  LIBS pmem )
+
 ecbuild_add_test( TARGET test_pmem_atomic_constructor
                   BOOST
                   SOURCES test_atomic_constructor.cc

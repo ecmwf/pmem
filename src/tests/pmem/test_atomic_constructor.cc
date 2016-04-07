@@ -10,7 +10,6 @@
 
 #define BOOST_TEST_MODULE test_pmem
 
-#include <string>
 #include <stdint.h>
 
 #include "ecbuild/boost_test_framework.h"
