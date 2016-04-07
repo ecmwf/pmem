@@ -72,6 +72,11 @@ bool PersistentPtrBase::null() const {
 }
 
 
+PMEMoid PersistentPtrBase::raw() const {
+    return oid_;
+}
+
+
 // -------------------------------------------------------------------------------------------------
 
 

@@ -54,7 +54,7 @@ private: // members
 
 
 /// Declare a unique typeid associated with the type
-template <> int pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template <> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
 
 //----------------------------------------------------------------------------------------------------------------------
 

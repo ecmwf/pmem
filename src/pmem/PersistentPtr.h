@@ -60,6 +60,9 @@ public: // methods
     /// Nullify the persistent pointer
     void nullify();
 
+    /// Give everyone access to the raw oid if they really want
+    PMEMoid raw() const;
+
 protected: // methods
 
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
@@ -92,10 +95,10 @@ class PersistentPtr : public PersistentPtrBase {
 
 public: // members
 
-    /// This static is used to perform type id lookups.
+    /// This static is used to perform type id lookups. uint64_t to match internals of libpmemobj.
     /// Needs to be defined GLOBALLY.
 
-    static int type_id;
+    static uint64_t type_id;
 
 public: // methods
 

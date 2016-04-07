@@ -31,12 +31,12 @@ namespace pmem {
 }
 
 
-template<> int pmem::PersistentPtr<tree::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> int pmem::PersistentPtr<tree::TreeNode>::type_id = 1;
+template<> uint64_t pmem::PersistentPtr<tree::TreeRoot>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentPtr<tree::TreeNode>::type_id = 1;
 
-template<> int pmem::PersistentPtr<pmem::PersistentVectorData<tree::TreeNode> >::type_id = 2;
+template<> uint64_t pmem::PersistentPtr<pmem::PersistentVectorData<tree::TreeNode> >::type_id = 2;
 
-template<> int pmem::PersistentPtr<pmem::PersistentBuffer>::type_id = 3;
+template<> uint64_t pmem::PersistentPtr<pmem::PersistentBuffer>::type_id = 3;
 
 
 

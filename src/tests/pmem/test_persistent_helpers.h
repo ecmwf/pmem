@@ -55,7 +55,7 @@ struct AutoPool {
 
     AutoPool(const pmem::AtomicConstructorBase& constructor) :
         path_(UniquePool().path_),
-        pool_(path_, auto_pool_size, auto_pool_name, constructor) { eckit::Log::info() << "Hmmmzz" << std::endl;}
+        pool_(path_, auto_pool_size, auto_pool_name, constructor) {}
     ~AutoPool() { pool_.remove(); }
 
     eckit::PathName path_;
