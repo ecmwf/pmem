@@ -76,6 +76,9 @@ public: // methods
     /// Returns true if the number of elements is equal to the available space
     bool full() const;
 
+    /// How much space is available
+    size_t allocated_size() const;
+
     /// Append an element to the list.
     void push_back(const AtomicConstructor<T>& constructor);
 
@@ -115,6 +118,8 @@ public:
     void push_back(const AtomicConstructor<T>& constructor);
 
     size_t size() const;
+
+    size_t allocated_size() const;
 
     const PersistentPtr<T>& operator[] (size_t i) const;
 
@@ -179,6 +184,13 @@ size_t PersistentVectorData<T>::size() const {
 
     ASSERT(nelem_ <= allocatedSize_);
     return nelem_;
+}
+
+
+/// Number of elements in the list
+template <typename T>
+size_t PersistentVectorData<T>::allocated_size() const {
+    return allocatedSize_;
 }
 
 
@@ -275,6 +287,12 @@ void PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
 template <typename T>
 size_t PersistentVector<T>::size() const {
     return PersistentPtr<data_type>::null() ? 0 : (*this)->size();
+}
+
+
+template <typename T>
+size_t PersistentVector<T>::allocated_size() const {
+    return PersistentPtr<data_type>::null() ? 0 : (*this)->allocated_size();
 }
 
 
