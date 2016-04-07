@@ -82,6 +82,10 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_init_root )
 
     PersistentPtr<RootType> root = ap.pool_.getRoot<RootType>();
     BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
+
+    // Check that all the pool references add up
+
+    BOOST_CHECK_EQUAL(ap.pool_.raw_pool(), ::pmemobj_pool_by_ptr(root.get()));
 }
 
 

@@ -131,6 +131,7 @@ public: // methods
     /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
     void allocate(PMEMobjpool * pool, const AtomicConstructor<T>& constructor);
+    void allocate(PersistentPool& pool, const AtomicConstructor<T>& constructor);
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
     /// it will put the data into the same pool as the pointer is in
@@ -139,6 +140,7 @@ public: // methods
     /// Atomically replace the existing object with a new one. If anything fails in the chain of
     /// construction, the original object is left unchanged.
     void replace(PMEMobjpool* pool, const AtomicConstructor<T>& constructor);
+    void replace(PersistentPool& pool, const AtomicConstructor<T>& constructor);
     void replace(const AtomicConstructor<T>& constructor);
 
 protected: // methods
@@ -220,6 +222,12 @@ void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<T>& 
 
 
 template <typename T>
+void PersistentPtr<T>::allocate(PersistentPool& pool, const AtomicConstructor<T>& constructor) {
+    allocate(pool.raw_pool(), constructor);
+}
+
+
+template <typename T>
 void PersistentPtr<T>::allocate(const AtomicConstructor<T>& constructor) {
 
     // For allocating directly on an existing persistent object, we don't have to specify the pool manually. Get the
@@ -245,10 +253,17 @@ void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<T> &co
                         type_id,
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
+        ASSERT(OID_EQUALS(oid_, oid_tmp));
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
     } else {
         ::pmemobj_free(&oid_tmp);
     }
+}
+
+
+template <typename T>
+void PersistentPtr<T>::replace(PersistentPool& pool, const AtomicConstructor<T> &constructor) {
+    replace(pool.raw_pool(), constructor);
 }
 
 

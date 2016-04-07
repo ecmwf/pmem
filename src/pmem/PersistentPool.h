@@ -63,6 +63,9 @@ public: // methods
     template <typename T>
     PersistentPtr<T> getRoot() const;
 
+    /// Get hold of the raw libpmemobj pool
+    PMEMobjpool * raw_pool() const;
+
 protected: // members
 
     eckit::PathName path_;

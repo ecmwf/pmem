@@ -48,7 +48,6 @@ struct UniquePool {
 const size_t auto_pool_size = 1024 * 1024 * 20;
 const std::string auto_pool_name = "pool-name";
 
-
 /// A structure to automatically create and clean up a pool (used except in the tests where this
 /// functionality is being directly tested
 
@@ -56,7 +55,7 @@ struct AutoPool {
 
     AutoPool(const pmem::AtomicConstructorBase& constructor) :
         path_(UniquePool().path_),
-        pool_(path_, auto_pool_size, auto_pool_name, constructor) {}
+        pool_(path_, auto_pool_size, auto_pool_name, constructor) { eckit::Log::info() << "Hmmmzz" << std::endl;}
     ~AutoPool() { pool_.remove(); }
 
     eckit::PathName path_;

@@ -122,6 +122,11 @@ size_t PersistentPool::size() const {
     return size_;
 }
 
+
+PMEMobjpool* PersistentPool::raw_pool() const {
+    return pool_;
+}
+
 // -------------------------------------------------------------------------------------------------
 
 } // namespace pmem
