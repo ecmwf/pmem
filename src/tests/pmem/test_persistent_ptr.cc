@@ -24,11 +24,9 @@ using namespace eckit;
 
 
 // TODO:
-// - Test &, *, get dereferences
 // - Test mismatch behaviour of type_id
 // - Check valid()
 // - Check free()
-// - Check that we can access things cross-pools when allocated cross pools.
 // - Check that replace does what it says on the tin
 
 //----------------------------------------------------------------------------------------------------------------------

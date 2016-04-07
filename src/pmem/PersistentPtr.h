@@ -99,14 +99,11 @@ public: // members
 
 public: // methods
 
-    /*
-     * Constructors
-     */
+    /// Constructor
+
     PersistentPtr();
 
-    /*
-     * Access the stored object
-     */
+    /// Access the stored object
 
     T& operator*() const;
 
@@ -114,17 +111,11 @@ public: // methods
 
     T* get() const;
 
-    /*
-     * Status testing?
-     */
-
     // bool null() const; // Inherited
 
     bool valid() const;
 
-    /*
-     * Modification
-     */
+    /// Modification of pointers
 
     // void nullify(); // Inherited
 
