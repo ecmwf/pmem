@@ -87,6 +87,8 @@ public: // methods
 
     /// As the nelem_ member is updated after allocation has taken place, and hence non-atomically, we need to
     /// be able to check that its value is correct.
+    ///
+    /// @note this implementation will be insufficient if we add the capacity to remove elements as well as add them.
     void consistency_check() const;
 
 protected: // methods
@@ -94,7 +96,7 @@ protected: // methods
     /// Update the number of elements, ensuring that the result is persisted
     void update_nelem(size_t nelem) const;
 
-private: // members
+protected: // members
 
     // Track the allocated size, and the number of elements used
     mutable size_t nelem_;

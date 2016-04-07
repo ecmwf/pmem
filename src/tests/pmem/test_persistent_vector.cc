@@ -20,12 +20,6 @@ using namespace std;
 using namespace pmem;
 using namespace eckit;
 
-// TODO:
-//
-// - Check explicit call to resize(). Should work from empty, and allready allocated.
-// - Test consistency check
-// - test operator[]
-
 //----------------------------------------------------------------------------------------------------------------------
 
 /// A custom type to allocate objects in the tests
@@ -55,7 +49,7 @@ public: // members
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 2;
+const size_t root_elems = 3;
 
 
 class RootType {
@@ -141,6 +135,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
     BOOST_CHECK(!pv.null());
     BOOST_CHECK_EQUAL(pv.size(), 1);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 1);
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
 
     PersistentPtr<CustomType> pp0 = pv[0];
     PersistentPtr<PersistentVectorData<CustomType> > pd0 = pv;
@@ -154,6 +149,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
     BOOST_CHECK(!pv.null());
     BOOST_CHECK_EQUAL(pv.size(), 2);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 2);
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
 
     BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
     BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
@@ -174,12 +170,14 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
 
     BOOST_CHECK_EQUAL(pv.size(), 3);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK(!pv->full()); // Internal to PersistentVectorData
 
     pv.push_back(CustomType::Constructor(4444));
     PersistentPtr<PersistentVectorData<CustomType> > pd3 = pv;
 
     BOOST_CHECK_EQUAL(pv.size(), 4);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
 
     BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
     BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
@@ -273,8 +271,91 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_resize )
     BOOST_CHECK_EQUAL(p4, pv[4]);
     BOOST_CHECK_EQUAL(p5, pv[5]);
     BOOST_CHECK_EQUAL(p6, pv[6]);
+}
 
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_consistency_check )
+{
+    // Necessarily the nelem_ count is incremented after the allocation has succeeded atomically
+    //
+    // --> On later accesses, it may be out of date
+    // --> consistency_check updates it if necessary
 
+    // We define a PersistentVectorData abuser, which allows us to manipulate nelem_ ...
+    // (this is obviously normally private).
+    //
+    // It also gives direct access to read the nelem_ member, as the normal size() routine
+    // automatically runs a consistency_check(), so we can't do direct testing...
+
+    class Abuser : public PersistentVectorData<CustomType> {
+    public:
+        void tweak_nelem(size_t n) { update_nelem(n); }
+        size_t raw_size() const { return nelem_; }
+    };
+
+    // -------------
+    PersistentVector<CustomType>& pv(global_root->data_[2]);
+
+    pv.push_back(CustomType::Constructor(1234));
+    pv.push_back(CustomType::Constructor(1235));
+    pv.push_back(CustomType::Constructor(1236));
+
+    BOOST_CHECK(!pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), 3);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK(!pv->full());
+
+    // Manipulate the internal count, and check that consistency_check fixes it
+
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 3);
+    static_cast<Abuser*>(pv.get())->tweak_nelem(2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+
+    pv->consistency_check();
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 3);
+
+    // Manipulate the internal count. Check that it is automatically corrected if we try and read it.
+
+    static_cast<Abuser*>(pv.get())->tweak_nelem(2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+
+    BOOST_CHECK_EQUAL(pv.size(), 3);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 3);
+
+    // Manipulate the internal count. Check that it is automatically corrected if we try and push_back
+
+    static_cast<Abuser*>(pv.get())->tweak_nelem(2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+
+    pv.push_back(CustomType::Constructor(1237));
+
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), 4);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK(pv->full());
+
+    // Check that the full() check (used to determine if we need to resize on push_back) does the correction
+
+    static_cast<Abuser*>(pv.get())->tweak_nelem(2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+
+    BOOST_CHECK(pv->full());
+
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), 4);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+
+    // If we manipulate nelem_ the wrong way, we end up with null() gaps in the vector.
+    // This will be picked up by consistency check.
+
+    pv.resize(8);
+    BOOST_CHECK_EQUAL(pv.size(), 4);
+
+    static_cast<Abuser*>(pv.get())->tweak_nelem(6);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 6);
+
+    BOOST_CHECK_THROW(pv->consistency_check(), AssertionFailed);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
