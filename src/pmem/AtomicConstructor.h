@@ -70,8 +70,11 @@ public:
         return 0;
     }
 
-    /// N.b. This is virtual. This allows the constructor to actually allocate more memory
-    ///      than the size of the declared structure (e.g. if allocating a buffer).
+    /// Return the size of the object to be allocated in bytes. This is called by the
+    /// ::pmem_constructor routine.
+    ///
+    /// @note This is virtual. This allows the constructor to actually allocate more memory
+    ///       than the size of the declared structure (e.g. if allocating a buffer).
     virtual size_t size() const { return sizeof(T); }
 };
 
