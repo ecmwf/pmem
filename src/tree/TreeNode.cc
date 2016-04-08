@@ -136,6 +136,11 @@ size_t TreeNode::dataSize() const {
 }
 
 
+const pmem::PersistentVector<TreeNode>& TreeNode::items() const {
+    return items_;
+}
+
+
 std::vector<PersistentPtr<TreeNode> >
 TreeNode::lookup(const StringDict& request) {
 

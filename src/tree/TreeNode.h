@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "eckit/types/FixedString.h"
+#include "eckit/types/Types.h"
 
 #include "pmem/PersistentPtr.h"
 #include "pmem/PersistentVector.h"
@@ -75,7 +76,7 @@ public: // methods
 
     void addNode(const KeyType& key, const eckit::DataBlob& blob);
 
-
+    /// How many subnodes are there to this node?
     size_t nodeCount() const;
 
     // n.b. this is non-const. May return a reference to the current object, that can be
@@ -90,11 +91,17 @@ public: // methods
     /// The key by which child nodes are selected
     const eckit::FixedString<12>& key() const;
 
+    /// Does this node contain data?
     bool leaf() const;
 
     const void * data() const;
 
     size_t dataSize() const;
+
+protected: //
+
+    /// A utility method to facilitate testing.
+    const pmem::PersistentVector<TreeNode>& items() const;
 
 private: // members
 
