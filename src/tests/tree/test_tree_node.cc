@@ -225,6 +225,143 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_recursive )
 }
 
 
+BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
+{
+    PersistentPtr<TreeNode>& first(global_root->data_[2]);
+
+    BOOST_CHECK(first.null());
+
+    // Check that we can insert a leaf at a certain depth
+
+    TreeNode::KeyType key;
+    key.push_back(std::make_pair("key1", "value1"));
+    key.push_back(std::make_pair("key2", "value2"));
+    key.push_back(std::make_pair("key3", "value3"));
+
+    std::string data("\"data 1234\"");
+    eckit::JSONDataBlob blob(data.c_str(), data.length());
+
+    first.allocate(TreeNode::Constructor("SAMPLE", key, blob));
+
+    // Add a second element to the tree being built
+
+    TreeNode::KeyType key2;
+    key2.push_back(std::make_pair("key1", "value1"));
+    key2.push_back(std::make_pair("key2", "value2a"));
+    key2.push_back(std::make_pair("key99", "valueX"));
+
+    std::string data2("\"Another bit of data that is a bit longer than the previous one.......\"");
+    eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
+
+    first->addNode(key2, blob2);
+
+    // Check that the structure is correct.
+
+    BOOST_CHECK(!first.null());
+    BOOST_CHECK(!first->leaf());
+    BOOST_CHECK_EQUAL(first->nodeCount(), 1);
+
+    BOOST_CHECK_EQUAL(first->value(), "SAMPLE");
+    BOOST_CHECK_EQUAL(first->key(), "key1");
+    BOOST_CHECK_EQUAL(first->dataSize(), 0);
+    BOOST_CHECK(first->data() == 0);
+
+    // ... next node
+
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), 1);
+    const PersistentPtr<TreeNode> child1 = (*reinterpret_cast<TreeNodeSpy*>(first.get())).items()[0];
+
+    BOOST_CHECK(!child1.null());
+    BOOST_CHECK(!child1->leaf());
+    BOOST_CHECK_EQUAL(child1->nodeCount(), 2);
+
+    BOOST_CHECK_EQUAL(child1->value(), "value1");
+    BOOST_CHECK_EQUAL(child1->key(), "key2");
+    BOOST_CHECK_EQUAL(child1->dataSize(), 0);
+    BOOST_CHECK(child1->data() == 0);
+
+    // ... Follow only the second branch (have checked the original add in a previous test).
+
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), 2);
+    const PersistentPtr<TreeNode> child2 = (*reinterpret_cast<TreeNodeSpy*>(child1.get())).items()[1];
+
+    BOOST_CHECK(!child2.null());
+    BOOST_CHECK(!child2->leaf());
+    BOOST_CHECK_EQUAL(child2->nodeCount(), 1);
+
+    BOOST_CHECK_EQUAL(child2->value(), "value2a");
+    BOOST_CHECK_EQUAL(child2->key(), "key99");
+    BOOST_CHECK_EQUAL(child2->dataSize(), 0);
+    BOOST_CHECK(child2->data() == 0);
+
+    // ... leaf node
+
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), 1);
+    const PersistentPtr<TreeNode> child3 = (*reinterpret_cast<TreeNodeSpy*>(child2.get())).items()[0];
+
+    BOOST_CHECK(!child3.null());
+    BOOST_CHECK(child3->leaf());
+    BOOST_CHECK_EQUAL(child3->nodeCount(), 0);
+
+    BOOST_CHECK_EQUAL(child3->value(), "valueX");
+    BOOST_CHECK_EQUAL(child3->key(), "");
+
+    // Check that the data has been copied into persistent memory
+
+    BOOST_CHECK(child3->data() != 0);
+    BOOST_CHECK(child3->data() != blob.buffer());
+
+    PMEMobjpool * pool_data = ::pmemobj_pool_by_ptr(child3->data());
+    PMEMobjpool * pool_root = ::pmemobj_pool_by_ptr(global_root.get());
+
+    BOOST_CHECK(pool_data != 0);
+    BOOST_CHECK_EQUAL(pool_data, pool_root);
+
+    // Check the data contents
+
+    BOOST_CHECK_EQUAL(child3->dataSize(), data2.length());
+
+    std::string str_out(static_cast<const char*>(child3->data()), child3->dataSize());
+
+    BOOST_CHECK_EQUAL(data2, str_out);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
+{
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
+{
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_tree_node_construct_leaf_branch )
+{
+
+}
+
+BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
+{
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_tree_node_locate_intermediate_node )
+{
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_tree_node_locate_wildcard )
+{
+
+}
+
+
 //----------------------------------------------------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END()
