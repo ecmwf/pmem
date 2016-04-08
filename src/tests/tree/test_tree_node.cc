@@ -28,7 +28,7 @@ using namespace tree;
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 5;
+const size_t root_elems = 7;
 
 
 class RootType {
@@ -393,30 +393,109 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
     eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
 
     BOOST_CHECK_THROW(first->addNode(key, blob2), TreeNode::LeafExistsError);
-
 }
 
 
 BOOST_AUTO_TEST_CASE( test_tree_node_construct_leaf_branch )
 {
+    // We cannot add further nodes to a leaf node.
 
+    PersistentPtr<TreeNode>& first(global_root->data_[5]);
+
+    BOOST_CHECK(first.null());
+
+    // Insert a leaf at a certain depth
+
+    TreeNode::KeyType key;
+    key.push_back(std::make_pair("key1", "value1"));
+    key.push_back(std::make_pair("key2", "value2"));
+
+    std::string data("\"data 1234\"");
+    eckit::JSONDataBlob blob(data.c_str(), data.length());
+
+    first.allocate(TreeNode::Constructor("SAMPLE", key, blob));
+
+    // What happens when we attempt to insert a leaf to the same key?
+
+    key.push_back(std::make_pair("key3", "value3"));
+
+    BOOST_CHECK_THROW(first->addNode(key, blob), TreeNode::LeafExistsError);
 }
 
 BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
 {
+    PersistentPtr<TreeNode>& first(global_root->data_[6]);
 
-}
+    BOOST_CHECK(first.null());
+
+    // Construct a
+
+    TreeNode::KeyType key;
+    key.push_back(std::make_pair("key1", "value1"));
+    key.push_back(std::make_pair("key2", "value2"));
+    key.push_back(std::make_pair("key3", "value3"));
+
+    std::string data("\"data 1234\"");
+    eckit::JSONDataBlob blob(data.c_str(), data.length());
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_locate_intermediate_node )
-{
+    TreeNode::KeyType key2;
+    key2.push_back(std::make_pair("key1", "value1"));
+    key2.push_back(std::make_pair("key2", "value2a"));
+    key2.push_back(std::make_pair("key3", "value3"));
 
-}
+    std::string data2("\"Some more data\"");
+    eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_locate_wildcard )
-{
+    TreeNode::KeyType key3;
+    key3.push_back(std::make_pair("key1", "value1"));
+    key3.push_back(std::make_pair("key2", "value2a"));
+    key3.push_back(std::make_pair("key3", "value3a"));
 
+    std::string data3("\"Woooooooohoooooooooooooooooooooo\"");
+    eckit::JSONDataBlob blob3(data3.c_str(), data3.length());
+
+
+    first.allocate(TreeNode::Constructor("SAMPLE", key, blob));
+    first->addNode(key2, blob2);
+    first->addNode(key3, blob3);
+
+    // Do a lookup for a non-existent key
+
+    StringDict request;
+    request["key1"] = "value1";
+    request["key2"] = "value_bad";
+    request["key3"] = "value3";
+
+    BOOST_CHECK_EQUAL(first->lookup(request).size(), 0);
+
+    // Find a single key, as _fully_ specified
+
+    StringDict request2;
+    for (TreeNode::KeyType::const_iterator it = key2.begin(); it != key2.end(); ++it) {
+        request2[it->first] = it->second;
+    }
+
+    std::vector<PersistentPtr<TreeNode> > result2 = first->lookup(request2);
+
+    BOOST_CHECK_EQUAL(result2.size(), 1);
+    BOOST_CHECK_EQUAL(result2[0]->value(), "value3");
+    BOOST_CHECK_EQUAL(std::string((const char*)result2[0]->data(), result2[0]->dataSize()), data2);
+
+    //// Do a wildcard (underspecified) lookup
+
+    StringDict request3;
+    request3["key1"] = "value1";
+    request3["key3"] = "value3";
+
+    std::vector<PersistentPtr<TreeNode> > result3 = first->lookup(request3);
+
+    BOOST_CHECK_EQUAL(result3.size(), 2);
+    BOOST_CHECK_EQUAL(result3[0]->value(), "value3");
+    BOOST_CHECK_EQUAL(result3[1]->value(), "value3");
+    BOOST_CHECK_EQUAL(std::string((const char*)result3[0]->data(), result3[0]->dataSize()), data);
+    BOOST_CHECK_EQUAL(std::string((const char*)result3[1]->data(), result3[1]->dataSize()), data2);
 }
 
 

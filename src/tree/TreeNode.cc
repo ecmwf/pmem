@@ -10,8 +10,9 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
-#include "eckit/log/Log.h"
 #include "eckit/io/DataBlob.h"
+#include "eckit/log/Bytes.h"
+#include "eckit/log/Log.h"
 #include "eckit/types/Types.h"
 
 #include "pmem/PersistentBuffer.h"
@@ -150,13 +151,13 @@ const pmem::PersistentVector<TreeNode>& TreeNode::items() const {
 std::vector<PersistentPtr<TreeNode> >
 TreeNode::lookup(const StringDict& request) {
 
-//    Log::info() << "Node lookup: " << request << std::endl;
-
-    // 3 possibilities:
+    // Look through subnodes. Return depends on conditions
     //
-    // - name of current node is a key in request --> do lookup on subnodes
-    // - name of current node is not a key --> return all subnodes
-    // - name of current node is not a key, and no subnodes --> return this node.
+    // i) If the current key() is found in the request, then find matching values() in subnodes
+    // ii) If the current key() is not found in the request, consider all subnodes
+    //
+    // - All relevant leaf() subnodes should be added to the result
+    // - The lookup should be propagated down into relevant non-leaf subnodes.
 
     ASSERT(!leaf());
 
@@ -201,20 +202,23 @@ void TreeNode::printTree(std::ostream& os, std::string pad) const {
     // n.b. the parent is responsible for indenting the opening brace.
     os << "{" << std::endl;
     std::string pad2(pad + "  ");
-    os << pad2 << "key: " << key_ << "," << std::endl;
-    os << pad2 << "data: " << (data_.null() ? "missing" : "present")
-       << "," << std::endl;
-    os << pad2 << "items: [";
 
-    std::string pad4(pad2 + "  ");
-    for (size_t i = 0; i < items_.size(); i++) {
-        if (i > 0) os << ",";
-        os << std::endl << pad4 << std::string(items_[i]->key()) << ": ";
-        items_[i]->printTree(os, pad4);
+    if (leaf()) {
+        os << pad2 << "data: " << Bytes(dataSize()) << std::endl;
+    } else {
+        os << pad2 << "key: " << key_ << "," << std::endl;
+        os << pad2 << "items: [";
+
+        std::string pad4(pad2 + "  ");
+        for (size_t i = 0; i < items_.size(); i++) {
+            if (i > 0) os << ",";
+            os << std::endl << pad4 << std::string(items_[i]->value()) << ": ";
+            items_[i]->printTree(os, pad4);
+        }
+
+        if (items_.size() > 0) os << std::endl << pad2;
+        os << "]" << std::endl;
     }
-
-    if (items_.size() > 0) os << std::endl << pad2;
-    os << "]" << std::endl;
 
     // The parent is responsible for terminating the final line if desired.
     os << pad << "}";
