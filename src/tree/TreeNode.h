@@ -44,6 +44,10 @@ public: // types
 
     typedef std::vector<std::pair<std::string, std::string> > KeyType;
 
+    struct LeafExistsError : public eckit::Exception {
+        LeafExistsError(const std::string&, const eckit::CodeLocation&);
+    };
+
 public: // Construction objects
 
     class Constructor : public pmem::AtomicConstructor<TreeNode> {

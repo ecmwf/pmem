@@ -28,7 +28,7 @@ using namespace tree;
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 3;
+const size_t root_elems = 5;
 
 
 class RootType {
@@ -329,12 +329,70 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
 
 BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
 {
+    // When we are attempting to read a nodes children, the key is already set
+    //
+    // --> Branching must occur by specifying a different value, not a different key
+    // --> (As shown in test _construct_addNode it is possible to have differing keys after the branch point).
 
+    PersistentPtr<TreeNode>& first(global_root->data_[3]);
+
+    BOOST_CHECK(first.null());
+
+    // Insert a leaf at a certain depth
+
+    TreeNode::KeyType key;
+    key.push_back(std::make_pair("key1", "value1"));
+    key.push_back(std::make_pair("key2", "value2"));
+    key.push_back(std::make_pair("key3", "value3"));
+
+    std::string data("\"data 1234\"");
+    eckit::JSONDataBlob blob(data.c_str(), data.length());
+
+    first.allocate(TreeNode::Constructor("SAMPLE", key, blob));
+
+    // Attempt to branch by changing key2
+
+    TreeNode::KeyType key2;
+    key2.push_back(std::make_pair("key1", "value1"));
+    key2.push_back(std::make_pair("key2a", "value2"));
+    key2.push_back(std::make_pair("key3", "value3"));
+
+    std::string data2("\"Some more data\"");
+    eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
+
+    BOOST_CHECK_THROW(first->addNode(key2, blob2), AssertionFailed);
 }
 
 
 BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
 {
+    // When we are attempting to read a nodes children, the key is already set
+    //
+    // --> Branching must occur by specifying a different value, not a different key
+    // --> (As shown in test _construct_addNode it is possible to have differing keys after the branch point).
+
+    PersistentPtr<TreeNode>& first(global_root->data_[4]);
+
+    BOOST_CHECK(first.null());
+
+    // Insert a leaf at a certain depth
+
+    TreeNode::KeyType key;
+    key.push_back(std::make_pair("key1", "value1"));
+    key.push_back(std::make_pair("key2", "value2"));
+    key.push_back(std::make_pair("key3", "value3"));
+
+    std::string data("\"data 1234\"");
+    eckit::JSONDataBlob blob(data.c_str(), data.length());
+
+    first.allocate(TreeNode::Constructor("SAMPLE", key, blob));
+
+    // What happens when we attempt to insert a leaf to the same key?
+
+    std::string data2("\"Another bit of data\"");
+    eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
+
+    BOOST_CHECK_THROW(first->addNode(key, blob2), TreeNode::LeafExistsError);
 
 }
 

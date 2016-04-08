@@ -26,6 +26,10 @@ using namespace pmem;
 
 namespace tree {
 
+
+TreeNode::LeafExistsError::LeafExistsError(const std::string& msg, const CodeLocation& here) :
+    Exception(msg, here) {}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -92,6 +96,8 @@ void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
         if (items_[i]->value() == value) {
 
             KeyType subkeys(key.begin()+1, key.end());
+            if (items_[i]->leaf())
+                throw LeafExistsError(std::string("The leaf ") + std::string(value) + " already exists", Here());
             items_[i]->addNode(subkeys, blob);
             return;
         }
