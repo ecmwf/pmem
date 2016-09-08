@@ -75,6 +75,18 @@ void TreeTool::usage(const std::string& tool) {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// This functionality has been removed from JSONParser.
+
+void value_to_string_dict(const Value& v, StringDict& d) {
+
+    ASSERT(v.isMap());
+    ValueMap m(v);
+
+    for( ValueMap::iterator it = m.begin(); it != m.end(); ++it) {
+        d[it->first] = std::string(it->second);
+    }
+}
+
 
 void TreeTool::run() {
 
@@ -98,10 +110,10 @@ void TreeTool::run() {
     options.push_back(new SimpleOption<bool>("print", "Prints the tree in its entirety to stdout"));
     options.push_back(new SimpleOption<std::string>("lookup", "Specify a (partial) key (as JSON) to perform a lookup"));
 
-    CmdArgs args(&usage, 1, options);
+    CmdArgs args(&usage, options, 1);
 
     size_t pool_size = args.getLong("size", 20 * 1024 * 1024);
-    PathName path = args.args()[0];
+    PathName path = args(0);
     Log::info() << "Specified pool: " << path << std::endl;
 
     // ---------------------------------------------------------------------------------
@@ -138,7 +150,7 @@ void TreeTool::run() {
         JSONParser parser(iss);
 
         StringDict key;
-        JSONParser::toStrDict(parser.parse(), key);
+        value_to_string_dict(parser.parse(), key);
 
         // Get the data to store into a blob.
         PathName data_path(args.getString("data"));
@@ -168,7 +180,7 @@ void TreeTool::run() {
         JSONParser parser(iss);
 
         StringDict key;
-        JSONParser::toStrDict(parser.parse(), key);
+        value_to_string_dict(parser.parse(), key);
 
         std::vector<PersistentPtr<TreeNode> > nodes = tree.lookup(key);
 
@@ -211,7 +223,7 @@ void TreeTool::run() {
             if (op == "insert") {
 
                 StringDict key;
-                JSONParser::toStrDict(request["key"], key);
+                value_to_string_dict(parser.parse(), key);
 
                 std::string data(request["data"]);
                 JSONDataBlob blob(data.c_str(), data.length());
@@ -221,7 +233,7 @@ void TreeTool::run() {
             } else if (op  == "lookup") {
 
                 StringDict key;
-                JSONParser::toStrDict(request["key"], key);
+                value_to_string_dict(request["key"], key);
 
                 std::vector<PersistentPtr<TreeNode> > nodes = tree.lookup(key);
 

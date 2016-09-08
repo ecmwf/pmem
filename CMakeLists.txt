@@ -17,7 +17,7 @@ ecbuild_declare_project()
 ### export package to other ecbuild packages
 
 set( PMEM_INCLUDE_DIRS   ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src )
-set( PMEM_LIBRARIES      pmemwrapper )
+set( PMEM_LIBRARIES      pmem)
 
 get_directory_property( PMEM_DEFINITIONS COMPILE_DEFINITIONS )
 
@@ -34,7 +34,7 @@ ecbuild_add_resources( TARGET top_files SOURCES README.md)
 
 ecbuild_pkgconfig(NAME pmem
                   DESCRIPTION "Use the persistent memory libs"
-                  LIBRARIES multio_pmem pmemwrapper)
+                  LIBRARIES pmem )
 
 ecbuild_install_project( NAME ${PROJECT_NAME} )
 
