@@ -19,8 +19,6 @@
 #include <cstddef>
 #include <string>
 
-#include "libpmemobj.h"
-
 #include "eckit/exception/Exceptions.h"
 
 namespace pmem {
