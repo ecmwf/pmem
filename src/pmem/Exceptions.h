@@ -31,6 +31,8 @@ class PersistentCreateError : public PersistentError {
 public:
     PersistentCreateError(const std::string&, int error);
     PersistentCreateError(const std::string&, int error, const eckit::CodeLocation&);
+
+    int errno_;
 };
 
 
@@ -38,6 +40,8 @@ class PersistentOpenError : public PersistentError {
 public:
     PersistentOpenError(const std::string&, int error);
     PersistentOpenError(const std::string&, int error, const eckit::CodeLocation&);
+
+    int errno_;
 };
 // -------------------------------------------------------------------------------------------------
 

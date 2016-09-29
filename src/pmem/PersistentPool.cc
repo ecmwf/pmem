@@ -37,14 +37,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
     newPool_(false),
     size_(0) {
 
-    // Get the pool size from the system
-    struct stat stat_buf;
-    int rc = stat(path.asString().c_str(), &stat_buf);
-    ASSERT(rc == 0);
-
     Log::info() << "Opening persistent pool: " << path << std::endl;
-    Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
-    size_ = stat_buf.st_size;
 
     pool_ = ::pmemobj_open(path.localPath(), name.c_str());
 
@@ -52,6 +45,14 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
         throw PersistentOpenError(path, errno, Here());
 
     Log::info() << "Pool opened: " << pool_ << std::endl;
+
+    // Get the pool size from the system
+    struct stat stat_buf;
+    int rc = stat(path.asString().c_str(), &stat_buf);
+    ASSERT(rc == 0);
+
+    Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
+    size_ = stat_buf.st_size;
 }
 
 /// Constructs a new persistent pool

@@ -16,7 +16,7 @@ ecbuild_declare_project()
 
 ### export package to other ecbuild packages
 
-set( PMEM_INCLUDE_DIRS   ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src )
+set( PMEM_INCLUDE_DIRS   ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src ${PMEMIO_INCLUDE_DIRS} )
 set( PMEM_LIBRARIES      pmem)
 
 get_directory_property( PMEM_DEFINITIONS COMPILE_DEFINITIONS )

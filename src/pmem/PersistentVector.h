@@ -80,7 +80,7 @@ public: // methods
     size_t allocated_size() const;
 
     /// Append an element to the list.
-    void push_back(const AtomicConstructor<T>& constructor);
+    PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor);
 
     /// Return a given element in the list
     const PersistentPtr<T>& operator[] (size_t i) const;
@@ -117,7 +117,7 @@ class PersistentVector : public PersistentPtr<PersistentVectorData<T> > {
 
 public:
 
-    void push_back(const AtomicConstructor<T>& constructor);
+    PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor);
 
     size_t size() const;
 
@@ -209,18 +209,23 @@ bool PersistentVectorData<T>::full() const {
 
 /// Append an element to the list.
 template<typename T>
-void PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor) {
+PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor) {
 
     consistency_check();
 
     if (nelem_ == allocatedSize_)
         throw eckit::OutOfRange("PersistentVector is full", Here());
 
-    elements_[nelem_].allocate(constructor);
+    size_t stored_elem = nelem_;
+    elements_[stored_elem].allocate(constructor);
 
     // n.b. This update is NOT ATOMIC, and therefore creates the requirement to call consistency_check() to ensure
     //      that we haven't had a power-off-power-on incident.
     update_nelem(nelem_ + 1);
+
+    eckit::Log::error() << "Added and updated: " << elements_[stored_elem] << std::endl;
+
+    return elements_[stored_elem];
 }
 
 
@@ -267,7 +272,7 @@ void PersistentVectorData<T>::update_nelem(size_t nelem) const {
 
 
 template <typename T>
-void PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
+PersistentPtr<T> PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
 
     // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
     if (PersistentPtr<data_type>::null()) {
@@ -283,7 +288,7 @@ void PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
         resize(sz * 2);
     }
 
-    PersistentPtr<data_type>::get()->push_back(constructor);
+    return PersistentPtr<data_type>::get()->push_back(constructor);
 }
 
 template <typename T>
