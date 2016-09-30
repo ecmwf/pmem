@@ -4,6 +4,7 @@ ecbuild_add_library(
 
     SOURCES
         AtomicConstructor.h
+        AtomicConstructorCast.h
         Exceptions.cc
         Exceptions.h
         PersistentBuffer.cc
