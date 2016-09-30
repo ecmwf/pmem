@@ -13,6 +13,7 @@ ecbuild_add_library(
         PersistentPtr.cc
         PersistentPtr.h
         PersistentVector.h
+        PersistentMutex.h
 
 
     INCLUDES
