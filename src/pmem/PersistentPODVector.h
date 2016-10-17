@@ -223,7 +223,7 @@ const T& PersistentPODVectorData<T>::operator[] (size_t i) const {
 
 
 template <typename T>
-PersistentPtr<T> PersistentPODVector<T>::push_back(const T& value) {
+void PersistentPODVector<T>::push_back(const T& value) {
 
     // TODO: Add a construtor that includes an element, or a new element, to avoid two stage allocate, push_back
     // TODO: A better sizing that using 1 as the default.
@@ -241,7 +241,7 @@ PersistentPtr<T> PersistentPODVector<T>::push_back(const T& value) {
         resize(sz * 2);
     }
 
-    return PersistentPtr<data_type>::get()->push_back(value);
+    PersistentPtr<data_type>::get()->push_back(value);
 }
 
 template <typename T>

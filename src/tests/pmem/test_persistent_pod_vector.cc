@@ -42,7 +42,7 @@ public: // constructor
 
 public: // members
 
-    PersistentVector<uint64_t> data_[root_elems];
+    PersistentPODVector<uint64_t> data_[root_elems];
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -92,14 +92,14 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_not_pmem )
 
     PersistentPODVector<uint64_t> pv;
 
-    BOOST_CHECK_THROW(pv.push_back(CustomType::Constructor(1234)), SeriousBug);
+    BOOST_CHECK_THROW(pv.push_back(1234), SeriousBug);
 }
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 {
     PersistentPODVector<size_t>& pv(global_root->data_[0]);
 
-    // Check that allocation works on an (as-of-yet null) PersistentVector
+    // Check that allocation works on an (as-of-yet null) PersistentPODVector
 
     BOOST_CHECK(pv.null());
     BOOST_CHECK_EQUAL(pv.size(), 0);
@@ -110,10 +110,10 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
     BOOST_CHECK(!pv.null());
     BOOST_CHECK_EQUAL(pv.size(), 1);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 1);
-    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+    BOOST_CHECK(pv->full()); // Internal to PersistentPODVectorData
 
     BOOST_CHECK_EQUAL(pv[0], 1111);
-    uint64_t * data_ptr_a = &pv[0];
+    const uint64_t * data_ptr_a = &pv[0];
 
     // Check that the next push_back works (will need to internally reallocate, as it goes in powers of two).
 
@@ -122,14 +122,14 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
     BOOST_CHECK(!pv.null());
     BOOST_CHECK_EQUAL(pv.size(), 2);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 2);
-    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+    BOOST_CHECK(pv->full()); // Internal to PersistentPODVectorData
 
     BOOST_CHECK_EQUAL(pv[0], 1111);
     BOOST_CHECK_EQUAL(pv[1], 2222);
 
     // The data has been reallocated in the previous push_back
 
-    uint64_t * data_ptr_b = &pv[0];
+    const uint64_t * data_ptr_b = &pv[0];
     BOOST_CHECK(data_ptr_b != data_ptr_a);
 
     // Check that the next 2 push_back works. Push back 4 doesn't need to reallocate.
@@ -138,9 +138,9 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 
     BOOST_CHECK_EQUAL(pv.size(), 3);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
-    BOOST_CHECK(!pv->full()); // Internal to PersistentVectorData
+    BOOST_CHECK(!pv->full()); // Internal to PersistentPODVectorData
 
-    uint64_t * data_ptr_c = &pv[0];
+    const uint64_t * data_ptr_c = &pv[0];
     BOOST_CHECK(data_ptr_c != data_ptr_a);
     BOOST_CHECK_EQUAL(data_ptr_b, data_ptr_c);
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 
     BOOST_CHECK_EQUAL(pv.size(), 4);
     BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
-    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+    BOOST_CHECK(pv->full()); // Internal to PersistentPODVectorData
 
     BOOST_CHECK_EQUAL(pv[0], 1111);
     BOOST_CHECK_EQUAL(pv[1], 2222);
@@ -157,6 +157,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 
     // Vector is reallocated again reallocated.
 
+    const uint64_t * data_ptr_d = &pv[0];
     BOOST_CHECK(data_ptr_d != data_ptr_a);
     BOOST_CHECK(data_ptr_d != data_ptr_b);
     BOOST_CHECK(data_ptr_d != data_ptr_c);
