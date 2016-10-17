@@ -119,6 +119,11 @@ void PersistentPool::remove() {
 }
 
 
+const eckit::PathName& PersistentPool::path() const {
+    return path_;
+}
+
+
 size_t PersistentPool::size() const {
     return size_;
 }

@@ -20,6 +20,7 @@
 #include "libpmemobj.h"
 
 #include "eckit/filesystem/PathName.h"
+#include "eckit/memory/NonCopyable.h"
 
 #include "pmem/AtomicConstructor.h"
 
@@ -33,7 +34,7 @@ template <typename T> class PersistentPtr;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-class PersistentPool {
+class PersistentPool : private eckit::NonCopyable {
 
 public: // methods
 
@@ -65,6 +66,9 @@ public: // methods
 
     /// Get hold of the raw libpmemobj pool
     PMEMobjpool * raw_pool() const;
+
+    /// Find the pool again!
+    const eckit::PathName& path() const;
 
 protected: // members
 
