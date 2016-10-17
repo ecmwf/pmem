@@ -9,12 +9,13 @@ ecbuild_add_library(
         Exceptions.h
         PersistentBuffer.cc
         PersistentBuffer.h
+        PersistentMutex.h
+        PersistentPODVector.h
         PersistentPool.cc
         PersistentPool.h
         PersistentPtr.cc
         PersistentPtr.h
         PersistentVector.h
-        PersistentMutex.h
 
 
     INCLUDES
