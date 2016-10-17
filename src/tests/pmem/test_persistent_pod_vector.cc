@@ -141,8 +141,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
     BOOST_CHECK(!pv->full()); // Internal to PersistentPODVectorData
 
     const uint64_t * data_ptr_c = &pv[0];
-    BOOST_CHECK(data_ptr_c != data_ptr_a);
-    BOOST_CHECK_EQUAL(data_ptr_b, data_ptr_c);
+    BOOST_CHECK(data_ptr_b != data_ptr_c);
 
     pv.push_back(4444);
 
@@ -152,15 +151,14 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 
     BOOST_CHECK_EQUAL(pv[0], 1111);
     BOOST_CHECK_EQUAL(pv[1], 2222);
-    BOOST_CHECK_EQUAL(pv[3], 1111);
-    BOOST_CHECK_EQUAL(pv[4], 2222);
+    BOOST_CHECK_EQUAL(pv[2], 3333);
+    BOOST_CHECK_EQUAL(pv[3], 4444);
 
     // Vector is reallocated again reallocated.
 
     const uint64_t * data_ptr_d = &pv[0];
-    BOOST_CHECK(data_ptr_d != data_ptr_a);
     BOOST_CHECK(data_ptr_d != data_ptr_b);
-    BOOST_CHECK(data_ptr_d != data_ptr_c);
+    BOOST_CHECK(data_ptr_d == data_ptr_c);
 }
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_resize )
