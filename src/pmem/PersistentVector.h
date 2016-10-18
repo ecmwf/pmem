@@ -36,6 +36,7 @@
 namespace pmem {
 
 
+
 //----------------------------------------------------------------------------------------------------------------------
 
 ///
@@ -80,7 +81,8 @@ public: // methods
     size_t allocated_size() const;
 
     /// Append an element to the list.
-    PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor);
+    template <typename A>
+    PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor, A& alloc);
 
     /// Return a given element in the list
     const PersistentPtr<T>& operator[] (size_t i) const;
@@ -115,7 +117,27 @@ class PersistentVector : public PersistentPtr<PersistentVectorData<T> > {
 
     typedef PersistentVectorData<T> data_type;
 
+    /// A utility class for cases where we need to be able to programatically change the allocation
+    /// strategy. This is the default
+    /// @note This is for the allocation of the objects, not for the PersistentVectorData object itself
+
+    class DefaultAllocator {
+    public:
+        void allocate(PersistentPtr<T>& ptr, const AtomicConstructor<T>& ctr) {
+            ptr.allocate(ctr);
+        }
+    };
+
 public:
+
+    /// @note The templated version allows a custom allocation strategy to be used. It takes an object with an
+    ///       allocate method, as illustrated by DefaultAllocator above.
+    /// @note This is done to push the logic/action of retrying after failure as close as possible to the point of
+    ///       allocation
+    /// TODO: Discuss with T/B if this should be removed from here, and instead a PMemPool object passed in, with
+    ///       retry logic further out of the loop.
+    template <typename A>
+    PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor, A& alloc);
 
     PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor);
 
@@ -208,8 +230,9 @@ bool PersistentVectorData<T>::full() const {
 
 
 /// Append an element to the list.
-template<typename T>
-PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor) {
+template <typename T>
+template <typename A>
+PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor, A& alloc) {
 
     consistency_check();
 
@@ -217,7 +240,7 @@ PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& 
         throw eckit::OutOfRange("PersistentVector is full", Here());
 
     size_t stored_elem = nelem_;
-    elements_[stored_elem].allocate(constructor);
+    alloc.allocate(elements_[stored_elem], constructor);
 
     // n.b. This update is NOT ATOMIC, and therefore creates the requirement to call consistency_check() to ensure
     //      that we haven't had a power-off-power-on incident.
@@ -271,8 +294,8 @@ void PersistentVectorData<T>::update_nelem(size_t nelem) const {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-template <typename T>
-PersistentPtr<T> PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
+template <typename T> template <typename A>
+PersistentPtr<T> PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor, A& alloc) {
 
     // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
     if (PersistentPtr<data_type>::null()) {
@@ -288,7 +311,14 @@ PersistentPtr<T> PersistentVector<T>::push_back(const AtomicConstructor<T>& cons
         resize(sz * 2);
     }
 
-    return PersistentPtr<data_type>::get()->push_back(constructor);
+    return PersistentPtr<data_type>::get()->push_back(constructor, alloc);
+}
+
+template <typename T>
+PersistentPtr<T> PersistentVector<T>::push_back(const AtomicConstructor<T>& constructor) {
+
+    DefaultAllocator alloc;
+    return push_back(constructor, alloc);
 }
 
 template <typename T>
