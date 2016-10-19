@@ -70,6 +70,9 @@ public: // methods
     /// Find the pool again!
     const eckit::PathName& path() const;
 
+    /// Obtain the UUID of the pool for later identification
+    uint64_t uuid() const;
+
 protected: // members
 
     eckit::PathName path_;

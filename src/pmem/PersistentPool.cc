@@ -133,6 +133,18 @@ PMEMobjpool* PersistentPool::raw_pool() const {
     return pool_;
 }
 
+
+uint64_t PersistentPool::uuid() const {
+
+    // The pools UUID is contained in any of the PersistentPtrs that are used, and the root element will always exist,
+    // so grab hold of the PersistentPtr to the root element and get the UUID from there!
+
+    // n.b. root elem is guaranteed to be >= the size supplied here. So pick a nice small size.
+    PMEMoid rootElem = ::pmemobj_root(pool_, sizeof(size_t));
+
+    return rootElem.pool_uuid_lo;
+}
+
 // -------------------------------------------------------------------------------------------------
 
 } // namespace pmem
