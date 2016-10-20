@@ -19,6 +19,8 @@
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPool.h"
 
+#include <vector>
+
 //----------------------------------------------------------------------------------------------------------------------
 
 /// A fixture to obtain a unique name for this pool.
@@ -60,6 +62,31 @@ struct AutoPool {
 
     eckit::PathName path_;
     pmem::PersistentPool pool_;
+};
+
+
+
+/// A mock type, to call AtomicConstructors on appropriately sized regions of memory without going via the
+/// nvml library
+
+template <typename T>
+class PersistentMock {
+
+public: // methods
+
+    PersistentMock(const typename T::Constructor& ctr) :
+        data_(ctr.size()) {
+        ctr.make(object());
+    }
+
+    T& object() {
+        return *reinterpret_cast<T*>(&data_[0]);
+    }
+
+private: // data
+
+    std::vector<char> data_;
+
 };
 
 //----------------------------------------------------------------------------------------------------------------------

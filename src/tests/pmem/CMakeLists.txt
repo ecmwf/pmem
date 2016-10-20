@@ -33,3 +33,9 @@ ecbuild_add_test( TARGET test_pmem_atomic_constructor
                   SOURCES test_atomic_constructor.cc
                   INCLUDES ${ECKIT_INCLUDE_DIRS}
                   LIBS pmem )
+
+ecbuild_add_test( TARGET test_pmem_persistent_string
+                  BOOST
+                  SOURCES test_persistent_string.cc
+                  INCLUDES ${ECKIT_INCLUDE_DIRS}
+                  LIBS pmem )

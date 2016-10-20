@@ -15,6 +15,8 @@ ecbuild_add_library(
         PersistentPool.h
         PersistentPtr.cc
         PersistentPtr.h
+        PersistentString.cc
+        PersistentString.h
         PersistentVector.h
 
 
