@@ -61,7 +61,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
 /// \param size The size in bytes to use if the pool is being created.
 /// \param name The name to associate with the pool.
 /// \param constructor Constructor object for the root node.
-PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
+PersistentPool::PersistentPool(const eckit::PathName& path, size_t size, const std::string& name,
                                const AtomicConstructorBase& constructor) :
     path_(path),
     newPool_(true),
@@ -69,6 +69,10 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const size_t size, c
 
     Log::info() << "Creating persistent pool: " << path << std::endl;
 
+    if (size < PMEMOBJ_MIN_POOL) {
+        Log::error() << "Requested pool size is below minimum. Using minimum size instead" << std::endl;
+        size = PMEMOBJ_MIN_POOL;
+    }
     Log::info() << "Size: " << Bytes(size) << std::endl;
 
     // TODO: Consider permissions. Currently this is world R/W-able.

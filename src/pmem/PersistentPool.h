@@ -42,7 +42,7 @@ public: // methods
     PersistentPool(const eckit::PathName& path, const std::string& name);
 
     /// Create new persistent pool
-    PersistentPool(const eckit::PathName& path, const size_t size, const std::string& name,
+    PersistentPool(const eckit::PathName& path, size_t size, const std::string& name,
                    const AtomicConstructorBase& constructor);
 
     ~PersistentPool();

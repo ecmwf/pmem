@@ -16,6 +16,7 @@
 #ifndef pmem_PersistentVector_H
 #define pmem_PersistentVector_H
 
+#include "eckit/log/Log.h"
 
 #include "pmem/PersistentPtr.h"
 
@@ -246,8 +247,6 @@ PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& 
     //      that we haven't had a power-off-power-on incident.
     update_nelem(nelem_ + 1);
 
-    eckit::Log::error() << "Added and updated: " << elements_[stored_elem] << std::endl;
-
     return elements_[stored_elem];
 }
 
@@ -307,7 +306,6 @@ PersistentPtr<T> PersistentVector<T>::push_back(const AtomicConstructor<T>& cons
     // If all of the available space is full, then increase the space available (by factor of 2)
     if (PersistentPtr<data_type>::get()->full()) {
         size_t sz = size();
-        eckit::Log::info() << "Resizing vector from " << sz << " elements to " << 2*sz << std::endl;
         resize(sz * 2);
     }
 
