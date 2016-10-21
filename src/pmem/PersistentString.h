@@ -59,6 +59,9 @@ public: // methods
     bool operator==(const PersistentString& rhs) const;
     bool operator==(const std::string& rhs) const;
 
+    bool operator!=(const PersistentString& rhs) const;
+    bool operator!=(const std::string& rhs) const;
+
     char operator[](size_t i) const;
 
 private: // friends
@@ -66,6 +69,7 @@ private: // friends
     friend class PersistentBuffer::Constructor;
 
     friend bool operator==(const std::string&, const PersistentString&);
+    friend bool operator!=(const std::string&, const PersistentString&);
     friend std::ostream& operator<< (std::ostream&, const PersistentString&);
 };
 

@@ -74,16 +74,30 @@ char PersistentString::operator[] (size_t i) const {
 }
 
 bool PersistentString::operator==(const PersistentString& rhs) const {
-    return ::strncmp(c_str(), rhs.c_str(), std::min(size(), rhs.size())) == 0;
+
+    size_t lsize = size();
+    size_t rsize = size();
+
+    if (lsize != rsize)
+        return false;
+    else
+        return ::strncmp(c_str(), rhs.c_str(), lsize) == 0;
 }
 
 bool PersistentString::operator==(const std::string& rhs) const {
-    return c_str() == rhs;
+    if (size() != rhs.size())
+        return false;
+    else
+        return c_str() == rhs;
 }
 
 bool operator==(const std::string& lhs, const PersistentString& rhs) {
-    return lhs == rhs.c_str();
+    return rhs == lhs;
 }
+
+bool PersistentString::operator!=(const PersistentString& rhs) const { return !(*this == rhs); }
+bool PersistentString::operator!=(const std::string& rhs) const { return !(*this == rhs); }
+bool operator!=(const std::string& lhs, const PersistentString& rhs) { return !(rhs == lhs); }
 
 std::ostream& operator<< (std::ostream& os, const PersistentString& s) {
     os << s.c_str();

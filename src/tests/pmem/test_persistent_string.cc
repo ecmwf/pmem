@@ -92,6 +92,58 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_out_of_range )
 }
 
 
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_equality_operators )
+{
+    PersistentMock<PersistentString> stringMock1(PersistentString::Constructor("This is a string 1"));
+    PersistentMock<PersistentString> stringMock1b(PersistentString::Constructor("This is a string 1"));
+    PersistentMock<PersistentString> stringMock2(PersistentString::Constructor("This is a string 2"));
+
+    PersistentString& str1(stringMock1.object());
+    PersistentString& str1b(stringMock1b.object());
+    PersistentString& str2(stringMock2.object());
+
+    // Compare two Persistent Strings
+
+    BOOST_CHECK(str1 == str1b);         BOOST_CHECK(!(str1 != str1b));
+    BOOST_CHECK(str1 != str2);          BOOST_CHECK(!(str1 == str2));
+    BOOST_CHECK(str2 != str1);          BOOST_CHECK(!(str2 == str1));
+
+    // Compare persistent strings to C strings
+
+    const char* cstrsame = "This is a string 1";
+    const char* cstrdiff = "This is another str";
+    const char* cstrshorter = "This";
+    const char* cstrlonger = "This is a string that is somewhat longer";
+
+    BOOST_CHECK(str1 == cstrsame);      BOOST_CHECK(!(str1 != cstrsame));
+    BOOST_CHECK(str1 != cstrdiff);      BOOST_CHECK(!(str1 == cstrdiff));
+    BOOST_CHECK(str1 != cstrshorter);   BOOST_CHECK(!(str1 == cstrshorter));
+    BOOST_CHECK(str1 != cstrlonger);    BOOST_CHECK(!(str1 == cstrlonger));
+
+    BOOST_CHECK(cstrsame == str1);      BOOST_CHECK(!(cstrsame != str1));
+    BOOST_CHECK(cstrdiff != str1);      BOOST_CHECK(!(cstrdiff == str1));
+    BOOST_CHECK(cstrshorter != str1);   BOOST_CHECK(!(cstrshorter == str1));
+    BOOST_CHECK(cstrlonger != str1);    BOOST_CHECK(!(cstrlonger == str1));
+
+    // Compare persistent strings to std::strings
+
+    std::string strsame(cstrsame);
+    std::string strdiff(cstrdiff);
+    std::string strshorter(cstrshorter);
+    std::string strlonger(cstrlonger);
+
+    BOOST_CHECK(str1 == strsame);       BOOST_CHECK(!(str1 != strsame));
+    BOOST_CHECK(str1 != strdiff);       BOOST_CHECK(!(str1 == strdiff));
+    BOOST_CHECK(str1 != strshorter);    BOOST_CHECK(!(str1 == strshorter));
+    BOOST_CHECK(str1 != strlonger);     BOOST_CHECK(!(str1 == strlonger));
+
+    BOOST_CHECK(strsame == str1);       BOOST_CHECK(!(strsame != str1));
+    BOOST_CHECK(strdiff != str1);       BOOST_CHECK(!(strdiff == str1));
+    BOOST_CHECK(strshorter != str1);    BOOST_CHECK(!(strshorter == str1));
+    BOOST_CHECK(strlonger != str1);     BOOST_CHECK(!(strlonger == str1));
+}
+
+
 //----------------------------------------------------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END()
