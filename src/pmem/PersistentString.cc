@@ -68,7 +68,8 @@ const char * PersistentString::data () const {
 
 char PersistentString::operator[] (size_t i) const {
 
-    ASSERT(i < size());
+    if (i >= size())
+        throw OutOfRange(i, size()-1, Here());
     return c_str()[i];
 }
 

@@ -14,6 +14,8 @@
 
 #include "ecbuild/boost_test_framework.h"
 
+#include "eckit/exception/Exceptions.h"
+
 #include "pmem/PersistentString.h"
 
 #include "test_persistent_helpers.h"
@@ -70,6 +72,23 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_real )
     BOOST_CHECK_EQUAL(str[15], 'g');
 
     BOOST_CHECK_EQUAL(::strcmp("this is a string", str.c_str()), 0);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_out_of_range )
+{
+    struct Tester {
+        void operator() () {
+            PersistentString::Constructor ctr("this is a string");
+
+            PersistentMock<PersistentString> stringMock(ctr);
+            PersistentString& str(stringMock.object());
+
+            str[666];
+        }
+    };
+
+    BOOST_CHECK_THROW(Tester()(), OutOfRange);
 }
 
 
