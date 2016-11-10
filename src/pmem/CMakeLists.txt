@@ -18,6 +18,7 @@ ecbuild_add_library(
         PersistentString.cc
         PersistentString.h
         PersistentVector.h
+        PersistentType.h
 
 
     INCLUDES

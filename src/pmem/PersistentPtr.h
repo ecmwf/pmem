@@ -89,7 +89,6 @@ protected: // members
 
 //----------------------------------------------------------------------------------------------------------------------
 
-
 template <typename T>
 class PersistentPtr : public PersistentPtrBase {
 
@@ -105,6 +104,10 @@ public: // methods
     /// Constructor
 
     PersistentPtr();
+
+    /// For utility, when building derived types
+
+    template <typename S> PersistentPtr<S> forced_cast() const;
 
     /// Access the stored object
 
@@ -154,6 +157,8 @@ private: // friends
     friend std::ostream& operator<< <> (std::ostream&, const PersistentPtr&);
 
     friend class PersistentPool;
+
+    template <typename S> friend class PersistentPtr;
 };
 
 
@@ -170,6 +175,11 @@ template <typename T>
 PersistentPtr<T>::PersistentPtr(PMEMoid oid) :
     PersistentPtrBase(oid) {}
 
+template <typename T>
+template <typename S>
+PersistentPtr<S> PersistentPtr<T>::forced_cast() const {
+    return PersistentPtr<S>(oid_);
+}
 
 template <typename T>
 T& PersistentPtr<T>::operator*() const {
