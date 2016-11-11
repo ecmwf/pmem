@@ -202,7 +202,7 @@ template <typename T>
 typename PersistentPtr<T>::object_type* PersistentPtr<T>::get() const {
     assert_type_validity();
     ASSERT(valid());
-    return (T*)::pmemobj_direct(oid_);
+    return (typename PersistentPtr<T>::object_type*)::pmemobj_direct(oid_);
 }
 
 

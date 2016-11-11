@@ -39,3 +39,9 @@ ecbuild_add_test( TARGET test_pmem_persistent_string
                   SOURCES test_persistent_string.cc
                   INCLUDES ${ECKIT_INCLUDE_DIRS}
                   LIBS pmem )
+
+ecbuild_add_test( TARGET test_pmem_persistent_type
+                  BOOST
+                  SOURCES test_persistent_type.cc
+                  INCLUDES ${ECKIT_INCLUDE_DIRS}
+                  LIBS pmem )
