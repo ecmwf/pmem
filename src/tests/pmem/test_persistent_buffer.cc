@@ -17,18 +17,30 @@
 #include "eckit/filesystem/PathName.h"
 #include "eckit/io/Buffer.h"
 #include "eckit/memory/NonCopyable.h"
+#include "eckit/testing/Setup.h"
 #include "eckit/types/FixedString.h"
 
 #include "pmem/PersistentBuffer.h"
+#include "pmem/PersistentPtr.h"
 
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 
 //----------------------------------------------------------------------------------------------------------------------
 
+
 BOOST_AUTO_TEST_SUITE( test_pmem_persistent_buffer )
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_valid_persistent_ptr )
+{
+    // If PersistentBuffer is not OK, this will trigger StaticAssert
+    PersistentPtr<PersistentBuffer> ptr;
+}
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_size )
 {

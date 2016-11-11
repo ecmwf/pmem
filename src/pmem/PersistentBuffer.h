@@ -16,6 +16,7 @@
 
 
 #include "pmem/AtomicConstructor.h"
+#include "pmem/PersistentType.h"
 
 
 namespace eckit {
@@ -27,7 +28,7 @@ namespace pmem {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-class PersistentBuffer {
+class PersistentBuffer : public PersistentType<PersistentBuffer> {
 
 public: // Construction objects
 
