@@ -208,7 +208,7 @@ typename PersistentPtr<T>::object_type* PersistentPtr<T>::get() const {
 
 template <typename T>
 bool PersistentPtr<T>::valid() const {
-    return ::pmemobj_type_num(oid_) == T::type_id;
+    return PersistentType<typename T::object_type>::validate_type_id(::pmemobj_type_num(oid_));
 }
 
 

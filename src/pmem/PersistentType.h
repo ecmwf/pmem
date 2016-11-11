@@ -28,7 +28,17 @@ public: // types
     typedef T object_type;
 
     static uint64_t type_id;
+
+    static bool validate_type_id(uint64_t id);
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+bool PersistentType<T>::validate_type_id(uint64_t id) {
+
+    return type_id == id;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 
