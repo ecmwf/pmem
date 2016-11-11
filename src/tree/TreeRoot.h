@@ -42,7 +42,7 @@ class TreeSchema;
 
 // N.B. This is to be stored in PersistentPtr --> NO virtual behaviour.
 
-class TreeRoot {
+class TreeRoot : public pmem::PersistentType<TreeRoot> {
 
 public: // types
 

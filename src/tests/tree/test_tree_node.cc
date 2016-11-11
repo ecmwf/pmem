@@ -31,7 +31,7 @@ using namespace tree;
 const size_t root_elems = 7;
 
 
-class RootType {
+class RootType : public PersistentType<RootType> {
 
 public: // constructor
 
@@ -62,9 +62,9 @@ public:
 
 // And structure the pool with types
 
-template<> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> uint64_t pmem::PersistentPtr<TreeNode>::type_id = 1;
-template<> uint64_t pmem::PersistentPtr<pmem::PersistentVectorData<TreeNode> >::type_id = 2;
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<TreeNode>::type_id = 1;
+template<> uint64_t pmem::PersistentType<pmem::PersistentVectorData<TreeNode> >::type_id = 2;
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 

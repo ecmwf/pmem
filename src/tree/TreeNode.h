@@ -24,13 +24,10 @@
 
 #include "pmem/PersistentPtr.h"
 #include "pmem/PersistentVector.h"
+#include "pmem/PersistentBuffer.h"
 
 namespace eckit {
     class DataBlob;
-}
-
-namespace pmem{
-    class PersistentBuffer;
 }
 
 
@@ -38,7 +35,7 @@ namespace tree {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-class TreeNode {
+class TreeNode : public pmem::PersistentType<TreeNode> {
 
 public: // types
 
