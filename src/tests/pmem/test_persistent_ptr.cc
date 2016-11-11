@@ -14,6 +14,8 @@
 
 #include "ecbuild/boost_test_framework.h"
 
+#include "eckit/testing/Setup.h"
+
 #include "pmem/PersistentPtr.h"
 
 #include "test_persistent_helpers.h"
@@ -21,6 +23,9 @@
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 

@@ -15,13 +15,17 @@
 #include "ecbuild/boost_test_framework.h"
 
 #include "eckit/exception/Exceptions.h"
+#include "eckit/testing/Setup.h"
 
 #include "tree/TreeSchema.h"
 #include "tree/TreeNode.h"
 
 using namespace std;
 using namespace eckit;
+using namespace eckit::testing;
 using namespace tree;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 

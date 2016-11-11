@@ -13,6 +13,7 @@
 #include "ecbuild/boost_test_framework.h"
 
 #include "eckit/parser/JSONDataBlob.h"
+#include "eckit/testing/Setup.h"
 
 #include "tree/TreeNode.h"
 
@@ -21,7 +22,10 @@
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
 using namespace tree;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 
