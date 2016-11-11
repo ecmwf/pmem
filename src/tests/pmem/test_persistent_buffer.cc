@@ -64,6 +64,7 @@ public: // members
 
 template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
 template<> uint64_t pmem::PersistentType<PersistentBuffer>::type_id = 1;
+
 //----------------------------------------------------------------------------------------------------------------------
 
 
