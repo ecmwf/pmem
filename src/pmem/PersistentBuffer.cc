@@ -25,17 +25,17 @@ namespace pmem {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-PersistentBuffer::Constructor::Constructor(const void* data, size_t length) :
+PersistentBufferBase::ConstructorBase::ConstructorBase(const void* data, size_t length) :
     data_(data),
     length_(length) {}
 
 
-size_t PersistentBuffer::Constructor::size() const {
-    return sizeof(PersistentBuffer) + length_;
+size_t PersistentBufferBase::ConstructorBase::size() const {
+    return sizeof(PersistentBufferBase) + length_;
 }
 
 
-void PersistentBuffer::Constructor::make(PersistentBuffer& object) const {
+void PersistentBufferBase::ConstructorBase::make(PersistentBufferBase& object) const {
 
     object.length_ = length_;
 
@@ -46,13 +46,27 @@ void PersistentBuffer::Constructor::make(PersistentBuffer& object) const {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+PersistentBuffer::Constructor::Constructor(const void* data, size_t length) :
+    ConstructorBase(data, length) {}
 
-size_t PersistentBuffer::size() const {
+
+void PersistentBuffer::Constructor::make(PersistentBuffer& object) const {
+    ConstructorBase::make(object);
+}
+
+size_t PersistentBuffer::Constructor::size() const {
+    return ConstructorBase::size();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+
+size_t PersistentBufferBase::size() const {
     return length_;
 }
 
 
-const void * PersistentBuffer::data () const {
+const void * PersistentBufferBase::data () const {
     return data_;
 }
 

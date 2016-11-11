@@ -23,6 +23,8 @@
 #include "pmem/PersistentBuffer.h"
 #include "pmem/PersistentPtr.h"
 
+#include "test_persistent_helpers.h"
+
 using namespace std;
 using namespace pmem;
 using namespace eckit;
@@ -33,6 +35,37 @@ BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 
+/// Define a root type. Each test that does allocation should use a different element in the root object.
+
+// How many possibilities do we want?
+const size_t root_elems = 1;
+
+
+class RootType : public PersistentType<RootType> {
+
+public: // constructor
+
+    class Constructor : public AtomicConstructor<RootType> {
+        virtual void make(RootType &object) const {
+            for (size_t i = 0; i < root_elems; i++) {
+                object.data_[i].nullify();
+            }
+        }
+    };
+
+public: // members
+
+    PersistentPtr<PersistentBuffer> data_[root_elems];
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// And structure the pool with types
+
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<PersistentBuffer>::type_id = 1;
+//----------------------------------------------------------------------------------------------------------------------
+
 
 BOOST_AUTO_TEST_SUITE( test_pmem_persistent_buffer )
 
@@ -40,6 +73,19 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_valid_persistent_ptr )
 {
     // If PersistentBuffer is not OK, this will trigger StaticAssert
     PersistentPtr<PersistentBuffer> ptr;
+}
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_allocate )
+{
+    std::string test_string = "I am a test string";
+
+    AutoPool ap((RootType::Constructor()));
+    PersistentPtr<RootType> root = ap.pool_.getRoot<RootType>();
+
+    root->data_[0].allocate(PersistentBuffer::Constructor(test_string.data(), test_string.length()));
+
+    std::string get_back(static_cast<const char*>(root->data_[0]->data()), root->data_[0]->size());
+    BOOST_CHECK_EQUAL(get_back, test_string);
 }
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_size )

@@ -28,17 +28,23 @@ namespace pmem {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-class PersistentBuffer : public PersistentType<PersistentBuffer> {
+/*
+ * We provide a base type, which gets simply wrapped. This allows the _derived_ types to be PersistentType<T>, so that
+ * more than one concrete class can be built on top of the functionality of PersistentBufferBase. See (as a start)
+ * both PersistentBuffer and PersistentString.
+ */
+
+class PersistentBufferBase {
 
 public: // Construction objects
 
-    class Constructor : public AtomicConstructor<PersistentBuffer> {
+    class ConstructorBase {
 
     public: // methods
 
-        Constructor(const void* data, size_t length);
+        ConstructorBase(const void* data, size_t length);
 
-        virtual void make (PersistentBuffer& object) const;
+        virtual void make (PersistentBufferBase& object) const;
 
         virtual size_t size() const;
 
@@ -62,10 +68,23 @@ private: // members
     // Accessor to the data.
     // Data is VARIABLY SIZED following on from this location.
     char data_[0];
+};
 
-private: // friends
 
-    friend class PersistentBuffer::Constructor;
+// ---------------------------------------------------------------------------------------------------------------------
+
+class PersistentBuffer : public PersistentBufferBase
+                       , public PersistentType<PersistentBuffer> {
+
+public: // Construction objects
+
+    struct Constructor : public AtomicConstructor<PersistentBuffer>
+                       , public ConstructorBase {
+
+        Constructor(const void* data, size_t length);
+        virtual void make(PersistentBuffer& object) const;
+        virtual size_t size() const;
+    };
 
 };
 

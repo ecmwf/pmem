@@ -29,22 +29,19 @@ namespace pmem {
 
 /// @note We store the null character, so that data() and c_str() can be implemented O(1) according to the std.
 
-class PersistentString : private PersistentBuffer {
+class PersistentString : private PersistentBufferBase
+                       , public PersistentType<PersistentString> {
 
 public: // Construction objects
 
-    class Constructor : public AtomicConstructor<PersistentString>, private PersistentBuffer::Constructor {
-
-    public: // methods
+    struct Constructor : public AtomicConstructor<PersistentString>
+                       , private ConstructorBase {
 
         Constructor(const std::string& value);
 
         virtual void make (PersistentString& object) const;
 
         virtual size_t size() const;
-
-    private:
-
     };
 
 public: // methods
@@ -65,8 +62,6 @@ public: // methods
     char operator[](size_t i) const;
 
 private: // friends
-
-    friend class PersistentBuffer::Constructor;
 
     friend bool operator==(const std::string&, const PersistentString&);
     friend bool operator!=(const std::string&, const PersistentString&);

@@ -28,19 +28,19 @@ namespace pmem {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-// Construction is easy - we just pass through to the PersistentBuffer we are built from!
+// Construction is easy - we just pass through to the PersistentBufferBase we are built from!
 
 PersistentString::Constructor::Constructor(const std::string& value) :
-    PersistentBuffer::Constructor(value.c_str(), value.size()+1) {}
+    ConstructorBase(value.c_str(), value.size()+1) {}
 
 
 size_t PersistentString::Constructor::size() const {
-    return PersistentBuffer::Constructor::size();
+    return ConstructorBase::size();
 }
 
 
 void PersistentString::Constructor::make(PersistentString& object) const {
-    PersistentBuffer::Constructor::make(object);
+    ConstructorBase::make(object);
 
     ASSERT(object.data()[object.size()] == '\0');
 }
@@ -50,7 +50,7 @@ void PersistentString::Constructor::make(PersistentString& object) const {
 
 
 size_t PersistentString::size() const {
-    return PersistentBuffer::size()-1;
+    return PersistentBufferBase::size()-1;
 }
 
 size_t PersistentString::length() const {
@@ -58,11 +58,11 @@ size_t PersistentString::length() const {
 }
 
 const char* PersistentString::c_str() const {
-    return static_cast<const char*>(PersistentBuffer::data());
+    return static_cast<const char*>(PersistentBufferBase::data());
 }
 
 const char * PersistentString::data () const {
-    return static_cast<const char*>(PersistentBuffer::data());
+    return static_cast<const char*>(PersistentBufferBase::data());
 }
 
 

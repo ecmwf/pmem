@@ -15,6 +15,7 @@
 #include "ecbuild/boost_test_framework.h"
 
 #include "eckit/exception/Exceptions.h"
+#include "eckit/testing/Setup.h"
 
 #include "pmem/PersistentString.h"
 #include "pmem/PersistentPtr.h"
@@ -30,12 +31,57 @@ BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 
+/// Define a root type.
+
+// How many possibilities do we want?
+const size_t root_elems = 1;
+
+
+class RootType : public PersistentType<RootType> {
+
+public: // constructor
+
+    class Constructor : public AtomicConstructor<RootType> {
+        virtual void make(RootType &object) const {
+            for (size_t i = 0; i < root_elems; i++) {
+                object.data_.nullify();
+            }
+        }
+    };
+
+public: // members
+
+    PersistentPtr<PersistentString> data_;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// And structure the pool with types
+
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<PersistentString>::type_id = 1;
+
+//----------------------------------------------------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_SUITE( test_pmem_persistent_string )
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_valid_persistent_ptr )
 {
     // If PersistentBuffer is not OK, this will trigger StaticAssert
     PersistentPtr<PersistentString> ptr;
+}
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_allocate )
+{
+    std::string test_string = "I am a test string";
+
+    AutoPool ap((RootType::Constructor()));
+    PersistentPtr<RootType> root = ap.pool_.getRoot<RootType>();
+
+    root->data_.allocate(PersistentString::Constructor(test_string));
+
+    std::string get_back(root->data_->c_str(), root->data_->length());
+    BOOST_CHECK_EQUAL(get_back, test_string);
 }
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_size )
