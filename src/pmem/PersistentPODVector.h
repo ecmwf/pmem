@@ -42,7 +42,7 @@ namespace pmem {
 /// We separate out the data type and the management type for the PersistentVector. Ultimately the
 /// persistent vector is a wrapper around
 template <typename T>
-class PersistentPODVectorData {
+class PersistentPODVectorData : public PersistentType<PersistentPODVectorData<T> > {
 
 public: // Constructors
 

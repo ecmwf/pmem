@@ -12,13 +12,19 @@
 
 #include "ecbuild/boost_test_framework.h"
 
+#include "eckit/testing/Setup.h"
+
 #include "pmem/PersistentPODVector.h"
+#include "pmem/PersistentType.h"
 
 #include "test_persistent_helpers.h"
 
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -28,7 +34,7 @@ using namespace eckit;
 const size_t root_elems = 2;
 
 
-class RootType {
+class RootType : public PersistentType<RootType> {
 
 public: // constructor
 
@@ -49,8 +55,8 @@ public: // members
 
 // And structure the pool with types
 
-template<> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> uint64_t pmem::PersistentPtr<pmem::PersistentPODVector<uint64_t>::data_type>::type_id = 1;
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<pmem::PersistentPODVector<uint64_t>::data_type>::type_id = 1;
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 
@@ -79,8 +85,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_size )
 {
     PersistentPODVector<uint64_t> pv;
 
-    BOOST_CHECK_EQUAL(sizeof(PersistentPODVector<uint64_t>), sizeof(PersistentPtr<uint64_t>));
-    BOOST_CHECK_EQUAL(sizeof(pv), sizeof(PersistentPtr<uint64_t>));
+    BOOST_CHECK_EQUAL(sizeof(PersistentPODVector<uint64_t>), sizeof(PersistentPtr<PersistentType<uint64_t> >));
+    BOOST_CHECK_EQUAL(sizeof(pv), sizeof(PersistentPtr<PersistentType<uint64_t> >));
     BOOST_CHECK_EQUAL(sizeof(pv), sizeof(PMEMoid));
     BOOST_CHECK_EQUAL(sizeof(global_root->data_[0]), sizeof(PMEMoid));
 }
