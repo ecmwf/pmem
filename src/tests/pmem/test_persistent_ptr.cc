@@ -26,7 +26,7 @@ using namespace eckit;
 
 /// A custom type to allocate objects in the tests
 
-class CustomType {
+class CustomType : public PersistentType<CustomType> {
 
 public: // constructor
 
@@ -45,7 +45,7 @@ public: // members
 
 /// A different type to play the devils advocate
 
-class OtherType {
+class OtherType : public PersistentType<OtherType> {
 public: // members
     uint32_t other1_;
     uint32_t other2_;
@@ -57,7 +57,7 @@ public: // members
 const size_t root_elems = 3;
 
 
-class RootType {
+class RootType : public PersistentType<RootType> {
 
 public: // constructor
 
@@ -78,9 +78,9 @@ public: // members
 
 // And structure the pool with types
 
-template<> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> uint64_t pmem::PersistentPtr<CustomType>::type_id = 1;
-template<> uint64_t pmem::PersistentPtr<OtherType>::type_id = 2;
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<CustomType>::type_id = 1;
+template<> uint64_t pmem::PersistentType<OtherType>::type_id = 2;
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_typeid )
 
     // Check the type_id explicitly
 
-    BOOST_CHECK_EQUAL(p.type_id, ::pmemobj_type_num(p.raw()));
+    BOOST_CHECK_EQUAL(PersistentType<CustomType>::type_id, ::pmemobj_type_num(p.raw()));
 
     // Cast the PersistentPtr to a different type. Now we can see things go wrong.
 
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_typeid )
 
     // We may have changed the wrapper pointer, but we haven't changed the type_id stored in the persistent layer.
     BOOST_CHECK_EQUAL(::pmemobj_type_num(p.raw()), ::pmemobj_type_num(pother.raw()));
-    BOOST_CHECK(pother.type_id != ::pmemobj_type_num(pother.raw()));
+    BOOST_CHECK(PersistentType<OtherType>::type_id != ::pmemobj_type_num(pother.raw()));
 }
 
 
