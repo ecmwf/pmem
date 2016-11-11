@@ -19,9 +19,13 @@
 #include "libpmemobj.h"
 
 #include "eckit/exception/Exceptions.h"
+#include "eckit/exception/StaticAssert.h"
+#include "eckit/types/IsBaseOf.h"
+#include "eckit/types/IsSame.h"
 
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPool.h"
+#include "pmem/PersistentType.h"
 
 namespace pmem {
 
@@ -93,12 +97,9 @@ protected: // members
 template <typename T>
 class PersistentPtr : public PersistentPtrBase {
 
-public: // members
+public: // types
 
-    /// This static is used to perform type id lookups. uint64_t to match internals of libpmemobj.
-    /// Needs to be defined GLOBALLY.
-
-    static uint64_t type_id;
+    typedef typename T::object_type object_type;
 
 public: // methods
 
@@ -108,11 +109,11 @@ public: // methods
 
     /// Access the stored object
 
-    T& operator*() const;
+    object_type& operator*() const;
 
-    T* operator->() const;
+    object_type* operator->() const;
 
-    T* get() const;
+    object_type* get() const;
 
     // bool null() const; // Inherited
 
@@ -124,18 +125,18 @@ public: // methods
 
     /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
-    void allocate(PMEMobjpool * pool, const AtomicConstructor<T>& constructor);
-    void allocate(PersistentPool& pool, const AtomicConstructor<T>& constructor);
+    void allocate(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor);
+    void allocate(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
     /// it will put the data into the same pool as the pointer is in
-    void allocate(const AtomicConstructor<T>& constructor);
+    void allocate(const AtomicConstructor<object_type>& constructor);
 
     /// Atomically replace the existing object with a new one. If anything fails in the chain of
     /// construction, the original object is left unchanged.
-    void replace(PMEMobjpool* pool, const AtomicConstructor<T>& constructor);
-    void replace(PersistentPool& pool, const AtomicConstructor<T>& constructor);
-    void replace(const AtomicConstructor<T>& constructor);
+    void replace(PMEMobjpool* pool, const AtomicConstructor<object_type>& constructor);
+    void replace(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
+    void replace(const AtomicConstructor<object_type>& constructor);
 
 protected: // methods
 
@@ -145,6 +146,9 @@ private: // methods
 
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
     PersistentPtr(PMEMoid oid);
+
+    /// Check the validity of the types involved
+    void assert_type_validity() const;
 
 private: // friends
 
@@ -162,29 +166,41 @@ private: // friends
 // Templated member functions
 
 template <typename T>
+void PersistentPtr<T>::assert_type_validity() const {
+
+    eckit::StaticAssert<eckit::IsBaseOf<PersistentType<T>, T>::value ||
+                        eckit::IsSame<PersistentType<typename T::object_type>, T>::value>();
+}
+
+template <typename T>
 PersistentPtr<T>::PersistentPtr() :
-    PersistentPtrBase() {}
+    PersistentPtrBase() {
+    assert_type_validity();
+}
 
 
 template <typename T>
 PersistentPtr<T>::PersistentPtr(PMEMoid oid) :
-    PersistentPtrBase(oid) {}
+    PersistentPtrBase(oid) {
+    assert_type_validity();
+}
 
 
 template <typename T>
-T& PersistentPtr<T>::operator*() const {
+typename PersistentPtr<T>::object_type& PersistentPtr<T>::operator*() const {
     return *get();
 }
 
 
 template <typename T>
-T* PersistentPtr<T>::operator->() const {
+typename PersistentPtr<T>::object_type* PersistentPtr<T>::operator->() const {
     return get();
 }
 
 
 template <typename T>
-T* PersistentPtr<T>::get() const {
+typename PersistentPtr<T>::object_type* PersistentPtr<T>::get() const {
+    assert_type_validity();
     ASSERT(valid());
     return (T*)::pmemobj_direct(oid_);
 }
@@ -192,13 +208,14 @@ T* PersistentPtr<T>::get() const {
 
 template <typename T>
 bool PersistentPtr<T>::valid() const {
-    return ::pmemobj_type_num(oid_) == type_id;
+    return ::pmemobj_type_num(oid_) == T::type_id;
 }
 
 
 template <typename T>
-void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<T>& constructor) {
+void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor) {
 
+    assert_type_validity();
     ASSERT(null());
 
     // We don't want to assert(null()). We may be updating, say, pointers in a chain of
@@ -208,7 +225,7 @@ void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<T>& 
     if (::pmemobj_alloc(pool,
                         &oid_,
                         constructor.size(),
-                        type_id,
+                        T::type_id,
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0)
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
@@ -216,13 +233,13 @@ void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<T>& 
 
 
 template <typename T>
-void PersistentPtr<T>::allocate(PersistentPool& pool, const AtomicConstructor<T>& constructor) {
+void PersistentPtr<T>::allocate(PersistentPool& pool, const AtomicConstructor<object_type>& constructor) {
     allocate(pool.raw_pool(), constructor);
 }
 
 
 template <typename T>
-void PersistentPtr<T>::allocate(const AtomicConstructor<T>& constructor) {
+void PersistentPtr<T>::allocate(const AtomicConstructor<object_type>& constructor) {
 
     // For allocating directly on an existing persistent object, we don't have to specify the pool manually. Get the
     // pool by using the same one as the current persistent object.
@@ -236,15 +253,16 @@ void PersistentPtr<T>::allocate(const AtomicConstructor<T>& constructor) {
 
 
 template <typename T>
-void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<T> &constructor) {
+void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
 
+    assert_type_validity();
     ASSERT(!null());
     PMEMoid oid_tmp = oid_;
 
     if (::pmemobj_alloc(pool,
                         &oid_,
                         constructor.size(),
-                        type_id,
+                        T::type_id,
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
         ASSERT(OID_EQUALS(oid_, oid_tmp));
@@ -256,13 +274,13 @@ void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<T> &co
 
 
 template <typename T>
-void PersistentPtr<T>::replace(PersistentPool& pool, const AtomicConstructor<T> &constructor) {
+void PersistentPtr<T>::replace(PersistentPool& pool, const AtomicConstructor<object_type> &constructor) {
     replace(pool.raw_pool(), constructor);
 }
 
 
 template <typename T>
-void PersistentPtr<T>::replace(const AtomicConstructor<T> &constructor) {
+void PersistentPtr<T>::replace(const AtomicConstructor<object_type> &constructor) {
 
     PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
 

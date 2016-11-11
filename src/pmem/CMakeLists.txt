@@ -17,6 +17,7 @@ ecbuild_add_library(
         PersistentPtr.h
         PersistentString.cc
         PersistentString.h
+        PersistentType.h
         PersistentVector.h
 
 
