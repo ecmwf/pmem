@@ -12,6 +12,8 @@
 
 #include "ecbuild/boost_test_framework.h"
 
+#include "eckit/testing/Setup.h"
+
 #include "pmem/PersistentVector.h"
 
 #include "test_persistent_helpers.h"
@@ -19,12 +21,15 @@
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 
 /// A custom type to allocate objects in the tests
 
-class CustomType {
+class CustomType : public PersistentType<CustomType> {
 
 public: // constructor
 
@@ -52,7 +57,7 @@ public: // members
 const size_t root_elems = 3;
 
 
-class RootType {
+class RootType : public PersistentType<RootType> {
 
 public: // constructor
 
@@ -73,9 +78,9 @@ public: // members
 
 // And structure the pool with types
 
-template<> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> uint64_t pmem::PersistentPtr<CustomType>::type_id = 1;
-template<> uint64_t pmem::PersistentPtr<pmem::PersistentVectorData<CustomType> >::type_id = 2;
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<CustomType>::type_id = 1;
+template<> uint64_t pmem::PersistentType<pmem::PersistentVectorData<CustomType> >::type_id = 2;
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 

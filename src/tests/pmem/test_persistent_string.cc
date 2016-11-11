@@ -17,16 +17,26 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "pmem/PersistentString.h"
+#include "pmem/PersistentPtr.h"
 
 #include "test_persistent_helpers.h"
 
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup)
 
 //----------------------------------------------------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE( test_pmem_persistent_string )
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_valid_persistent_ptr )
+{
+    // If PersistentBuffer is not OK, this will trigger StaticAssert
+    PersistentPtr<PersistentString> ptr;
+}
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_size )
 {
