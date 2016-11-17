@@ -21,6 +21,8 @@
 
 #include "eckit/exception/Exceptions.h"
 
+#include "pmem/PersistentType.h"
+
 namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
@@ -43,6 +45,7 @@ public:
 
     virtual int build(void * obj) const = 0;
     virtual size_t size() const = 0;
+    virtual uint64_t type_id() const = 0;
 };
 
 
@@ -74,9 +77,69 @@ public:
     /// @note This is virtual. This allows the constructor to actually allocate more memory
     ///       than the size of the declared structure (e.g. if allocating a buffer).
     virtual size_t size() const { return sizeof(T); }
+
+    /// Return the type_id to use during construction. Generally this just echoes whatever
+    /// is contained in the PersistentType<> structure for the type, but it can be customised
+    virtual uint64_t type_id() const { return PersistentType<T>::type_id; }
 };
 
 
+// TODO: Generate these templates from a script... DRY.
+
+
+template <typename T>
+class AtomicConstructor0 : public AtomicConstructor<T> {
+
+public: // methods
+
+    virtual void make (T& object) const {
+        new (&object) T;
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+};
+
+
+template <typename T, typename X1>
+class AtomicConstructor1 : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor1(const X1& x1) : x1_(x1) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+private: // members
+
+    const X1& x1_;
+};
+
+
+template <typename T, typename X1, typename X2>
+class AtomicConstructor2 : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor2(const X1& x1, const X2& x2) : x1_(x1), x2_(x2) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_, x2_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+private: // members
+
+    const X1& x1_;
+    const X2& x2_;
+};
 // -------------------------------------------------------------------------------------------------
 
 } // namespace pmem

@@ -132,6 +132,11 @@ public: // methods
     /// it will put the data into the same pool as the pointer is in
     void allocate(const AtomicConstructor<object_type>& constructor);
 
+    /// Allocate functions using argument passthrough
+    void allocate();
+    template <typename X1> void allocate(const X1& x1);
+    template <typename X1, typename X2> void allocate(const X1& x1, const X2& x2);
+
     /// Atomically replace the existing object with a new one. If anything fails in the chain of
     /// construction, the original object is left unchanged.
     void replace(PMEMobjpool* pool, const AtomicConstructor<object_type>& constructor);
@@ -251,6 +256,31 @@ void PersistentPtr<T>::allocate(const AtomicConstructor<object_type>& constructo
     allocate(pool, constructor);
 }
 
+
+template <typename T>
+void PersistentPtr<T>::allocate() {
+
+    AtomicConstructor0<T> ctr;
+    allocate(ctr);
+}
+
+
+template <typename T>
+template <typename X1>
+void PersistentPtr<T>::allocate(const X1& x1) {
+
+    AtomicConstructor1<T, X1> ctr(x1);
+    allocate(ctr);
+}
+
+
+template <typename T>
+template <typename X1, typename X2>
+void PersistentPtr<T>::allocate(const X1& x1, const X2& x2) {
+
+    AtomicConstructor2<T, X1, X2> ctr(x1, x2);
+    allocate(ctr);
+}
 
 template <typename T>
 void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
