@@ -125,12 +125,12 @@ public: // methods
 
     /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
-    void allocate(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor);
-    void allocate(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
+    void allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor);
+    void allocate_ctr(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
     /// it will put the data into the same pool as the pointer is in
-    void allocate(const AtomicConstructor<object_type>& constructor);
+    void allocate_ctr(const AtomicConstructor<object_type>& constructor);
 
     /// Allocate functions using argument passthrough
     void allocate();
@@ -218,7 +218,7 @@ bool PersistentPtr<T>::valid() const {
 
 
 template <typename T>
-void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor) {
+void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor) {
 
     assert_type_validity();
     ASSERT(null());
@@ -238,13 +238,13 @@ void PersistentPtr<T>::allocate(PMEMobjpool * pool, const AtomicConstructor<obje
 
 
 template <typename T>
-void PersistentPtr<T>::allocate(PersistentPool& pool, const AtomicConstructor<object_type>& constructor) {
-    allocate(pool.raw_pool(), constructor);
+void PersistentPtr<T>::allocate_ctr(PersistentPool& pool, const AtomicConstructor<object_type>& constructor) {
+    allocate_ctr(pool.raw_pool(), constructor);
 }
 
 
 template <typename T>
-void PersistentPtr<T>::allocate(const AtomicConstructor<object_type>& constructor) {
+void PersistentPtr<T>::allocate_ctr(const AtomicConstructor<object_type>& constructor) {
 
     // For allocating directly on an existing persistent object, we don't have to specify the pool manually. Get the
     // pool by using the same one as the current persistent object.
@@ -253,7 +253,7 @@ void PersistentPtr<T>::allocate(const AtomicConstructor<object_type>& constructo
     if (pool == 0)
         throw eckit::SeriousBug("Allocating persistent memory to non-persistent pointer", Here());
 
-    allocate(pool, constructor);
+    allocate_ctr(pool, constructor);
 }
 
 
@@ -261,7 +261,7 @@ template <typename T>
 void PersistentPtr<T>::allocate() {
 
     AtomicConstructor0<T> ctr;
-    allocate(ctr);
+    allocate_ctr(ctr);
 }
 
 
@@ -270,7 +270,7 @@ template <typename X1>
 void PersistentPtr<T>::allocate(const X1& x1) {
 
     AtomicConstructor1<T, X1> ctr(x1);
-    allocate(ctr);
+    allocate_ctr(ctr);
 }
 
 
@@ -279,7 +279,7 @@ template <typename X1, typename X2>
 void PersistentPtr<T>::allocate(const X1& x1, const X2& x2) {
 
     AtomicConstructor2<T, X1, X2> ctr(x1, x2);
-    allocate(ctr);
+    allocate_ctr(ctr);
 }
 
 template <typename T>

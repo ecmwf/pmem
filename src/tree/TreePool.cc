@@ -14,6 +14,7 @@
 
 #include "pmem/PersistentPtr.h"
 #include "pmem/AtomicConstructor.h"
+#include "pmem/PersistentString.h"
 
 #include "tree/TreePool.h"
 #include "tree/TreeRoot.h"

@@ -232,7 +232,7 @@ void PersistentPODVector<T>::push_back(const T& value) {
 
     if (PersistentPtr<data_type>::null()) {
         typename data_type::Constructor ctr(1);
-        PersistentPtr<data_type>::allocate(ctr);
+        PersistentPtr<data_type>::allocate_ctr(ctr);
         ASSERT(size() == 0);
     }
 
@@ -271,7 +271,7 @@ void PersistentPODVector<T>::resize(size_t new_size) {
 
         // Reserve space as specified
         typename data_type::Constructor ctr(new_size);
-        PersistentPtr<data_type>::allocate(ctr);
+        PersistentPtr<data_type>::allocate_ctr(ctr);
 
     } else {
 

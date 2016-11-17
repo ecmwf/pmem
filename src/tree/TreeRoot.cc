@@ -45,7 +45,7 @@ void TreeRoot::Constructor::make(TreeRoot& object) const {
 
     PersistentBuffer::Constructor ctr(json.c_str(), json.length());
 
-    object.schema_.allocate(ctr);
+    object.schema_.allocate_ctr(ctr);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ void TreeRoot::addNode(const KeyType& key, const eckit::DataBlob& blob) {
     //      knew the data schema in advance.
     if (node_.null()) {
         TreeNode::Constructor ctr(key[0].first, key, blob);
-        node_.allocate(ctr);
+        node_.allocate_ctr(ctr);
     } else {
         ASSERT(node_->key() == key[0].first);
         node_->addNode(key, blob);

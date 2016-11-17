@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_allocate )
     AutoPool ap((RootType::Constructor()));
     PersistentPtr<RootType> root = ap.pool_.getRoot<RootType>();
 
-    root->data_.allocate(PersistentString::Constructor(test_string));
+    root->data_.allocate_ctr(PersistentString::Constructor(test_string));
 
     std::string get_back(root->data_->c_str(), root->data_->length());
     BOOST_CHECK_EQUAL(get_back, test_string);

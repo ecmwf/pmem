@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_type_allocate_needs_pmem )
 
     CustomType::Constructor ctr;
 
-    BOOST_CHECK_THROW(ptr.allocate(ctr), SeriousBug);
+    BOOST_CHECK_THROW(ptr.allocate_ctr(ctr), SeriousBug);
 }
 
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_type_direct_allocate )
     BOOST_CHECK(global_root->data_[0].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[0].allocate(ctr);
+    global_root->data_[0].allocate_ctr(ctr);
 
     BOOST_CHECK(!global_root->data_[0].null());
     BOOST_CHECK(global_root->data_[0].valid());
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
     BOOST_CHECK(global_root->data_[1].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[1].allocate(pool2, ctr);
+    global_root->data_[1].allocate_ctr(pool2, ctr);
 
     PersistentPtr<PersistentType<CustomType> > p1 = global_root->data_[1];
     BOOST_CHECK(!p1.null());
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_type_typeid )
     BOOST_CHECK(global_root->data_[2].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[2].allocate(ctr);
+    global_root->data_[2].allocate_ctr(ctr);
 
     PersistentPtr<PersistentType<CustomType> > p = global_root->data_[2];
 
