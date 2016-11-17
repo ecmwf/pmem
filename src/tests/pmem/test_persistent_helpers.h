@@ -15,6 +15,7 @@
 #define pmem_test_persistent_helpers_h
 
 #include "eckit/filesystem/PathName.h"
+#include "eckit/memory/ScopedPtr.h"
 
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPool.h"
@@ -74,9 +75,29 @@ class PersistentMock {
 
 public: // methods
 
-    PersistentMock(const typename T::Constructor& ctr) :
+    PersistentMock(const pmem::AtomicConstructor<T>& ctr) :
         data_(ctr.size()) {
         ctr.make(object());
+    }
+
+    PersistentMock() :
+        ctr_(new pmem::AtomicConstructor0<T>),
+        data_(ctr_->size()) {
+        ctr_->make(object());
+    }
+
+    template <typename X1>
+    PersistentMock(const X1& x1) :
+        ctr_(new pmem::AtomicConstructor1<T, X1>(x1)),
+        data_(ctr_->size()) {
+        ctr_->make(object());
+    }
+
+    template <typename X1, typename X2>
+    PersistentMock(const X1& x1, const X2& x2) :
+        ctr_(new pmem::AtomicConstructor2<T, X1, X2>(x1, x2)),
+        data_(ctr_->size()) {
+        ctr_->make(object());
     }
 
     T& object() {
@@ -85,8 +106,8 @@ public: // methods
 
 private: // data
 
+    eckit::ScopedPtr<pmem::AtomicConstructor<T> > ctr_;
     std::vector<char> data_;
-
 };
 
 //----------------------------------------------------------------------------------------------------------------------

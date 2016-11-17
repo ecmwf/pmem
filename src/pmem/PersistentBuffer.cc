@@ -25,40 +25,21 @@ namespace pmem {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-PersistentBufferBase::ConstructorBase::ConstructorBase(const void* data, size_t length) :
-    data_(data),
-    length_(length) {}
+PersistentBuffer::PersistentBuffer(const void * data, size_t length) :
+    PersistentBufferBase(data, length) {}
 
 
-size_t PersistentBufferBase::ConstructorBase::size() const {
-    return sizeof(PersistentBufferBase) + length_;
+PersistentBufferBase::PersistentBufferBase(const void *data, size_t length)
+    : length_(length) {
+
+    if (length != 0 && data != 0)
+        ::memcpy(data_, data, length);
 }
 
 
-void PersistentBufferBase::ConstructorBase::make(PersistentBufferBase& object) const {
-
-    object.length_ = length_;
-
-    if (length_ != 0 && data_ != 0)
-        ::memcpy(object.data_, data_, length_);
+size_t PersistentBufferBase::data_size(size_t length) {
+    return sizeof(PersistentBufferBase) + length;
 }
-
-
-//----------------------------------------------------------------------------------------------------------------------
-
-PersistentBuffer::Constructor::Constructor(const void* data, size_t length) :
-    ConstructorBase(data, length) {}
-
-
-void PersistentBuffer::Constructor::make(PersistentBuffer& object) const {
-    ConstructorBase::make(object);
-}
-
-size_t PersistentBuffer::Constructor::size() const {
-    return ConstructorBase::size();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 
 
 size_t PersistentBufferBase::size() const {

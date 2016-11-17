@@ -43,6 +43,9 @@ public:
         AllocationError(const std::string& what) : Exception(what) {}
     };
 
+    AtomicConstructorBase() {}
+    virtual ~AtomicConstructorBase() {}
+
     virtual int build(void * obj) const = 0;
     virtual size_t size() const = 0;
     virtual uint64_t type_id() const = 0;

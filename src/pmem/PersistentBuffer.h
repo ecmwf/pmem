@@ -36,30 +36,15 @@ namespace pmem {
 
 class PersistentBufferBase {
 
-public: // Construction objects
-
-    class ConstructorBase {
-
-    public: // methods
-
-        ConstructorBase(const void* data, size_t length);
-
-        virtual void make (PersistentBufferBase& object) const;
-
-        virtual size_t size() const;
-
-    private: // members
-
-        const void* data_;
-        size_t length_;
-    };
-
-
 public: // methods
+
+    PersistentBufferBase(const void* data, size_t length);
 
     size_t size() const;
 
     const void* data() const;
+
+    static size_t data_size(size_t length);
 
 private: // members
 
@@ -76,17 +61,14 @@ private: // members
 class PersistentBuffer : public PersistentBufferBase
                        , public PersistentType<PersistentBuffer> {
 
-public: // Construction objects
-
-    struct Constructor : public AtomicConstructor<PersistentBuffer>
-                       , public ConstructorBase {
-
-        Constructor(const void* data, size_t length);
-        virtual void make(PersistentBuffer& object) const;
-        virtual size_t size() const;
-    };
-
+    PersistentBuffer(const void* data, size_t length);
 };
+
+
+template<>
+inline size_t AtomicConstructor2<PersistentBuffer, const void*, size_t>::size() const {
+    return PersistentBufferBase::data_size(x2_);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 
