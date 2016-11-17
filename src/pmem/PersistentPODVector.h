@@ -107,6 +107,8 @@ protected: // members
 template <typename T>
 class PersistentPODVector : public PersistentPtr<PersistentPODVectorData<T> > {
 
+public: // types
+
     typedef PersistentPODVectorData<T> data_type;
 
 public:
