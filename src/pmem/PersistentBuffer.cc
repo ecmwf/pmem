@@ -32,8 +32,11 @@ PersistentBuffer::PersistentBuffer(const void * data, size_t length) :
 PersistentBufferBase::PersistentBufferBase(const void *data, size_t length)
     : length_(length) {
 
-    if (length != 0 && data != 0)
+    eckit::Log::error() << "Storing" << length << ", " << data << std::endl;
+    if (length != 0 && data != 0) {
+        eckit::Log::error() << "Storing ..." << std::endl;
         ::memcpy(data_, data, length);
+    }
 }
 
 

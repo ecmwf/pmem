@@ -61,6 +61,8 @@ private: // members
 class PersistentBuffer : public PersistentBufferBase
                        , public PersistentType<PersistentBuffer> {
 
+public: // methods
+
     PersistentBuffer(const void* data, size_t length);
 };
 
