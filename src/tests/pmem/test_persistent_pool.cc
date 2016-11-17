@@ -94,32 +94,32 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_init_root )
 }
 
 
-//BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_open )
-//{
-//    UniquePool p;
-//
-//    // Create and close the pool
-//    PersistentPool pool(p.path_, 1024 * 1024 * 20, "pool-name", RootType::Constructor());
-//    BOOST_CHECK(pool.newPool());
-//    pool.close();
-//
-//    // Reopen the pool
-//    PersistentPool pool2(p.path_, "pool-name");
-//
-//    // Check that this is not a new pool (i.e. it is opened)
-//    BOOST_CHECK(!pool2.newPool());
-//
-//    // Check that we have got a pool of the correct size, with a correctly initialised root.
-//    BOOST_CHECK_EQUAL(pool2.size(), 1024 * 1024 * 20);
-//
-//    PersistentPtr<RootType> root = pool2.getRoot<RootType>();
-//    BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
-//
-//    // And cleanup after ourselves
-//    pool2.remove();
-//}
-//
-//
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_open )
+{
+    UniquePool p;
+
+    // Create and close the pool
+    PersistentPool pool(p.path_, 1024 * 1024 * 20, "pool-name", RootType::Constructor());
+    BOOST_CHECK(pool.newPool());
+    pool.close();
+
+    // Reopen the pool
+    PersistentPool pool2(p.path_, "pool-name");
+
+    // Check that this is not a new pool (i.e. it is opened)
+    BOOST_CHECK(!pool2.newPool());
+
+    // Check that we have got a pool of the correct size, with a correctly initialised root.
+    BOOST_CHECK_EQUAL(pool2.size(), 1024 * 1024 * 20);
+
+    PersistentPtr<RootType> root = pool2.getRoot<RootType>();
+    BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
+
+    // And cleanup after ourselves
+    pool2.remove();
+}
+
+
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_check_pool_name )
 {
     AutoPool ap((RootType::Constructor()));
