@@ -44,6 +44,10 @@ public: // constructor
         uint32_t value_;
     };
 
+    // Also provide an interface using a constructor, such that magic happers
+    CustomType(uint32_t val) : data1_(val), data2_(val) {}
+    CustomType(uint32_t val, uint32_t val2) : data1_(val), data2_(val2) {}
+
 public: // members
 
     uint32_t data1_;
@@ -54,7 +58,7 @@ public: // members
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 3;
+const size_t root_elems = 4;
 
 
 class RootType : public PersistentType<RootType> {
@@ -203,6 +207,51 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
     BOOST_CHECK(pd2 != pd0);
     BOOST_CHECK(pd2 != pd1);
     BOOST_CHECK(pd2 == pd3); // The vectors data member is not extended when it isn't full.
+}
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back_constructors )
+{
+    // Use the normal constructor interface
+
+    PersistentVector<CustomType>& pv(global_root->data_[3]);
+
+    // Check that allocation works on an (as-of-yet null) PersistentVector
+
+    BOOST_CHECK(pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), 0);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 0);
+
+    pv.push_back(1111);
+
+    BOOST_CHECK(!pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), 1);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 1);
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+
+    PersistentPtr<CustomType> pp0 = pv[0];
+    PersistentPtr<PersistentVectorData<CustomType> > pd0 = pv;
+    BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
+    BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
+
+    // Check that the next push_back works (will need to internally reallocate, as it goes in powers of two).
+
+    pv.push_back(2222, 3333);
+
+    BOOST_CHECK(!pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), 2);
+    BOOST_CHECK_EQUAL(pv.allocated_size(), 2);
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+
+    BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
+    BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
+
+    BOOST_CHECK_EQUAL(pv[1]->data1_, 2222);
+    BOOST_CHECK_EQUAL(pv[1]->data2_, 3333);
+
+    // Data itself is not reallocated, but the data vector is.
+    PersistentPtr<PersistentVectorData<CustomType> > pd1 = pv;
+    BOOST_CHECK(pd1 != pd0);
+    BOOST_CHECK_EQUAL(pp0, pv[0]);
 }
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_resize )
