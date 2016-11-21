@@ -49,15 +49,18 @@ TreeNode::TreeNode(const std::string& value, const DataBlob& blob) :
 
 TreeNode::TreeNode(const std::string& value, const KeyType& subkeys, const DataBlob& blob) :
     value_(eckit::FixedString<12>(value)),
-    key_(subkeys[0].first) {
+    key_(subkeys.size() > 0 ? subkeys[0].first : "") {
 
     ASSERT(blob.length() != 0);
 
     items_.nullify();
     data_.nullify();
 
-    std::vector<std::pair<std::string, std::string> > new_subkeys(subkeys.begin()+1, subkeys.end());
-    items_.push_back(subkeys[0].second, new_subkeys, blob);
+    if (subkeys.size() > 0) {
+        std::vector<std::pair<std::string, std::string> > new_subkeys(subkeys.begin()+1, subkeys.end());
+        items_.push_back(subkeys[0].second, new_subkeys, blob);
+    } else
+        data_.allocate(blob.buffer(), blob.length());
 }
 
 
