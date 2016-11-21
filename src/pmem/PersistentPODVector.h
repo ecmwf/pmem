@@ -46,29 +46,12 @@ class PersistentPODVectorData : public PersistentType<PersistentPODVectorData<T>
 
 public: // Constructors
 
-    class Constructor : public AtomicConstructor<PersistentPODVectorData<T> > {
+    /// Constructors
+    PersistentPODVectorData(size_t max_size);
+    PersistentPODVectorData(const PersistentPODVector<T>& source, size_t max_size);
 
-    public: // methods
-
-        /// Normal constructor
-        Constructor(size_t max_size);
-
-        /// Copy constructor
-        Constructor(const PersistentPODVectorData<T>& source, size_t max_size);
-
-        virtual void make(PersistentPODVectorData<T>& object) const;
-
-        /// Return the size in bytes. This is variable depending on the number of elements
-        /// stored in the vector.
-        virtual size_t size() const;
-
-    private: // members
-
-        size_t maxSize_;
-        const PersistentPODVectorData<T>* sourceVector_;
-    };
-
-public: // methods
+    /// The amount of memory that needs to be allocated to store this
+    static size_t data_size(size_t max_size);
 
     /// Number of elements in the list
     size_t size() const;
@@ -128,43 +111,40 @@ public:
 //----------------------------------------------------------------------------------------------------------------------
 
 
-/// Normal data constructor
-template <typename T>
-PersistentPODVectorData<T>::Constructor::Constructor(size_t max_size) :
-    maxSize_(max_size),
-    sourceVector_(0) {}
+PersistentPODVectorData<T>::PersistentPODVectorData(size_t max_size) :
+    allocatedSize_(max_size),
+    nelem_(0) {
 
-
-/// Copy constructor
-template <typename T>
-PersistentPODVectorData<T>::Constructor::Constructor(const PersistentPODVectorData<T>& source, size_t max_size) :
-    maxSize_(max_size),
-    sourceVector_(&source) {
-
-    ASSERT(max_size > source.nelem_);
 }
 
 
-template <typename T>
-void PersistentPODVectorData<T>::Constructor::make(PersistentPODVectorData<T>& object) const {
+PersistentPODVectorData<T>::PersistentPODVectorData(const PersistentPODVector<T> &source,
+                                                    size_t max_size) :
+    allocatedSize_(max_size),
+    nelem_(source_.size()) { // n.b. using size() enforces consistency check.
 
-    object.allocatedSize_ = maxSize_;
+    ASSERT(allocatedSize_ > nelem_);
 
-    // If we are copying an existing vector, then transfer the data across
-    if (sourceVector_) {
-        object.nelem_ = sourceVector_->size();  // n.b. enforces consistency check.
-        for (size_t i = 0; i < sourceVector_->nelem_; i++) {
-            object.elements_[i] = sourceVector_->elements_[i];
-        }
-    } else {
-        object.nelem_ = 0;
+    for (size_t i = 0; i < nelem_; i++) {
+        elements_[i] = source_.elements_[i];
     }
 }
 
 
 template <typename T>
-size_t PersistentPODVectorData<T>::Constructor::size() const {
-    return sizeof(PersistentPODVectorData<T>) + (maxSize_ - 1) * sizeof(T);
+size_t PersistentPODVectorData<T>::data_size(size_t max_size) {
+    return sizeof(PersistentPODVectorData<T>) + (max_size - 1) * sizeof(T);
+}
+
+// Specify the size of the PersistentPODVectorData
+template<T>
+inline size_t AtomicConstructor1<PersistentPODVectorData<T>, std::string>::size() const {
+    return PersistentPODVectorData<T>::data_size(x1_);
+}
+
+template<T>
+inline size_t AtomicConstructor1<PersistentPODVectorData<T>, std::string>::size() const {
+    return PersistentPODVectorData<T>::data_size(x2_);
 }
 
 
@@ -231,8 +211,7 @@ void PersistentPODVector<T>::push_back(const T& value) {
     // TODO: A better sizing that using 1 as the default.
 
     if (PersistentPtr<data_type>::null()) {
-        typename data_type::Constructor ctr(1);
-        PersistentPtr<data_type>::allocate_ctr(ctr);
+        PersistentPtr<data_type>::allocate(size_t(1));
         ASSERT(size() == 0);
     }
 
@@ -270,8 +249,7 @@ void PersistentPODVector<T>::resize(size_t new_size) {
     if (PersistentPtr<data_type>::null()) {
 
         // Reserve space as specified
-        typename data_type::Constructor ctr(new_size);
-        PersistentPtr<data_type>::allocate_ctr(ctr);
+        PersistentPtr<data_type>::allocate(new_size);
 
     } else {
 
