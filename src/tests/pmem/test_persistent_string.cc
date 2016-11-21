@@ -86,14 +86,16 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_allocate )
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_size )
 {
-    AtomicConstructor1<PersistentString, std::string> ctr("");
+    std::string str_in("");
+    AtomicConstructor1<PersistentString, std::string> ctr(str_in);
 
     // n.b. we store the null character, so that data() and c_str() can be implemented O(1) according to the std.
 
     // Check that space is allocated to store the data, and to store the size of the data
     BOOST_CHECK_EQUAL(ctr.size(), sizeof(size_t) + sizeof(char));
 
-    AtomicConstructor1<PersistentString, std::string> ctr2("1234");
+    std::string str_in2("1234");
+    AtomicConstructor1<PersistentString, std::string> ctr2(str_in2);
 
     // Check that space is allocated to store the data, and to store the size of the data
     BOOST_CHECK_EQUAL(ctr2.size(), sizeof(size_t) + 5 * sizeof(char));
