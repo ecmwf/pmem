@@ -120,7 +120,7 @@ public:
     AtomicConstructor1(size_t x1) : AtomicConstructor1Base<PersistentPODVectorData<T>,size_t>(x1) {}
 
     virtual size_t size() const {
-        return PersistentPODVectorData<size_t>::data_size(this->x1_);
+        return PersistentPODVectorData<T>::data_size(this->x1_);
     }
 };
 
@@ -134,7 +134,7 @@ public:
         AtomicConstructor2Base<PersistentPODVectorData<T>, PersistentPODVectorData<T>,size_t>(x1, x2) {}
 
     virtual size_t size() const {
-        return PersistentPODVectorData<size_t>::data_size(this->x2_);
+        return PersistentPODVectorData<T>::data_size(this->x2_);
     }
 };
 
@@ -144,15 +144,13 @@ public:
 template <typename T>
 PersistentPODVectorData<T>::PersistentPODVectorData(size_t max_size) :
     nelem_(0),
-    allocatedSize_(max_size) {
-
-}
+    allocatedSize_(max_size) {}
 
 
 template <typename T>
 PersistentPODVectorData<T>::PersistentPODVectorData(const PersistentPODVectorData<T>& source,
                                                     size_t max_size) :
-    nelem_(source.size()), // n.b. using size() enforces consistency check.
+    nelem_(source.size()),
     allocatedSize_(max_size) {
 
     ASSERT(allocatedSize_ > nelem_);
