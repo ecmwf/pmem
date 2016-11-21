@@ -68,7 +68,7 @@ public: // methods
 
 
 template<>
-inline size_t AtomicConstructor2<PersistentBuffer, const void*, size_t>::size() const {
+inline size_t AtomicConstructor2Base<PersistentBuffer, const void*, size_t>::size() const {
     return PersistentBufferBase::data_size(x2_);
 }
 

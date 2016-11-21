@@ -139,9 +139,14 @@ public: // methods
 
     /// Atomically replace the existing object with a new one. If anything fails in the chain of
     /// construction, the original object is left unchanged.
-    void replace(PMEMobjpool* pool, const AtomicConstructor<object_type>& constructor);
-    void replace(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
-    void replace(const AtomicConstructor<object_type>& constructor);
+    void replace_ctr(PMEMobjpool* pool, const AtomicConstructor<object_type>& constructor);
+    void replace_ctr(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
+    void replace_ctr(const AtomicConstructor<object_type>& constructor);
+
+    /// Replace functions using argument passthrough
+    void replace();
+    template <typename X1> void replace(const X1& x1);
+    template <typename X1, typename X2> void replace(const X1& x1, const X2& x2);
 
 protected: // methods
 
@@ -283,7 +288,7 @@ void PersistentPtr<T>::allocate(const X1& x1, const X2& x2) {
 }
 
 template <typename T>
-void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
+void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
 
     assert_type_validity();
     ASSERT(!null());
@@ -304,20 +309,45 @@ void PersistentPtr<T>::replace(PMEMobjpool* pool, const AtomicConstructor<object
 
 
 template <typename T>
-void PersistentPtr<T>::replace(PersistentPool& pool, const AtomicConstructor<object_type> &constructor) {
-    replace(pool.raw_pool(), constructor);
+void PersistentPtr<T>::replace_ctr(PersistentPool& pool, const AtomicConstructor<object_type> &constructor) {
+    replace_ctr(pool.raw_pool(), constructor);
 }
 
 
 template <typename T>
-void PersistentPtr<T>::replace(const AtomicConstructor<object_type> &constructor) {
+void PersistentPtr<T>::replace_ctr(const AtomicConstructor<object_type> &constructor) {
 
     PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
 
     if (pool == 0)
         throw eckit::SeriousBug("Replacing persistent memory alloction in non-persistent memory", Here());
 
-    replace(pool, constructor);
+    replace_ctr(pool, constructor);
+}
+
+
+template <typename T>
+void PersistentPtr<T>::replace() {
+
+    AtomicConstructor0<T> ctr;
+    replace_ctr(ctr);
+}
+
+
+template <typename T>
+template <typename X1>
+void PersistentPtr<T>::replace(const X1& x1) {
+
+    AtomicConstructor1<T, X1> ctr(x1);
+    replace_ctr(ctr);
+}
+
+template <typename T>
+template <typename X1, typename X2>
+void PersistentPtr<T>::replace(const X1& x1, const X2& x2) {
+
+    AtomicConstructor2<T, X1, X2> ctr(x1, x2);
+    replace_ctr(ctr);
 }
 
 

@@ -43,9 +43,7 @@ void TreeRoot::Constructor::make(TreeRoot& object) const {
     // Creata a data blob from the schema, so we can store it
     std::string json = schema_.json_str();
 
-    PersistentBuffer::Constructor ctr(json.c_str(), json.length());
-
-    object.schema_.allocate_ctr(ctr);
+    object.schema_.allocate(json.c_str(), json.length());
 }
 
 // -------------------------------------------------------------------------------------------------

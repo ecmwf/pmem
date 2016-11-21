@@ -89,9 +89,13 @@ public:
 
 // TODO: Generate these templates from a script... DRY.
 
+// We use an indirection with AtomicConstructorNBase<T> -- > AtomicConstructorN<T>. This
+// allows partial specialisation of functions (as in PersistentPODVector), which is not
+// directly available in the C++ standard (sigh).
+
 
 template <typename T>
-class AtomicConstructor0 : public AtomicConstructor<T> {
+class AtomicConstructor0Base : public AtomicConstructor<T> {
 
 public: // methods
 
@@ -104,12 +108,18 @@ public: // methods
 };
 
 
+template <typename T>
+class AtomicConstructor0 : public AtomicConstructor0Base<T> { };
+
+// --
+
+
 template <typename T, typename X1>
-class AtomicConstructor1 : public AtomicConstructor<T> {
+class AtomicConstructor1Base : public AtomicConstructor<T> {
 
 public: // methods
 
-    AtomicConstructor1(const X1& x1) : x1_(x1) {}
+    AtomicConstructor1Base(const X1& x1) : x1_(x1) {}
 
     virtual void make (T& object) const {
         new (&object) T(x1_);
@@ -118,18 +128,27 @@ public: // methods
     virtual size_t size() const { return AtomicConstructor<T>::size(); }
     virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
 
-private: // members
+protected: // members
 
     const X1& x1_;
 };
 
 
+template <typename T, typename X1>
+class AtomicConstructor1 : public AtomicConstructor1Base<T, X1> {
+public:
+    AtomicConstructor1(const X1& x1) : AtomicConstructor1Base<T,X1>(x1) {}
+};
+
+// --
+
+
 template <typename T, typename X1, typename X2>
-class AtomicConstructor2 : public AtomicConstructor<T> {
+class AtomicConstructor2Base : public AtomicConstructor<T> {
 
 public: // methods
 
-    AtomicConstructor2(const X1& x1, const X2& x2) : x1_(x1), x2_(x2) {}
+    AtomicConstructor2Base(const X1& x1, const X2& x2) : x1_(x1), x2_(x2) {}
 
     virtual void make (T& object) const {
         new (&object) T(x1_, x2_);
@@ -138,11 +157,19 @@ public: // methods
     virtual size_t size() const { return AtomicConstructor<T>::size(); }
     virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
 
-private: // members
+protected: // members
 
     const X1& x1_;
     const X2& x2_;
 };
+
+
+template <typename T, typename X1, typename X2>
+class AtomicConstructor2 : public AtomicConstructor2Base<T, X1, X2> {
+public:
+    AtomicConstructor2(const X1& x1, const X2& x2) : AtomicConstructor2Base<T,X1,X2>(x1, x2) {}
+};
+
 // -------------------------------------------------------------------------------------------------
 
 } // namespace pmem

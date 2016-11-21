@@ -321,7 +321,7 @@ void PersistentVector<T>::resize(size_t new_size) {
 
         // Atomically replace the data with a resized copy.
         typename data_type::Constructor ctr(**this, new_size);
-        PersistentPtr<data_type>::replace(ctr);
+        PersistentPtr<data_type>::replace_ctr(ctr);
     }
 }
 

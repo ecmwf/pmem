@@ -61,7 +61,7 @@ private: // friends
 //----------------------------------------------------------------------------------------------------------------------
 
 template<>
-inline size_t AtomicConstructor1<PersistentString, std::string>::size() const {
+inline size_t AtomicConstructor1Base<PersistentString, std::string>::size() const {
     return PersistentBufferBase::data_size(x1_.size() + 1);
 }
 

@@ -39,7 +39,7 @@ namespace pmem {
 //----------------------------------------------------------------------------------------------------------------------
 
 ///
-/// We separate out the data type and the management type for the PersistentVector. Ultimately the
+/// We separate out the data type and the management type for the PersistentPODVector. Ultimately the
 /// persistent vector is a wrapper around
 template <typename T>
 class PersistentPODVectorData : public PersistentType<PersistentPODVectorData<T> > {
@@ -48,7 +48,7 @@ public: // Constructors
 
     /// Constructors
     PersistentPODVectorData(size_t max_size);
-    PersistentPODVectorData(const PersistentPODVector<T>& source, size_t max_size);
+    PersistentPODVectorData(const PersistentPODVectorData<T>& source, size_t max_size);
 
     /// The amount of memory that needs to be allocated to store this
     static size_t data_size(size_t max_size);
@@ -79,7 +79,7 @@ protected: // members
     mutable size_t nelem_;
     size_t allocatedSize_;
 
-    // The allocator/constructor will make the PersistentVectorData the right size.
+    // The allocator/constructor will make the PersistentPODVectorData the right size.
     T elements_[1];
 };
 
@@ -108,25 +108,57 @@ public:
 };
 
 
+// ---------------------------------------------------------------------------------------------------------------------
+
+/// Override the determination of the size for each of the two constructors.
+
+template <typename T>
+class AtomicConstructor1<PersistentPODVectorData<T>, size_t> :
+        public AtomicConstructor1Base<PersistentPODVectorData<T>, size_t> {
+public:
+
+    AtomicConstructor1(size_t x1) : AtomicConstructor1Base<PersistentPODVectorData<T>,size_t>(x1) {}
+
+    virtual size_t size() const {
+        return PersistentPODVectorData<size_t>::data_size(this->x1_);
+    }
+};
+
+
+template <typename T>
+class AtomicConstructor2<PersistentPODVectorData<T>, PersistentPODVectorData<T>, size_t> :
+        public AtomicConstructor2Base<PersistentPODVectorData<T>, PersistentPODVectorData<T>, size_t> {
+public:
+
+    AtomicConstructor2(const PersistentPODVectorData<T>& x1, size_t x2) :
+        AtomicConstructor2Base<PersistentPODVectorData<T>, PersistentPODVectorData<T>,size_t>(x1, x2) {}
+
+    virtual size_t size() const {
+        return PersistentPODVectorData<size_t>::data_size(this->x2_);
+    }
+};
+
 //----------------------------------------------------------------------------------------------------------------------
 
 
+template <typename T>
 PersistentPODVectorData<T>::PersistentPODVectorData(size_t max_size) :
-    allocatedSize_(max_size),
-    nelem_(0) {
+    nelem_(0),
+    allocatedSize_(max_size) {
 
 }
 
 
-PersistentPODVectorData<T>::PersistentPODVectorData(const PersistentPODVector<T> &source,
+template <typename T>
+PersistentPODVectorData<T>::PersistentPODVectorData(const PersistentPODVectorData<T>& source,
                                                     size_t max_size) :
-    allocatedSize_(max_size),
-    nelem_(source_.size()) { // n.b. using size() enforces consistency check.
+    nelem_(source.size()), // n.b. using size() enforces consistency check.
+    allocatedSize_(max_size) {
 
     ASSERT(allocatedSize_ > nelem_);
 
     for (size_t i = 0; i < nelem_; i++) {
-        elements_[i] = source_.elements_[i];
+        elements_[i] = source.elements_[i];
     }
 }
 
@@ -134,17 +166,6 @@ PersistentPODVectorData<T>::PersistentPODVectorData(const PersistentPODVector<T>
 template <typename T>
 size_t PersistentPODVectorData<T>::data_size(size_t max_size) {
     return sizeof(PersistentPODVectorData<T>) + (max_size - 1) * sizeof(T);
-}
-
-// Specify the size of the PersistentPODVectorData
-template<T>
-inline size_t AtomicConstructor1<PersistentPODVectorData<T>, std::string>::size() const {
-    return PersistentPODVectorData<T>::data_size(x1_);
-}
-
-template<T>
-inline size_t AtomicConstructor1<PersistentPODVectorData<T>, std::string>::size() const {
-    return PersistentPODVectorData<T>::data_size(x2_);
 }
 
 
@@ -180,7 +201,7 @@ void PersistentPODVectorData<T>::push_back(const T& value) {
 
     ASSERT(nelem_ <= allocatedSize_);
     if (nelem_ == allocatedSize_)
-        throw eckit::OutOfRange("PersistentVector is full", Here());
+        throw eckit::OutOfRange("PersistentPODVector is full", Here());
 
     // Store the data first, and then update the counter. If persistence is lost imbetween, that is fine, as we
     // still retain an object in a reasonable state.
@@ -254,8 +275,7 @@ void PersistentPODVector<T>::resize(size_t new_size) {
     } else {
 
         // Atomically replace the data with a resized copy.
-        typename data_type::Constructor ctr(**this, new_size);
-        PersistentPtr<data_type>::replace(ctr);
+        PersistentPtr<data_type>::replace(**this, new_size);
     }
 }
 

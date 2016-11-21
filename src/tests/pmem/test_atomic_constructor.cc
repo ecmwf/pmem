@@ -38,12 +38,12 @@ namespace {
 namespace pmem {
 // Define a custom size and type_id function for the single-parameter constructor
 template<>
-size_t ::pmem::AtomicConstructor1<LocalType, int>::size() const {
+size_t ::pmem::AtomicConstructor1Base<LocalType, int>::size() const {
     return x1_ * 3;
 }
 
 template<>
-uint64_t AtomicConstructor1<LocalType, int>::type_id() const {
+uint64_t AtomicConstructor1Base<LocalType, int>::type_id() const {
     return 4321;
 }
 }

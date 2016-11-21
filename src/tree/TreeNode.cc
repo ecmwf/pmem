@@ -72,8 +72,7 @@ void TreeNode::Constructor::make(TreeNode& object) const {
         TreeNode::Constructor ctr(sk[0].second, new_subkeys, blob_);
         object.items_.push_back(ctr);
     } else {
-        PersistentBuffer::Constructor ctr(blob_.buffer(), blob_.length());
-        object.data_.allocate_ctr(ctr);
+        object.data_.allocate(blob_.buffer(), blob_.length());
     }
 }
 
