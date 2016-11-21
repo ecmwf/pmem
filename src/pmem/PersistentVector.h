@@ -105,10 +105,9 @@ public:
     PersistentPtr<T> push_back_ctr(const AtomicConstructor<T>& constructor);
 
     PersistentPtr<T> push_back();
-    template <typename X1>
-    PersistentPtr<T> push_back(const X1& x1);
-    template <typename X1, typename X2>
-    PersistentPtr<T> push_back(const X1& x1, const X2& x2);
+    template <typename X1> PersistentPtr<T> push_back(const X1& x1);
+    template <typename X1, typename X2> PersistentPtr<T> push_back(const X1& x1, const X2& x2);
+    template <typename X1, typename X2, typename X3> PersistentPtr<T> push_back(const X1& x1, const X2& x2, const X3& x3);
 
     size_t size() const;
 
@@ -320,6 +319,15 @@ PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1, const X2& x2) {
     AtomicConstructor2<T, X1, X2> ctr(x1, x2);
     return push_back_ctr(ctr);
 }
+
+
+template <typename T>
+template <typename X1, typename X2, typename X3>
+PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1, const X2& x2, const X3& x3) {
+    AtomicConstructor3<T, X1, X2, X3> ctr(x1, x2, x3);
+    return push_back_ctr(ctr);
+}
+
 
 template <typename T>
 size_t PersistentVector<T>::size() const {

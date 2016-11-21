@@ -170,6 +170,38 @@ public:
     AtomicConstructor2(const X1& x1, const X2& x2) : AtomicConstructor2Base<T,X1,X2>(x1, x2) {}
 };
 
+// --
+
+
+template <typename T, typename X1, typename X2, typename X3>
+class AtomicConstructor3Base : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor3Base(const X1& x1, const X2& x2, const X3& x3) : x1_(x1), x2_(x2), x3_(x3) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_, x2_, x3_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+protected: // members
+
+    const X1& x1_;
+    const X2& x2_;
+    const X3& x3_;
+};
+
+
+template <typename T, typename X1, typename X2, typename X3>
+class AtomicConstructor3 : public AtomicConstructor3Base<T, X1, X2, X3> {
+public:
+    AtomicConstructor3(const X1& x1, const X2& x2, const X3& x3) :
+        AtomicConstructor3Base<T,X1,X2,X3>(x1, x2, x3) {}
+};
+
 // -------------------------------------------------------------------------------------------------
 
 } // namespace pmem

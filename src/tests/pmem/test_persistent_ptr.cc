@@ -42,6 +42,9 @@ public: // constructor
         }
     };
 
+    CustomType(const uint32_t elem) :
+        data1_(elem), data2_(elem) {}
+
 public: // members
 
     uint32_t data1_;
@@ -59,7 +62,7 @@ public: // members
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 3;
+const size_t root_elems = 4;
 
 
 class RootType : public PersistentType<RootType> {
@@ -198,24 +201,24 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_allocate_needs_pmem )
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate_ctr )
 {
-    BOOST_CHECK(global_root->data_[0].null());
+    BOOST_CHECK(global_root->data_[3].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[0].allocate_ctr(ctr);
+    global_root->data_[3].allocate_ctr(ctr);
 
-    BOOST_CHECK(!global_root->data_[0].null());
-    BOOST_CHECK(global_root->data_[0].valid());
+    BOOST_CHECK(!global_root->data_[3].null());
+    BOOST_CHECK(global_root->data_[3].valid());
 
     // Check that persistent pointers in volatile vs persistent space are the same
 
-    PersistentPtr<CustomType> p1 = global_root->data_[0];
+    PersistentPtr<CustomType> p1 = global_root->data_[3];
 
-    BOOST_CHECK(!global_root->data_[0].null());
-    BOOST_CHECK(global_root->data_[0].valid());
-    BOOST_CHECK(p1 == global_root->data_[0]);
-    BOOST_CHECK(!(p1 != global_root->data_[0]));
+    BOOST_CHECK(!global_root->data_[3].null());
+    BOOST_CHECK(global_root->data_[3].valid());
+    BOOST_CHECK(p1 == global_root->data_[3]);
+    BOOST_CHECK(!(p1 != global_root->data_[3]));
 
     // Check that we can dereference this PersistentPtr to give access to the memory mapped region
 
@@ -246,13 +249,70 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
 
     // Check that replace also works
 
-    global_root->data_[0].replace(ctr);
+    global_root->data_[3].replace_ctr(ctr);
 
-    PersistentPtr<CustomType> p2 = global_root->data_[0];
+    PersistentPtr<CustomType> p2 = global_root->data_[3];
 
     BOOST_CHECK(p1 != p2);
     BOOST_CHECK_EQUAL(p2->data1_, 1111);
     BOOST_CHECK_EQUAL(p2->data2_, 2222);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
+{
+    BOOST_CHECK(global_root->data_[0].null());
+
+    global_root->data_[0].allocate(999);
+
+    BOOST_CHECK(!global_root->data_[0].null());
+    BOOST_CHECK(global_root->data_[0].valid());
+
+    // Check that persistent pointers in volatile vs persistent space are the same
+
+    PersistentPtr<CustomType> p1 = global_root->data_[0];
+
+    BOOST_CHECK(!global_root->data_[0].null());
+    BOOST_CHECK(global_root->data_[0].valid());
+    BOOST_CHECK(p1 == global_root->data_[0]);
+    BOOST_CHECK(!(p1 != global_root->data_[0]));
+
+    // Check that we can dereference this PersistentPtr to give access to the memory mapped region
+
+    BOOST_CHECK_EQUAL(p1->data1_, 999);
+    BOOST_CHECK_EQUAL(p1->data2_, 999);
+
+    const CustomType* pelem = p1.get();
+
+    BOOST_CHECK_EQUAL(pelem->data1_, 999);
+    BOOST_CHECK_EQUAL(pelem->data2_, 999);
+
+    const CustomType& relem(*p1);
+
+    BOOST_CHECK_EQUAL(relem.data1_, 999);
+    BOOST_CHECK_EQUAL(relem.data2_, 999);
+
+    BOOST_CHECK_EQUAL(&relem, pelem);
+
+    // Test that this pointer is in persistent memory, and is in the same pool as the global root
+
+    PMEMobjpool* root_pool = ::pmemobj_pool_by_ptr(global_root.get());
+    PMEMobjpool* elem_pool = ::pmemobj_pool_by_ptr(pelem);
+
+    BOOST_CHECK(pelem != (void*)global_root.get());
+    BOOST_CHECK(root_pool != 0);
+    BOOST_CHECK(elem_pool != 0);
+    BOOST_CHECK_EQUAL(root_pool, elem_pool);
+
+    // Check that replace also works
+
+    global_root->data_[0].replace(888);
+
+    PersistentPtr<CustomType> p2 = global_root->data_[0];
+
+    BOOST_CHECK(p1 != p2);
+    BOOST_CHECK_EQUAL(p2->data1_, 888);
+    BOOST_CHECK_EQUAL(p2->data2_, 888);
 }
 
 
@@ -323,7 +383,7 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
 
     // And check an explicit replace
 
-    global_root->data_[1].replace(pool2a, ctr);
+    global_root->data_[1].replace_ctr(pool2a, ctr);
 
     PersistentPtr<CustomType> p2 = global_root->data_[1];
 

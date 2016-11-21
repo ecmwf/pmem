@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_raw_blob )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate_ctr(TreeNode::Constructor("value1", blob));
+    first.allocate("value1", blob);
 
     BOOST_CHECK(!first.null());
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_recursive )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate_ctr(TreeNode::Constructor("SAMPLE", key, blob));
+    first.allocate("SAMPLE", key, blob);
 
     // Check that we have created the correct structure (by manually walking the tree).
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate_ctr(TreeNode::Constructor("SAMPLE", key, blob));
+    first.allocate("SAMPLE", key, blob);
 
     // Add a second element to the tree being built
 
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate_ctr(TreeNode::Constructor("SAMPLE", key, blob));
+    first.allocate("SAMPLE", key, blob);
 
     // Attempt to branch by changing key2
 
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate_ctr(TreeNode::Constructor("SAMPLE", key, blob));
+    first.allocate("SAMPLE", key, blob);
 
     // What happens when we attempt to insert a leaf to the same key?
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_leaf_branch )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate_ctr(TreeNode::Constructor("SAMPLE", key, blob));
+    first.allocate("SAMPLE", key, blob);
 
     // What happens when we attempt to insert a leaf to the same key?
 
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
     eckit::JSONDataBlob blob3(data3.c_str(), data3.length());
 
 
-    first.allocate_ctr(TreeNode::Constructor("SAMPLE", key, blob));
+    first.allocate("SAMPLE", key, blob);
     first->addNode(key2, blob2);
     first->addNode(key3, blob3);
 

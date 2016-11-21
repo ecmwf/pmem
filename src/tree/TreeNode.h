@@ -45,30 +45,13 @@ public: // types
         LeafExistsError(const std::string&, const eckit::CodeLocation&);
     };
 
-public: // Construction objects
-
-    class Constructor : public pmem::AtomicConstructor<TreeNode> {
-
-    public: // methods
-
-        /// Construct a leaf (data) node. Leaves do not have a name.
-        Constructor(const std::string& value, const eckit::DataBlob& blob);
-
-        /// Construct a normal node, and its children.
-        Constructor(const std::string& value, const KeyType& subkeys, const eckit::DataBlob& blob);
-
-        virtual void make (TreeNode& object) const;
-
-    private: // members
-
-        std::string value_;
-
-        const KeyType* subkeys_;
-
-        const eckit::DataBlob& blob_;
-    };
-
 public: // methods
+
+    /// Construct a leaf (data) node. Leaves do not have a name.
+    TreeNode(const std::string& value, const eckit::DataBlob& blob);
+
+    /// Construct a normal node, and its children.
+    TreeNode(const std::string& value, const KeyType& subkeys, const eckit::DataBlob& blob);
 
     /// Add a new node
     /// @param key - The value used to select this sub-node from the current node
@@ -117,8 +100,6 @@ private: // members
 private:
 
     friend std::ostream& operator<< (std::ostream&, const TreeNode&);
-
-    friend class TreeNode::Constructor;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

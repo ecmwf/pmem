@@ -136,6 +136,7 @@ public: // methods
     void allocate();
     template <typename X1> void allocate(const X1& x1);
     template <typename X1, typename X2> void allocate(const X1& x1, const X2& x2);
+    template <typename X1, typename X2, typename X3> void allocate(const X1& x1, const X2& x2, const X3& x3);
 
     /// Atomically replace the existing object with a new one. If anything fails in the chain of
     /// construction, the original object is left unchanged.
@@ -147,6 +148,7 @@ public: // methods
     void replace();
     template <typename X1> void replace(const X1& x1);
     template <typename X1, typename X2> void replace(const X1& x1, const X2& x2);
+    template <typename X1, typename X2, typename X3> void replace(const X1& x1, const X2& x2, const X3& x3);
 
 protected: // methods
 
@@ -287,6 +289,15 @@ void PersistentPtr<T>::allocate(const X1& x1, const X2& x2) {
     allocate_ctr(ctr);
 }
 
+
+template <typename T>
+template <typename X1, typename X2, typename X3>
+void PersistentPtr<T>::allocate(const X1& x1, const X2& x2, const X3& x3) {
+
+    AtomicConstructor3<T, X1, X2, X3> ctr(x1, x2, x3);
+    allocate_ctr(ctr);
+}
+
 template <typename T>
 void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
 
@@ -347,6 +358,15 @@ template <typename X1, typename X2>
 void PersistentPtr<T>::replace(const X1& x1, const X2& x2) {
 
     AtomicConstructor2<T, X1, X2> ctr(x1, x2);
+    replace_ctr(ctr);
+}
+
+
+template <typename T>
+template <typename X1, typename X2, typename X3>
+void PersistentPtr<T>::replace(const X1& x1, const X2& x2, const X3& x3) {
+
+    AtomicConstructor3<T, X1, X2, X3> ctr(x1, x2, x3);
     replace_ctr(ctr);
 }
 

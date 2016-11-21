@@ -76,8 +76,7 @@ void TreeRoot::addNode(const KeyType& key, const eckit::DataBlob& blob) {
     // n.b. This could in principle be done in the TreeRoot constructor, if we assumed we
     //      knew the data schema in advance.
     if (node_.null()) {
-        TreeNode::Constructor ctr(key[0].first, key, blob);
-        node_.allocate_ctr(ctr);
+        node_.allocate(key[0].first, key, blob);
     } else {
         ASSERT(node_->key() == key[0].first);
         node_->addNode(key, blob);
