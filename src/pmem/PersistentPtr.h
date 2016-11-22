@@ -119,6 +119,11 @@ public: // methods
 
     bool valid() const;
 
+    /// For the implementation of simple polymorphism. Will required the PersistentTypes to be
+    /// modified to support interconversion
+    template <typename S>
+    PersistentPtr<S> as() const;
+
     /// Modification of pointers
 
     // void nullify(); // Inherited
@@ -170,6 +175,8 @@ private: // friends
     friend std::ostream& operator<< <> (std::ostream&, const PersistentPtr&);
 
     friend class PersistentPool;
+
+    template <typename S> friend class PersistentPtr;
 };
 
 
@@ -224,6 +231,18 @@ bool PersistentPtr<T>::valid() const {
 }
 
 
+/// Convert a PersistentPtr to another type of PersistentPtr. This will almost always
+/// fail at runtime on the type check, unless the PersistentType has been overriden
+/// to permit this.
+template <typename T>
+template <typename S>
+PersistentPtr<S> PersistentPtr<T>::as() const {
+    if (!PersistentType<typename S::object_type>::validate_type_id(::pmemobj_type_num(oid_)))
+        throw eckit::SeriousBug("Attempting to interconvert between incompatible PersistentPtr types", Here());
+    return PersistentPtr<S>(oid_);
+}
+
+
 template <typename T>
 void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor) {
 
@@ -237,7 +256,7 @@ void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<
     if (::pmemobj_alloc(pool,
                         &oid_,
                         constructor.size(),
-                        T::type_id,
+                        constructor.type_id(),
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0)
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
@@ -308,7 +327,7 @@ void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<ob
     if (::pmemobj_alloc(pool,
                         &oid_,
                         constructor.size(),
-                        T::type_id,
+                        constructor.type_id(),
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
         ASSERT(OID_EQUALS(oid_, oid_tmp));

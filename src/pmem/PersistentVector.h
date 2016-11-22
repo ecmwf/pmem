@@ -65,10 +65,11 @@ public: // methods
     size_t allocated_size() const;
 
     /// Append an element to the list.
-    PersistentPtr<T> push_back(const AtomicConstructor<T>& constructor);
+    PersistentPtr<PersistentType<T> > push_back(const AtomicConstructor<T>& constructor);
+    void push_back_elem(const PersistentPtr<PersistentType<T> >& elem);
 
     /// Return a given element in the list
-    const PersistentPtr<T>& operator[] (size_t i) const;
+    const PersistentPtr<PersistentType<T> >& operator[] (size_t i) const;
 
     /// As the nelem_ member is updated after allocation has taken place, and hence non-atomically, we need to
     /// be able to check that its value is correct.
@@ -88,7 +89,7 @@ protected: // members
     size_t allocatedSize_;
 
     // The allocator/constructor will make the PersistentVectorData the right size.
-    PersistentPtr<T> elements_[1];
+    PersistentPtr<PersistentType<T> > elements_[1];
 };
 
 
@@ -96,18 +97,19 @@ protected: // members
 
 
 template <typename T>
-class PersistentVector : public PersistentPtr<PersistentVectorData<T> > {
+class PersistentVector : public PersistentPtr<PersistentVectorData<typename T::object_type> > {
 
-    typedef PersistentVectorData<T> data_type;
+    typedef PersistentVectorData<typename T::object_type> data_type;
 
 public:
 
-    PersistentPtr<T> push_back_ctr(const AtomicConstructor<T>& constructor);
+    PersistentPtr< PersistentType<typename T::object_type> > push_back_ctr(const AtomicConstructor<typename T::object_type>& constructor);
+    void push_back_elem(const PersistentPtr<PersistentType<typename T::object_type> >& ptr);
 
-    PersistentPtr<T> push_back();
-    template <typename X1> PersistentPtr<T> push_back(const X1& x1);
-    template <typename X1, typename X2> PersistentPtr<T> push_back(const X1& x1, const X2& x2);
-    template <typename X1, typename X2, typename X3> PersistentPtr<T> push_back(const X1& x1, const X2& x2, const X3& x3);
+    PersistentPtr< PersistentType<typename T::object_type> > push_back();
+    template <typename X1> PersistentPtr< PersistentType<typename T::object_type> > push_back(const X1& x1);
+    template <typename X1, typename X2> PersistentPtr< PersistentType<typename T::object_type> > push_back(const X1& x1, const X2& x2);
+    template <typename X1, typename X2, typename X3> PersistentPtr< PersistentType<typename T::object_type> > push_back(const X1& x1, const X2& x2, const X3& x3);
 
     size_t size() const;
 
@@ -184,7 +186,7 @@ PersistentVectorData<T>::PersistentVectorData(const PersistentVectorData<T>& sou
 
 template <typename T>
 size_t PersistentVectorData<T>::data_size(size_t max_size) {
-    return sizeof(PersistentVectorData<T>) + (max_size - 1) * sizeof(PersistentPtr<T>);
+    return sizeof(PersistentVectorData<T>) + (max_size - 1) * sizeof(PersistentPtr<PersistentType<T> >);
 }
 
 
@@ -219,7 +221,7 @@ bool PersistentVectorData<T>::full() const {
 
 /// Append an element to the list.
 template <typename T>
-PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor) {
+PersistentPtr<PersistentType<T> > PersistentVectorData<T>::push_back(const AtomicConstructor<T>& constructor) {
 
     consistency_check();
 
@@ -237,9 +239,27 @@ PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<T>& 
 }
 
 
+/// Append an existing element to the list.
+template <typename T>
+void PersistentVectorData<T>::push_back_elem(const PersistentPtr<PersistentType<T> >& elem) {
+
+    consistency_check();
+
+    if (nelem_ == allocatedSize_)
+        throw eckit::OutOfRange("PersistentVector is full", Here());
+
+    elements_[nelem_] = elem;
+    ::pmemobj_persist(::pmemobj_pool_by_ptr(&elements_[nelem_]), &elements_[nelem_], sizeof(elem));
+
+    // n.b. This update is NOT ATOMIC, and therefore creates the requirement to call consistency_check() to ensure
+    //      that we haven't had a power-off-power-on incident.
+    update_nelem(nelem_ + 1);
+}
+
+
 /// Return a given element in the list
 template<typename T>
-const PersistentPtr<T>& PersistentVectorData<T>::operator[] (size_t i) const {
+const PersistentPtr<PersistentType<T> >& PersistentVectorData<T>::operator[] (size_t i) const {
     return elements_[i];
 }
 
@@ -280,7 +300,7 @@ void PersistentVectorData<T>::update_nelem(size_t nelem) const {
 
 
 template <typename T>
-PersistentPtr<T> PersistentVector<T>::push_back_ctr(const AtomicConstructor<T>& constructor) {
+PersistentPtr< PersistentType<typename T::object_type> > PersistentVector<T>::push_back_ctr(const AtomicConstructor<typename T::object_type>& constructor) {
 
     // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
     if (PersistentPtr<data_type>::null()) {
@@ -299,7 +319,26 @@ PersistentPtr<T> PersistentVector<T>::push_back_ctr(const AtomicConstructor<T>& 
 
 
 template <typename T>
-PersistentPtr<T> PersistentVector<T>::push_back() {
+void PersistentVector<T>::push_back_elem(const PersistentPtr<PersistentType<typename T::object_type> >& elem) {
+
+    // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
+    if (PersistentPtr<data_type>::null()) {
+        PersistentPtr<data_type>::allocate(1);
+        ASSERT(size() == 0);
+    }
+
+    // If all of the available space is full, then increase the space available (by factor of 2)
+    if (PersistentPtr<data_type>::get()->full()) {
+        size_t sz = size();
+        resize(sz * 2);
+    }
+
+    PersistentPtr<data_type>::get()->push_back_elem(elem);
+}
+
+
+template <typename T>
+PersistentPtr< PersistentType<typename T::object_type> > PersistentVector<T>::push_back() {
     AtomicConstructor0<T> ctr;
     return push_back_ctr(ctr);
 }
@@ -307,7 +346,7 @@ PersistentPtr<T> PersistentVector<T>::push_back() {
 
 template <typename T>
 template <typename X1>
-PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1) {
+PersistentPtr< PersistentType<typename T::object_type> > PersistentVector<T>::push_back(const X1& x1) {
     AtomicConstructor1<T, X1> ctr(x1);
     return push_back_ctr(ctr);
 }
@@ -315,7 +354,7 @@ PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1) {
 
 template <typename T>
 template <typename X1, typename X2>
-PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1, const X2& x2) {
+PersistentPtr< PersistentType<typename T::object_type> > PersistentVector<T>::push_back(const X1& x1, const X2& x2) {
     AtomicConstructor2<T, X1, X2> ctr(x1, x2);
     return push_back_ctr(ctr);
 }
@@ -323,7 +362,7 @@ PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1, const X2& x2) {
 
 template <typename T>
 template <typename X1, typename X2, typename X3>
-PersistentPtr<T> PersistentVector<T>::push_back(const X1& x1, const X2& x2, const X3& x3) {
+PersistentPtr< PersistentType<typename T::object_type> > PersistentVector<T>::push_back(const X1& x1, const X2& x2, const X3& x3) {
     AtomicConstructor3<T, X1, X2, X3> ctr(x1, x2, x3);
     return push_back_ctr(ctr);
 }

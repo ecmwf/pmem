@@ -36,6 +36,8 @@ public:
 
     virtual size_t size() const { return ctr_.size(); }
 
+    virtual uint64_t type_id() const { return ctr_.type_id(); }
+
     virtual void make(T& object) const { ctr_.make(static_cast<S&>(object)); }
 
 private: // members
