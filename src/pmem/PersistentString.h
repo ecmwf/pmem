@@ -29,8 +29,7 @@ namespace pmem {
 
 /// @note We store the null character, so that data() and c_str() can be implemented O(1) according to the std.
 
-class PersistentString : private PersistentBufferBase
-                       , public PersistentType<PersistentString> {
+class PersistentString : private PersistentBuffer {
 
 public: // methods
 
@@ -62,7 +61,7 @@ private: // friends
 
 template<>
 inline size_t AtomicConstructor1Base<PersistentString, std::string>::size() const {
-    return PersistentBufferBase::data_size(x1_.size() + 1);
+    return PersistentBuffer::data_size(x1_.size() + 1);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

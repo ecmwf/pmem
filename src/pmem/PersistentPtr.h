@@ -22,6 +22,7 @@
 #include "eckit/exception/StaticAssert.h"
 #include "eckit/types/IsBaseOf.h"
 #include "eckit/types/IsSame.h"
+#include "eckit/os/BackTrace.h"
 
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPool.h"
@@ -97,9 +98,7 @@ protected: // members
 template <typename T>
 class PersistentPtr : public PersistentPtrBase {
 
-public: // types
-
-    typedef typename T::object_type object_type;
+    typedef T object_type;
 
 public: // methods
 
@@ -164,9 +163,6 @@ private: // methods
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
     PersistentPtr(PMEMoid oid);
 
-    /// Check the validity of the types involved
-    void assert_type_validity() const;
-
 private: // friends
 
     friend bool operator== <> (const PersistentPtr& lhs, const PersistentPtr& rhs);
@@ -185,24 +181,13 @@ private: // friends
 // Templated member functions
 
 template <typename T>
-void PersistentPtr<T>::assert_type_validity() const {
-
-    eckit::StaticAssert<eckit::IsBaseOf<PersistentType<T>, T>::value ||
-                        eckit::IsSame<PersistentType<typename T::object_type>, T>::value>();
-}
-
-template <typename T>
 PersistentPtr<T>::PersistentPtr() :
-    PersistentPtrBase() {
-    assert_type_validity();
-}
+    PersistentPtrBase() {}
 
 
 template <typename T>
 PersistentPtr<T>::PersistentPtr(PMEMoid oid) :
-    PersistentPtrBase(oid) {
-    assert_type_validity();
-}
+    PersistentPtrBase(oid) {}
 
 
 template <typename T>
@@ -219,15 +204,14 @@ typename PersistentPtr<T>::object_type* PersistentPtr<T>::operator->() const {
 
 template <typename T>
 typename PersistentPtr<T>::object_type* PersistentPtr<T>::get() const {
-    assert_type_validity();
     ASSERT(valid());
-    return (typename PersistentPtr<T>::object_type*)::pmemobj_direct(oid_);
+    return (object_type*)::pmemobj_direct(oid_);
 }
 
 
 template <typename T>
 bool PersistentPtr<T>::valid() const {
-    return PersistentType<typename T::object_type>::validate_type_id(::pmemobj_type_num(oid_));
+    return PersistentType<object_type>::validate_type_id(::pmemobj_type_num(oid_));
 }
 
 
@@ -237,7 +221,7 @@ bool PersistentPtr<T>::valid() const {
 template <typename T>
 template <typename S>
 PersistentPtr<S> PersistentPtr<T>::as() const {
-    if (!PersistentType<typename S::object_type>::validate_type_id(::pmemobj_type_num(oid_)))
+    if (!PersistentType<object_type>::validate_type_id(::pmemobj_type_num(oid_)))
         throw eckit::SeriousBug("Attempting to interconvert between incompatible PersistentPtr types", Here());
     return PersistentPtr<S>(oid_);
 }
@@ -246,7 +230,6 @@ PersistentPtr<S> PersistentPtr<T>::as() const {
 template <typename T>
 void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor) {
 
-    assert_type_validity();
     ASSERT(null());
 
     // We don't want to assert(null()). We may be updating, say, pointers in a chain of
@@ -258,8 +241,11 @@ void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<
                         constructor.size(),
                         constructor.type_id(),
                         &pmem_constructor,
-                        const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0)
+                        const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
+        eckit::Log::error() << "allocate_ctr" << constructor.type_id() << std::endl;
+        eckit::Log::error() << eckit::BackTrace::dump() << std::endl;
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
+    }
 }
 
 
@@ -320,7 +306,6 @@ void PersistentPtr<T>::allocate(const X1& x1, const X2& x2, const X3& x3) {
 template <typename T>
 void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
 
-    assert_type_validity();
     ASSERT(!null());
     PMEMoid oid_tmp = oid_;
 
@@ -330,6 +315,8 @@ void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<ob
                         constructor.type_id(),
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
+        eckit::Log::error() << "replace_ctr" << constructor.type_id() << std::endl;
+        eckit::Log::error() << eckit::BackTrace::dump() << std::endl;
         ASSERT(OID_EQUALS(oid_, oid_tmp));
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
     } else {

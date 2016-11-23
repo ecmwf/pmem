@@ -34,11 +34,11 @@ namespace pmem {
  * both PersistentBuffer and PersistentString.
  */
 
-class PersistentBufferBase {
+class PersistentBuffer {
 
 public: // methods
 
-    PersistentBufferBase(const void* data, size_t length);
+    PersistentBuffer(const void* data, size_t length);
 
     size_t size() const;
 
@@ -58,18 +58,10 @@ private: // members
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-class PersistentBuffer : public PersistentBufferBase
-                       , public PersistentType<PersistentBuffer> {
-
-public: // methods
-
-    PersistentBuffer(const void* data, size_t length);
-};
-
 
 template<>
 inline size_t AtomicConstructor2Base<PersistentBuffer, const void*, size_t>::size() const {
-    return PersistentBufferBase::data_size(x2_);
+    return PersistentBuffer::data_size(x2_);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

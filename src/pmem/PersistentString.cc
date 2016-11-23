@@ -29,14 +29,14 @@ namespace pmem {
 
 
 PersistentString::PersistentString(const std::string &str) :
-    PersistentBufferBase(str.c_str(), str.size()+1) {
+    PersistentBuffer(str.c_str(), str.size()+1) {
 
     ASSERT(data()[size()] == '\0');
 }
 
 
 size_t PersistentString::size() const {
-    return PersistentBufferBase::size()-1;
+    return PersistentBuffer::size()-1;
 }
 
 size_t PersistentString::length() const {
@@ -44,11 +44,11 @@ size_t PersistentString::length() const {
 }
 
 const char* PersistentString::c_str() const {
-    return static_cast<const char*>(PersistentBufferBase::data());
+    return static_cast<const char*>(PersistentBuffer::data());
 }
 
 const char * PersistentString::data () const {
-    return static_cast<const char*>(PersistentBufferBase::data());
+    return static_cast<const char*>(PersistentBuffer::data());
 }
 
 

@@ -25,32 +25,25 @@ namespace pmem {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-PersistentBuffer::PersistentBuffer(const void * data, size_t length) :
-    PersistentBufferBase(data, length) {}
-
-
-PersistentBufferBase::PersistentBufferBase(const void *data, size_t length)
+PersistentBuffer::PersistentBuffer(const void *data, size_t length)
     : length_(length) {
 
-    eckit::Log::error() << "Storing" << length << ", " << data << std::endl;
-    if (length != 0 && data != 0) {
-        eckit::Log::error() << "Storing ..." << std::endl;
+    if (length != 0 && data != 0)
         ::memcpy(data_, data, length);
-    }
 }
 
 
-size_t PersistentBufferBase::data_size(size_t length) {
-    return sizeof(PersistentBufferBase) + length;
+size_t PersistentBuffer::data_size(size_t length) {
+    return sizeof(PersistentBuffer) + length;
 }
 
 
-size_t PersistentBufferBase::size() const {
+size_t PersistentBuffer::size() const {
     return length_;
 }
 
 
-const void * PersistentBufferBase::data () const {
+const void * PersistentBuffer::data () const {
     return data_;
 }
 
