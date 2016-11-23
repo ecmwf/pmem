@@ -117,6 +117,8 @@ public: // methods
 
     bool valid() const;
 
+    uint64_t uuid() const;
+
     /// For the implementation of simple polymorphism. Will required the PersistentTypes to be
     /// modified to support interconversion
     template <typename S>
@@ -213,6 +215,11 @@ bool PersistentPtr<T>::valid() const {
     return PersistentType<object_type>::validate_type_id(::pmemobj_type_num(oid_));
 }
 
+
+template <typename T>
+uint64_t PersistentPtr<T>::uuid() const {
+    return oid_.pool_uuid_lo;
+}
 
 /// Convert a PersistentPtr to another type of PersistentPtr. This will almost always
 /// fail at runtime on the type check, unless the PersistentType has been overriden
