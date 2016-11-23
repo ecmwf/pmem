@@ -22,7 +22,6 @@
 #include "eckit/exception/StaticAssert.h"
 #include "eckit/types/IsBaseOf.h"
 #include "eckit/types/IsSame.h"
-#include "eckit/os/BackTrace.h"
 
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPool.h"
@@ -242,8 +241,6 @@ void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<
                         constructor.type_id(),
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
-        eckit::Log::error() << "allocate_ctr" << constructor.type_id() << std::endl;
-        eckit::Log::error() << eckit::BackTrace::dump() << std::endl;
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
     }
 }
@@ -315,8 +312,6 @@ void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<ob
                         constructor.type_id(),
                         &pmem_constructor,
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
-        eckit::Log::error() << "replace_ctr" << constructor.type_id() << std::endl;
-        eckit::Log::error() << eckit::BackTrace::dump() << std::endl;
         ASSERT(OID_EQUALS(oid_, oid_tmp));
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
     } else {

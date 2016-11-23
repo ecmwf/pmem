@@ -117,7 +117,7 @@ class AtomicConstructor1<PersistentPODVectorData<T>, size_t> :
         public AtomicConstructor1Base<PersistentPODVectorData<T>, size_t> {
 public:
 
-    AtomicConstructor1(size_t x1) : AtomicConstructor1Base<PersistentPODVectorData<T>,size_t>(x1) {}
+    AtomicConstructor1(const size_t& x1) : AtomicConstructor1Base<PersistentPODVectorData<T>,size_t>(x1) {}
 
     virtual size_t size() const {
         return PersistentPODVectorData<T>::data_size(this->x1_);
@@ -130,7 +130,7 @@ class AtomicConstructor2<PersistentPODVectorData<T>, PersistentPODVectorData<T>,
         public AtomicConstructor2Base<PersistentPODVectorData<T>, PersistentPODVectorData<T>, size_t> {
 public:
 
-    AtomicConstructor2(const PersistentPODVectorData<T>& x1, size_t x2) :
+    AtomicConstructor2(const PersistentPODVectorData<T>& x1, const size_t& x2) :
         AtomicConstructor2Base<PersistentPODVectorData<T>, PersistentPODVectorData<T>,size_t>(x1, x2) {}
 
     virtual size_t size() const {
