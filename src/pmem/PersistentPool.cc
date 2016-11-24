@@ -106,7 +106,7 @@ bool PersistentPool::newPool() const {
 
 void PersistentPool::close() {
 
-    Log::info() << "Closing persistent pool." << std::endl;
+    Log::info() << "Closing persistent pool: " << path_ << std::endl;
     ASSERT(pool_);
 
     ::pmemobj_close(pool_);
