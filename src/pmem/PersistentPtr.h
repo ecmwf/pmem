@@ -19,9 +19,6 @@
 #include "libpmemobj.h"
 
 #include "eckit/exception/Exceptions.h"
-#include "eckit/exception/StaticAssert.h"
-#include "eckit/types/IsBaseOf.h"
-#include "eckit/types/IsSame.h"
 
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentPool.h"
