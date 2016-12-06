@@ -27,7 +27,7 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ template<> uint64_t pmem::PersistentType<PersistentString>::type_id = 1;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE( test_pmem_persistent_string )
+BOOST_AUTO_TEST_SUITE( test_pmem_persistent_string );
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_valid_persistent_ptr )
 {
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_empty )
     PersistentString& str(stringMock.object());
 
     BOOST_CHECK_EQUAL(str, std::string(""));
-    BOOST_CHECK_EQUAL(str.size(), 0);
-    BOOST_CHECK_EQUAL(str.length(), 0);
+    BOOST_CHECK_EQUAL(str.size(), size_t(0));
+    BOOST_CHECK_EQUAL(str.length(), size_t(0));
 }
 
 
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_real )
     PersistentString& str(stringMock.object());
 
     BOOST_CHECK_EQUAL(str, std::string("this is a string"));
-    BOOST_CHECK_EQUAL(str.size(), 16);
-    BOOST_CHECK_EQUAL(str.length(), 16);
+    BOOST_CHECK_EQUAL(str.size(), size_t(16));
+    BOOST_CHECK_EQUAL(str.length(), size_t(16));
 
     BOOST_CHECK_EQUAL(str[0], 't');
     BOOST_CHECK_EQUAL(str[15], 'g');

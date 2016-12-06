@@ -30,7 +30,7 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_size_zero )
     PersistentBuffer& buf_ref(*reinterpret_cast<PersistentBuffer*>((void*)buf));
     ctr.make(buf_ref);
 
-    BOOST_CHECK_EQUAL(buf_ref.size(), 0);
+    BOOST_CHECK_EQUAL(buf_ref.size(), size_t(0));
 }
 
 

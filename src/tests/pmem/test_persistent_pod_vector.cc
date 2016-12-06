@@ -24,7 +24,7 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ struct SuitePoolFixture {
     AutoPool autoPool_;
 };
 
-BOOST_GLOBAL_FIXTURE( SuitePoolFixture )
+BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -108,17 +108,17 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
     // Check that allocation works on an (as-of-yet null) PersistentPODVector
 
     BOOST_CHECK(pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 0);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 0);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(0));
 
     pv.push_back(1111);
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 1);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 1);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(1));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(1));
     BOOST_CHECK(pv->full()); // Internal to PersistentPODVectorData
 
-    BOOST_CHECK_EQUAL(pv[0], 1111);
+    BOOST_CHECK_EQUAL(pv[0], uint64_t(1111));
     const uint64_t * data_ptr_a = &pv[0];
 
     // Check that the next push_back works (will need to internally reallocate, as it goes in powers of two).
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
     pv.push_back(2222);
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 2);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 2);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(2));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(2));
     BOOST_CHECK(pv->full()); // Internal to PersistentPODVectorData
 
-    BOOST_CHECK_EQUAL(pv[0], 1111);
-    BOOST_CHECK_EQUAL(pv[1], 2222);
+    BOOST_CHECK_EQUAL(pv[0], uint64_t(1111));
+    BOOST_CHECK_EQUAL(pv[1], uint64_t(2222));
 
     // The data has been reallocated in the previous push_back
 
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 
     pv.push_back(3333);
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
     BOOST_CHECK(!pv->full()); // Internal to PersistentPODVectorData
 
     const uint64_t * data_ptr_c = &pv[0];
@@ -151,14 +151,14 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_push_back )
 
     pv.push_back(4444);
 
-    BOOST_CHECK_EQUAL(pv.size(), 4);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(4));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
     BOOST_CHECK(pv->full()); // Internal to PersistentPODVectorData
 
-    BOOST_CHECK_EQUAL(pv[0], 1111);
-    BOOST_CHECK_EQUAL(pv[1], 2222);
-    BOOST_CHECK_EQUAL(pv[2], 3333);
-    BOOST_CHECK_EQUAL(pv[3], 4444);
+    BOOST_CHECK_EQUAL(pv[0], uint64_t(1111));
+    BOOST_CHECK_EQUAL(pv[1], uint64_t(2222));
+    BOOST_CHECK_EQUAL(pv[2], uint64_t(3333));
+    BOOST_CHECK_EQUAL(pv[3], uint64_t(4444));
 
     // Vector is reallocated again reallocated.
 
@@ -174,14 +174,14 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_resize )
     // Run resize on an empty vector, should allocate initial space.
 
     BOOST_CHECK(pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 0);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 0);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(0));
 
     pv.resize(4);
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 0);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
 
     // Part-fill the available space
 
@@ -189,15 +189,15 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_resize )
     pv.push_back(8888);
     pv.push_back(7777);
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
 
     // Resize the vector
 
     pv.resize(6);
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 6);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(6));
 
     // Fill the vector completely
 
@@ -209,23 +209,23 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pod_vector_resize )
 
     pv.resize(8);
 
-    BOOST_CHECK_EQUAL(pv.size(), 6);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 8);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(6));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(8));
 
     pv.push_back(3333);
 
-    BOOST_CHECK_EQUAL(pv.size(), 7);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 8);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(7));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(8));
 
     // Check that all the data has been preserved throughout
 
-    BOOST_CHECK_EQUAL(pv[0], 9999);
-    BOOST_CHECK_EQUAL(pv[1], 8888);
-    BOOST_CHECK_EQUAL(pv[2], 7777);
-    BOOST_CHECK_EQUAL(pv[3], 6666);
-    BOOST_CHECK_EQUAL(pv[4], 5555);
-    BOOST_CHECK_EQUAL(pv[5], 4444);
-    BOOST_CHECK_EQUAL(pv[6], 3333);
+    BOOST_CHECK_EQUAL(pv[0], uint64_t(9999));
+    BOOST_CHECK_EQUAL(pv[1], uint64_t(8888));
+    BOOST_CHECK_EQUAL(pv[2], uint64_t(7777));
+    BOOST_CHECK_EQUAL(pv[3], uint64_t(6666));
+    BOOST_CHECK_EQUAL(pv[4], uint64_t(5555));
+    BOOST_CHECK_EQUAL(pv[5], uint64_t(4444));
+    BOOST_CHECK_EQUAL(pv[6], uint64_t(3333));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

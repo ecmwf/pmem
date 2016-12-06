@@ -25,7 +25,7 @@ using namespace eckit;
 using namespace eckit::testing;
 using namespace tree;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -87,7 +87,7 @@ struct SuitePoolFixture {
     AutoPool autoPool_;
 };
 
-BOOST_GLOBAL_FIXTURE( SuitePoolFixture )
+BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_raw_blob )
     // Check that we have created a leaf node, with no subnodes
 
     BOOST_CHECK(first->leaf());
-    BOOST_CHECK_EQUAL(first->nodeCount(), 0);
+    BOOST_CHECK_EQUAL(first->nodeCount(), size_t(0));
 
     // Leaf nodes have a value, by which they are referred by their parents, but no key (as they have no
     // subnodes)
@@ -161,49 +161,49 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_recursive )
 
     BOOST_CHECK(!first.null());
     BOOST_CHECK(!first->leaf());
-    BOOST_CHECK_EQUAL(first->nodeCount(), 1);
+    BOOST_CHECK_EQUAL(first->nodeCount(), size_t(1));
 
     BOOST_CHECK_EQUAL(first->value(), "SAMPLE");
     BOOST_CHECK_EQUAL(first->key(), "key1");
-    BOOST_CHECK_EQUAL(first->dataSize(), 0);
+    BOOST_CHECK_EQUAL(first->dataSize(), size_t(0));
     BOOST_CHECK(first->data() == 0);
 
     // ... next node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), 1);
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), size_t(1));
     const PersistentPtr<TreeNode> child1 = (*reinterpret_cast<TreeNodeSpy*>(first.get())).items()[0];
 
     BOOST_CHECK(!child1.null());
     BOOST_CHECK(!child1->leaf());
-    BOOST_CHECK_EQUAL(child1->nodeCount(), 1);
+    BOOST_CHECK_EQUAL(child1->nodeCount(), size_t(1));
 
     BOOST_CHECK_EQUAL(child1->value(), "value1");
     BOOST_CHECK_EQUAL(child1->key(), "key2");
-    BOOST_CHECK_EQUAL(child1->dataSize(), 0);
+    BOOST_CHECK_EQUAL(child1->dataSize(), size_t(0));
     BOOST_CHECK(child1->data() == 0);
 
     // ... next node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), 1);
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), size_t(1));
     const PersistentPtr<TreeNode> child2 = (*reinterpret_cast<TreeNodeSpy*>(child1.get())).items()[0];
 
     BOOST_CHECK(!child2.null());
     BOOST_CHECK(!child2->leaf());
-    BOOST_CHECK_EQUAL(child2->nodeCount(), 1);
+    BOOST_CHECK_EQUAL(child2->nodeCount(), size_t(1));
 
     BOOST_CHECK_EQUAL(child2->value(), "value2");
     BOOST_CHECK_EQUAL(child2->key(), "key3");
-    BOOST_CHECK_EQUAL(child2->dataSize(), 0);
+    BOOST_CHECK_EQUAL(child2->dataSize(), size_t(0));
     BOOST_CHECK(child2->data() == 0);
 
     // ... leaf node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), 1);
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), size_t(1));
     const PersistentPtr<TreeNode> child3 = (*reinterpret_cast<TreeNodeSpy*>(child2.get())).items()[0];
 
     BOOST_CHECK(!child3.null());
     BOOST_CHECK(child3->leaf());
-    BOOST_CHECK_EQUAL(child3->nodeCount(), 0);
+    BOOST_CHECK_EQUAL(child3->nodeCount(), size_t(0));
 
     BOOST_CHECK_EQUAL(child3->value(), "value3");
     BOOST_CHECK_EQUAL(child3->key(), "");
@@ -263,49 +263,49 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
 
     BOOST_CHECK(!first.null());
     BOOST_CHECK(!first->leaf());
-    BOOST_CHECK_EQUAL(first->nodeCount(), 1);
+    BOOST_CHECK_EQUAL(first->nodeCount(), size_t(1));
 
     BOOST_CHECK_EQUAL(first->value(), "SAMPLE");
     BOOST_CHECK_EQUAL(first->key(), "key1");
-    BOOST_CHECK_EQUAL(first->dataSize(), 0);
+    BOOST_CHECK_EQUAL(first->dataSize(), size_t(0));
     BOOST_CHECK(first->data() == 0);
 
     // ... next node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), 1);
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), size_t(1));
     const PersistentPtr<TreeNode> child1 = (*reinterpret_cast<TreeNodeSpy*>(first.get())).items()[0];
 
     BOOST_CHECK(!child1.null());
     BOOST_CHECK(!child1->leaf());
-    BOOST_CHECK_EQUAL(child1->nodeCount(), 2);
+    BOOST_CHECK_EQUAL(child1->nodeCount(), size_t(2));
 
     BOOST_CHECK_EQUAL(child1->value(), "value1");
     BOOST_CHECK_EQUAL(child1->key(), "key2");
-    BOOST_CHECK_EQUAL(child1->dataSize(), 0);
+    BOOST_CHECK_EQUAL(child1->dataSize(), size_t(0));
     BOOST_CHECK(child1->data() == 0);
 
     // ... Follow only the second branch (have checked the original add in a previous test).
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), 2);
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), size_t(2));
     const PersistentPtr<TreeNode> child2 = (*reinterpret_cast<TreeNodeSpy*>(child1.get())).items()[1];
 
     BOOST_CHECK(!child2.null());
     BOOST_CHECK(!child2->leaf());
-    BOOST_CHECK_EQUAL(child2->nodeCount(), 1);
+    BOOST_CHECK_EQUAL(child2->nodeCount(), size_t(1));
 
     BOOST_CHECK_EQUAL(child2->value(), "value2a");
     BOOST_CHECK_EQUAL(child2->key(), "key99");
-    BOOST_CHECK_EQUAL(child2->dataSize(), 0);
+    BOOST_CHECK_EQUAL(child2->dataSize(), size_t(0));
     BOOST_CHECK(child2->data() == 0);
 
     // ... leaf node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), 1);
+    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), size_t(1));
     const PersistentPtr<TreeNode> child3 = (*reinterpret_cast<TreeNodeSpy*>(child2.get())).items()[0];
 
     BOOST_CHECK(!child3.null());
     BOOST_CHECK(child3->leaf());
-    BOOST_CHECK_EQUAL(child3->nodeCount(), 0);
+    BOOST_CHECK_EQUAL(child3->nodeCount(), size_t(0));
 
     BOOST_CHECK_EQUAL(child3->value(), "valueX");
     BOOST_CHECK_EQUAL(child3->key(), "");
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
     request["key2"] = "value_bad";
     request["key3"] = "value3";
 
-    BOOST_CHECK_EQUAL(first->lookup(request).size(), 0);
+    BOOST_CHECK_EQUAL(first->lookup(request).size(), size_t(0));
 
     // Find a single key, as _fully_ specified
 
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
 
     std::vector<PersistentPtr<TreeNode> > result2 = first->lookup(request2);
 
-    BOOST_CHECK_EQUAL(result2.size(), 1);
+    BOOST_CHECK_EQUAL(result2.size(), size_t(1));
     BOOST_CHECK_EQUAL(result2[0]->value(), "value3");
     BOOST_CHECK_EQUAL(std::string((const char*)result2[0]->data(), result2[0]->dataSize()), data2);
 
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
 
     std::vector<PersistentPtr<TreeNode> > result3 = first->lookup(request3);
 
-    BOOST_CHECK_EQUAL(result3.size(), 2);
+    BOOST_CHECK_EQUAL(result3.size(), size_t(2));
     BOOST_CHECK_EQUAL(result3[0]->value(), "value3");
     BOOST_CHECK_EQUAL(result3[1]->value(), "value3");
     BOOST_CHECK_EQUAL(std::string((const char*)result3[0]->data(), result3[0]->dataSize()), data);

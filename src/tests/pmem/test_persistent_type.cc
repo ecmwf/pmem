@@ -26,7 +26,7 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_type_size )
     BOOST_CHECK_EQUAL(sizeof(PersistentPtr<PersistentType<CustomType> >), sizeof(PersistentPtrBase));
     BOOST_CHECK_EQUAL(sizeof(ptr1), sizeof(ptr_base));
     BOOST_CHECK_EQUAL(sizeof(ptr1), sizeof(PMEMoid));
-    BOOST_CHECK_EQUAL(sizeof(ptr1), 16);
+    BOOST_CHECK_EQUAL(sizeof(ptr1), size_t(16));
 }
 
 

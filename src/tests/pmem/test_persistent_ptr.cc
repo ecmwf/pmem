@@ -25,7 +25,7 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ struct SuitePoolFixture {
     AutoPool autoPool_;
 };
 
-BOOST_GLOBAL_FIXTURE( SuitePoolFixture )
+BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_size )
     BOOST_CHECK_EQUAL(sizeof(PersistentPtr<CustomType>), sizeof(PersistentPtrBase));
     BOOST_CHECK_EQUAL(sizeof(ptr1), sizeof(ptr_base));
     BOOST_CHECK_EQUAL(sizeof(ptr1), sizeof(PMEMoid));
-    BOOST_CHECK_EQUAL(sizeof(ptr1), 16);
+    BOOST_CHECK_EQUAL(sizeof(ptr1), size_t(16));
 }
 
 
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_nullification )
     ptr.nullify();
     BOOST_CHECK(ptr.null());
 
-    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->off, 0);
-    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->pool_uuid_lo, 0);
+    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->off, uint64_t(0));
+    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->pool_uuid_lo, uint64_t(0));
 }
 
 
@@ -222,18 +222,18 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate_ctr )
 
     // Check that we can dereference this PersistentPtr to give access to the memory mapped region
 
-    BOOST_CHECK_EQUAL(p1->data1_, 1111);
-    BOOST_CHECK_EQUAL(p1->data2_, 2222);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(2222));
 
     const CustomType* pelem = p1.get();
 
-    BOOST_CHECK_EQUAL(pelem->data1_, 1111);
-    BOOST_CHECK_EQUAL(pelem->data2_, 2222);
+    BOOST_CHECK_EQUAL(pelem->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pelem->data2_, uint32_t(2222));
 
     const CustomType& relem(*p1);
 
-    BOOST_CHECK_EQUAL(relem.data1_, 1111);
-    BOOST_CHECK_EQUAL(relem.data2_, 2222);
+    BOOST_CHECK_EQUAL(relem.data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(relem.data2_, uint32_t(2222));
 
     BOOST_CHECK_EQUAL(&relem, pelem);
 
@@ -254,8 +254,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate_ctr )
     PersistentPtr<CustomType> p2 = global_root->data_[3];
 
     BOOST_CHECK(p1 != p2);
-    BOOST_CHECK_EQUAL(p2->data1_, 1111);
-    BOOST_CHECK_EQUAL(p2->data2_, 2222);
+    BOOST_CHECK_EQUAL(p2->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p2->data2_, uint32_t(2222));
 }
 
 
@@ -279,18 +279,18 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
 
     // Check that we can dereference this PersistentPtr to give access to the memory mapped region
 
-    BOOST_CHECK_EQUAL(p1->data1_, 999);
-    BOOST_CHECK_EQUAL(p1->data2_, 999);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(999));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(999));
 
     const CustomType* pelem = p1.get();
 
-    BOOST_CHECK_EQUAL(pelem->data1_, 999);
-    BOOST_CHECK_EQUAL(pelem->data2_, 999);
+    BOOST_CHECK_EQUAL(pelem->data1_, uint32_t(999));
+    BOOST_CHECK_EQUAL(pelem->data2_, uint32_t(999));
 
     const CustomType& relem(*p1);
 
-    BOOST_CHECK_EQUAL(relem.data1_, 999);
-    BOOST_CHECK_EQUAL(relem.data2_, 999);
+    BOOST_CHECK_EQUAL(relem.data1_, uint32_t(999));
+    BOOST_CHECK_EQUAL(relem.data2_, uint32_t(999));
 
     BOOST_CHECK_EQUAL(&relem, pelem);
 
@@ -311,8 +311,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
     PersistentPtr<CustomType> p2 = global_root->data_[0];
 
     BOOST_CHECK(p1 != p2);
-    BOOST_CHECK_EQUAL(p2->data1_, 888);
-    BOOST_CHECK_EQUAL(p2->data2_, 888);
+    BOOST_CHECK_EQUAL(p2->data1_, uint32_t(888));
+    BOOST_CHECK_EQUAL(p2->data2_, uint32_t(888));
 }
 
 
@@ -332,8 +332,8 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
 
     PersistentPtr<CustomType> p1 = global_root->data_[1];
     BOOST_CHECK(!p1.null());
-    BOOST_CHECK_EQUAL(p1->data1_, 1111);
-    BOOST_CHECK_EQUAL(p1->data2_, 2222);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(2222));
 
     CustomType * volatile_p1 = p1.get();
 
@@ -376,10 +376,10 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
     BOOST_CHECK(raw_pool_p2 == raw_pool2a);
     BOOST_CHECK(raw_pool_p2 != raw_pool2);
 
-    BOOST_CHECK_EQUAL(p1->data1_, 1111);
-    BOOST_CHECK_EQUAL(p1->data2_, 2222);
-    BOOST_CHECK_EQUAL(volatile_p2->data1_, 1111);
-    BOOST_CHECK_EQUAL(volatile_p2->data2_, 2222);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(2222));
+    BOOST_CHECK_EQUAL(volatile_p2->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(volatile_p2->data2_, uint32_t(2222));
 
     // And check an explicit replace
 
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
     PersistentPtr<CustomType> p2 = global_root->data_[1];
 
     BOOST_CHECK(p1 != p2);
-    BOOST_CHECK_EQUAL(p2->data1_, 1111);
-    BOOST_CHECK_EQUAL(p2->data2_, 2222);
+    BOOST_CHECK_EQUAL(p2->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p2->data2_, uint32_t(2222));
     BOOST_CHECK_EQUAL(raw_pool2a, ::pmemobj_pool_by_ptr(p2.get()));
 
     // And clean everything up

@@ -29,7 +29,7 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 
-BOOST_GLOBAL_FIXTURE(Setup)
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_open )
     BOOST_CHECK(!pool2.newPool());
 
     // Check that we have got a pool of the correct size, with a correctly initialised root.
-    BOOST_CHECK_EQUAL(pool2.size(), 1024 * 1024 * 20);
+    BOOST_CHECK_EQUAL(pool2.size(), size_t(1024 * 1024 * 20));
 
     PersistentPtr<RootType> root = pool2.getRoot<RootType>();
     BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");
