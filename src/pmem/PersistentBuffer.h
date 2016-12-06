@@ -16,6 +16,7 @@
 
 
 #include "pmem/AtomicConstructor.h"
+#include "pmem/PersistentType.h"
 
 
 namespace eckit {
@@ -27,32 +28,23 @@ namespace pmem {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+/*
+ * We provide a base type, which gets simply wrapped. This allows the _derived_ types to be PersistentType<T>, so that
+ * more than one concrete class can be built on top of the functionality of PersistentBufferBase. See (as a start)
+ * both PersistentBuffer and PersistentString.
+ */
+
 class PersistentBuffer {
 
-public: // Construction objects
-
-    class Constructor : public AtomicConstructor<PersistentBuffer> {
-
-    public: // methods
-
-        Constructor(const void* data, size_t length);
-
-        virtual void make (PersistentBuffer& object) const;
-
-        virtual size_t size() const;
-
-    private: // members
-
-        const void* data_;
-        size_t length_;
-    };
-
-
 public: // methods
+
+    PersistentBuffer(const void* data, size_t length);
 
     size_t size() const;
 
     const void* data() const;
+
+    static size_t data_size(size_t length);
 
 private: // members
 
@@ -61,12 +53,16 @@ private: // members
     // Accessor to the data.
     // Data is VARIABLY SIZED following on from this location.
     char data_[0];
-
-private: // friends
-
-    friend class PersistentBuffer::Constructor;
-
 };
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+
+template<>
+inline size_t AtomicConstructor2Base<PersistentBuffer, const void*, size_t>::size() const {
+    return PersistentBuffer::data_size(x2_);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 

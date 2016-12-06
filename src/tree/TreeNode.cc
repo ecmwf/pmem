@@ -34,47 +34,33 @@ TreeNode::LeafExistsError::LeafExistsError(const std::string& msg, const CodeLoc
 //----------------------------------------------------------------------------------------------------------------------
 
 
-TreeNode::Constructor::Constructor(const std::string& value, const DataBlob& blob) :
-    value_(value),
-    subkeys_(0),
-    blob_(blob) {
+TreeNode::TreeNode(const std::string& value, const DataBlob& blob) :
+    value_(eckit::FixedString<12>(value)),
+    key_("") {
 
     ASSERT(blob.length() != 0);
+
+    items_.nullify();
+    data_.nullify();
+
+    data_.allocate(blob.buffer(), blob.length());
 }
 
 
-TreeNode::Constructor::Constructor(const std::string& value, const KeyType& subkeys, const DataBlob& blob) :
-    value_(value),
-    subkeys_(NULL),
-    blob_(blob) {
-
-    if (subkeys.size() > 0)
-        subkeys_ = &subkeys;
+TreeNode::TreeNode(const std::string& value, const KeyType& subkeys, const DataBlob& blob) :
+    value_(eckit::FixedString<12>(value)),
+    key_(subkeys.size() > 0 ? subkeys[0].first : "") {
 
     ASSERT(blob.length() != 0);
-}
 
+    items_.nullify();
+    data_.nullify();
 
-void TreeNode::Constructor::make(TreeNode& object) const {
-
-    object.value_ = eckit::FixedString<12>(value_);
-    object.key_ = subkeys_ ? (*subkeys_)[0].first : "";
-    object.items_.nullify();
-    object.data_.nullify();
-
-    // If this is the final node in the chain, then we need to store the data! Otherwise we need to continue
-    // building the chain.
-    if (subkeys_) {
-        const KeyType& sk(*subkeys_);
-
-        ASSERT(sk.size() > 0);
-        std::vector<std::pair<std::string, std::string> > new_subkeys(sk.begin()+1, sk.end());
-        TreeNode::Constructor ctr(sk[0].second, new_subkeys, blob_);
-        object.items_.push_back(ctr);
-    } else {
-        PersistentBuffer::Constructor ctr(blob_.buffer(), blob_.length());
-        object.data_.allocate(ctr);
-    }
+    if (subkeys.size() > 0) {
+        std::vector<std::pair<std::string, std::string> > new_subkeys(subkeys.begin()+1, subkeys.end());
+        items_.push_back(subkeys[0].second, new_subkeys, blob);
+    } else
+        data_.allocate(blob.buffer(), blob.length());
 }
 
 
@@ -108,8 +94,7 @@ void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
 
     // We have reached the bottom of the known tree. Create new nodes from here-on down.
     KeyType subkeys(key.begin()+1, key.end());
-    TreeNode::Constructor ctr(value, subkeys, blob);
-    items_.push_back(ctr);
+    items_.push_back(value, subkeys, blob);
 }
 
 

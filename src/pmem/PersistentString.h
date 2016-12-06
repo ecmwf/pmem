@@ -31,23 +31,9 @@ namespace pmem {
 
 class PersistentString : private PersistentBuffer {
 
-public: // Construction objects
-
-    class Constructor : public AtomicConstructor<PersistentString>, private PersistentBuffer::Constructor {
-
-    public: // methods
-
-        Constructor(const std::string& value);
-
-        virtual void make (PersistentString& object) const;
-
-        virtual size_t size() const;
-
-    private:
-
-    };
-
 public: // methods
+
+    PersistentString(const std::string& str);
 
     size_t size() const;
     size_t length() const;
@@ -66,12 +52,17 @@ public: // methods
 
 private: // friends
 
-    friend class PersistentBuffer::Constructor;
-
     friend bool operator==(const std::string&, const PersistentString&);
     friend bool operator!=(const std::string&, const PersistentString&);
     friend std::ostream& operator<< (std::ostream&, const PersistentString&);
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+
+template<>
+inline size_t AtomicConstructor1Base<PersistentString, std::string>::size() const {
+    return PersistentBuffer::data_size(x1_.size() + 1);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 

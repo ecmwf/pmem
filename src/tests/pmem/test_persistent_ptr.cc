@@ -14,6 +14,8 @@
 
 #include "ecbuild/boost_test_framework.h"
 
+#include "eckit/testing/Setup.h"
+
 #include "pmem/PersistentPtr.h"
 
 #include "test_persistent_helpers.h"
@@ -21,12 +23,15 @@
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
 /// A custom type to allocate objects in the tests
 
-class CustomType {
+class CustomType : public PersistentType<CustomType> {
 
 public: // constructor
 
@@ -37,6 +42,9 @@ public: // constructor
         }
     };
 
+    CustomType(const uint32_t elem) :
+        data1_(elem), data2_(elem) {}
+
 public: // members
 
     uint32_t data1_;
@@ -45,7 +53,7 @@ public: // members
 
 /// A different type to play the devils advocate
 
-class OtherType {
+class OtherType : public PersistentType<OtherType> {
 public: // members
     uint32_t other1_;
     uint32_t other2_;
@@ -54,10 +62,10 @@ public: // members
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 3;
+const size_t root_elems = 4;
 
 
-class RootType {
+class RootType : public PersistentType<RootType> {
 
 public: // constructor
 
@@ -78,9 +86,9 @@ public: // members
 
 // And structure the pool with types
 
-template<> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> uint64_t pmem::PersistentPtr<CustomType>::type_id = 1;
-template<> uint64_t pmem::PersistentPtr<OtherType>::type_id = 2;
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<CustomType>::type_id = 1;
+template<> uint64_t pmem::PersistentType<OtherType>::type_id = 2;
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 
@@ -99,7 +107,7 @@ struct SuitePoolFixture {
     AutoPool autoPool_;
 };
 
-BOOST_GLOBAL_FIXTURE( SuitePoolFixture )
+BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -116,7 +124,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_size )
     BOOST_CHECK_EQUAL(sizeof(PersistentPtr<CustomType>), sizeof(PersistentPtrBase));
     BOOST_CHECK_EQUAL(sizeof(ptr1), sizeof(ptr_base));
     BOOST_CHECK_EQUAL(sizeof(ptr1), sizeof(PMEMoid));
-    BOOST_CHECK_EQUAL(sizeof(ptr1), 16);
+    BOOST_CHECK_EQUAL(sizeof(ptr1), size_t(16));
 }
 
 
@@ -136,8 +144,8 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_nullification )
     ptr.nullify();
     BOOST_CHECK(ptr.null());
 
-    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->off, 0);
-    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->pool_uuid_lo, 0);
+    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->off, uint64_t(0));
+    BOOST_CHECK_EQUAL(reinterpret_cast<PMEMoid*>(&ptr)->pool_uuid_lo, uint64_t(0));
 }
 
 
@@ -189,43 +197,43 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_allocate_needs_pmem )
 
     CustomType::Constructor ctr;
 
-    BOOST_CHECK_THROW(ptr.allocate(ctr), SeriousBug);
+    BOOST_CHECK_THROW(ptr.allocate_ctr(ctr), SeriousBug);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate_ctr )
 {
-    BOOST_CHECK(global_root->data_[0].null());
+    BOOST_CHECK(global_root->data_[3].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[0].allocate(ctr);
+    global_root->data_[3].allocate_ctr(ctr);
 
-    BOOST_CHECK(!global_root->data_[0].null());
-    BOOST_CHECK(global_root->data_[0].valid());
+    BOOST_CHECK(!global_root->data_[3].null());
+    BOOST_CHECK(global_root->data_[3].valid());
 
     // Check that persistent pointers in volatile vs persistent space are the same
 
-    PersistentPtr<CustomType> p1 = global_root->data_[0];
+    PersistentPtr<CustomType> p1 = global_root->data_[3];
 
-    BOOST_CHECK(!global_root->data_[0].null());
-    BOOST_CHECK(global_root->data_[0].valid());
-    BOOST_CHECK(p1 == global_root->data_[0]);
-    BOOST_CHECK(!(p1 != global_root->data_[0]));
+    BOOST_CHECK(!global_root->data_[3].null());
+    BOOST_CHECK(global_root->data_[3].valid());
+    BOOST_CHECK(p1 == global_root->data_[3]);
+    BOOST_CHECK(!(p1 != global_root->data_[3]));
 
     // Check that we can dereference this PersistentPtr to give access to the memory mapped region
 
-    BOOST_CHECK_EQUAL(p1->data1_, 1111);
-    BOOST_CHECK_EQUAL(p1->data2_, 2222);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(2222));
 
     const CustomType* pelem = p1.get();
 
-    BOOST_CHECK_EQUAL(pelem->data1_, 1111);
-    BOOST_CHECK_EQUAL(pelem->data2_, 2222);
+    BOOST_CHECK_EQUAL(pelem->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pelem->data2_, uint32_t(2222));
 
     const CustomType& relem(*p1);
 
-    BOOST_CHECK_EQUAL(relem.data1_, 1111);
-    BOOST_CHECK_EQUAL(relem.data2_, 2222);
+    BOOST_CHECK_EQUAL(relem.data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(relem.data2_, uint32_t(2222));
 
     BOOST_CHECK_EQUAL(&relem, pelem);
 
@@ -241,13 +249,70 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
 
     // Check that replace also works
 
-    global_root->data_[0].replace(ctr);
+    global_root->data_[3].replace_ctr(ctr);
+
+    PersistentPtr<CustomType> p2 = global_root->data_[3];
+
+    BOOST_CHECK(p1 != p2);
+    BOOST_CHECK_EQUAL(p2->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p2->data2_, uint32_t(2222));
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_direct_allocate )
+{
+    BOOST_CHECK(global_root->data_[0].null());
+
+    global_root->data_[0].allocate(999);
+
+    BOOST_CHECK(!global_root->data_[0].null());
+    BOOST_CHECK(global_root->data_[0].valid());
+
+    // Check that persistent pointers in volatile vs persistent space are the same
+
+    PersistentPtr<CustomType> p1 = global_root->data_[0];
+
+    BOOST_CHECK(!global_root->data_[0].null());
+    BOOST_CHECK(global_root->data_[0].valid());
+    BOOST_CHECK(p1 == global_root->data_[0]);
+    BOOST_CHECK(!(p1 != global_root->data_[0]));
+
+    // Check that we can dereference this PersistentPtr to give access to the memory mapped region
+
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(999));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(999));
+
+    const CustomType* pelem = p1.get();
+
+    BOOST_CHECK_EQUAL(pelem->data1_, uint32_t(999));
+    BOOST_CHECK_EQUAL(pelem->data2_, uint32_t(999));
+
+    const CustomType& relem(*p1);
+
+    BOOST_CHECK_EQUAL(relem.data1_, uint32_t(999));
+    BOOST_CHECK_EQUAL(relem.data2_, uint32_t(999));
+
+    BOOST_CHECK_EQUAL(&relem, pelem);
+
+    // Test that this pointer is in persistent memory, and is in the same pool as the global root
+
+    PMEMobjpool* root_pool = ::pmemobj_pool_by_ptr(global_root.get());
+    PMEMobjpool* elem_pool = ::pmemobj_pool_by_ptr(pelem);
+
+    BOOST_CHECK(pelem != (void*)global_root.get());
+    BOOST_CHECK(root_pool != 0);
+    BOOST_CHECK(elem_pool != 0);
+    BOOST_CHECK_EQUAL(root_pool, elem_pool);
+
+    // Check that replace also works
+
+    global_root->data_[0].replace(888);
 
     PersistentPtr<CustomType> p2 = global_root->data_[0];
 
     BOOST_CHECK(p1 != p2);
-    BOOST_CHECK_EQUAL(p2->data1_, 1111);
-    BOOST_CHECK_EQUAL(p2->data2_, 2222);
+    BOOST_CHECK_EQUAL(p2->data1_, uint32_t(888));
+    BOOST_CHECK_EQUAL(p2->data2_, uint32_t(888));
 }
 
 
@@ -263,12 +328,12 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
     BOOST_CHECK(global_root->data_[1].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[1].allocate(pool2, ctr);
+    global_root->data_[1].allocate_ctr(pool2, ctr);
 
     PersistentPtr<CustomType> p1 = global_root->data_[1];
     BOOST_CHECK(!p1.null());
-    BOOST_CHECK_EQUAL(p1->data1_, 1111);
-    BOOST_CHECK_EQUAL(p1->data2_, 2222);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(2222));
 
     CustomType * volatile_p1 = p1.get();
 
@@ -311,20 +376,20 @@ BOOST_AUTO_TEST_CASE( test_pemem_persistent_ptr_cross_pool )
     BOOST_CHECK(raw_pool_p2 == raw_pool2a);
     BOOST_CHECK(raw_pool_p2 != raw_pool2);
 
-    BOOST_CHECK_EQUAL(p1->data1_, 1111);
-    BOOST_CHECK_EQUAL(p1->data2_, 2222);
-    BOOST_CHECK_EQUAL(volatile_p2->data1_, 1111);
-    BOOST_CHECK_EQUAL(volatile_p2->data2_, 2222);
+    BOOST_CHECK_EQUAL(p1->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p1->data2_, uint32_t(2222));
+    BOOST_CHECK_EQUAL(volatile_p2->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(volatile_p2->data2_, uint32_t(2222));
 
     // And check an explicit replace
 
-    global_root->data_[1].replace(pool2a, ctr);
+    global_root->data_[1].replace_ctr(pool2a, ctr);
 
     PersistentPtr<CustomType> p2 = global_root->data_[1];
 
     BOOST_CHECK(p1 != p2);
-    BOOST_CHECK_EQUAL(p2->data1_, 1111);
-    BOOST_CHECK_EQUAL(p2->data2_, 2222);
+    BOOST_CHECK_EQUAL(p2->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(p2->data2_, uint32_t(2222));
     BOOST_CHECK_EQUAL(raw_pool2a, ::pmemobj_pool_by_ptr(p2.get()));
 
     // And clean everything up
@@ -338,7 +403,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_typeid )
     BOOST_CHECK(global_root->data_[2].null());
 
     CustomType::Constructor ctr;
-    global_root->data_[2].allocate(ctr);
+    global_root->data_[2].allocate_ctr(ctr);
 
     PersistentPtr<CustomType> p = global_root->data_[2];
 
@@ -347,7 +412,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_typeid )
 
     // Check the type_id explicitly
 
-    BOOST_CHECK_EQUAL(p.type_id, ::pmemobj_type_num(p.raw()));
+    BOOST_CHECK_EQUAL(PersistentType<CustomType>::type_id, ::pmemobj_type_num(p.raw()));
 
     // Cast the PersistentPtr to a different type. Now we can see things go wrong.
 
@@ -363,7 +428,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_ptr_typeid )
 
     // We may have changed the wrapper pointer, but we haven't changed the type_id stored in the persistent layer.
     BOOST_CHECK_EQUAL(::pmemobj_type_num(p.raw()), ::pmemobj_type_num(pother.raw()));
-    BOOST_CHECK(pother.type_id != ::pmemobj_type_num(pother.raw()));
+    BOOST_CHECK(PersistentType<OtherType>::type_id != ::pmemobj_type_num(pother.raw()));
 }
 
 

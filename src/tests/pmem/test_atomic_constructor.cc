@@ -22,9 +22,30 @@ using namespace pmem;
 namespace {
 
     struct LocalType {
+
+        LocalType() : elem(11), elem2(99) {}
+        LocalType(int x) : elem(x), elem2(99) {}
+        LocalType(double x, std::string y) : elem(22), elem2(33) {}
+
         uint32_t elem;
         uint32_t elem2;
     };
+
+    template<> uint64_t PersistentType<LocalType>::type_id = 99;
+}
+
+
+namespace pmem {
+// Define a custom size and type_id function for the single-parameter constructor
+template<>
+size_t ::pmem::AtomicConstructor1Base<LocalType, int>::size() const {
+    return x1_ * 3;
+}
+
+template<>
+uint64_t AtomicConstructor1Base<LocalType, int>::type_id() const {
+    return 4321;
+}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -123,6 +144,67 @@ BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_build )
 
     BOOST_CHECK_EQUAL(obj.elem, 666);
     BOOST_CHECK_EQUAL(obj.elem2, 666);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// Consider the magic automatic constructors
+
+BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor0 )
+{
+    AtomicConstructor0<LocalType> ctr;
+
+    BOOST_CHECK_EQUAL(ctr.size(), 8);
+    BOOST_CHECK_EQUAL(ctr.type_id(), 99);
+
+    LocalType x;
+    x.elem = 0;
+    x.elem2 = 0;
+
+    ctr.build(&x);
+    BOOST_CHECK_EQUAL(x.elem, 11);
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor1 )
+{
+    // This test makes use of the customised size/type_id functions!
+
+    int arg1 = 33;
+    AtomicConstructor1<LocalType, int> ctr(arg1);
+
+    BOOST_CHECK_EQUAL(ctr.size(), 99);
+    BOOST_CHECK_EQUAL(ctr.type_id(), 4321);
+
+    LocalType x;
+    x.elem = 0;
+    x.elem2 = 0;
+
+    ctr.build(&x);
+    BOOST_CHECK_EQUAL(x.elem, 33);
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor2 )
+{
+    // This test makes use of the customised size/type_id functions!
+
+    int arg1 = 33;
+    std::string arg2 = "An argument";
+    AtomicConstructor2<LocalType, double, std::string> ctr(arg1, arg2);
+
+    BOOST_CHECK_EQUAL(ctr.size(), 8);
+    BOOST_CHECK_EQUAL(ctr.type_id(), 99);
+
+    LocalType x;
+    x.elem = 0;
+    x.elem2 = 0;
+
+    ctr.build(&x);
+    BOOST_CHECK_EQUAL(x.elem, 22);
+    BOOST_CHECK_EQUAL(x.elem2, 33);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

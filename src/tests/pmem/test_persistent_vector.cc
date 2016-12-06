@@ -12,6 +12,8 @@
 
 #include "ecbuild/boost_test_framework.h"
 
+#include "eckit/testing/Setup.h"
+
 #include "pmem/PersistentVector.h"
 
 #include "test_persistent_helpers.h"
@@ -19,12 +21,15 @@
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
+
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
 /// A custom type to allocate objects in the tests
 
-class CustomType {
+class CustomType : public PersistentType<CustomType> {
 
 public: // constructor
 
@@ -39,6 +44,10 @@ public: // constructor
         uint32_t value_;
     };
 
+    // Also provide an interface using a constructor, such that magic happers
+    CustomType(uint32_t val) : data1_(val), data2_(val) {}
+    CustomType(uint32_t val, uint32_t val2) : data1_(val), data2_(val2) {}
+
 public: // members
 
     uint32_t data1_;
@@ -49,10 +58,10 @@ public: // members
 /// Define a root type. Each test that does allocation should use a different element in the root object.
 
 // How many possibilities do we want?
-const size_t root_elems = 3;
+const size_t root_elems = 4;
 
 
-class RootType {
+class RootType : public PersistentType<RootType> {
 
 public: // constructor
 
@@ -73,9 +82,9 @@ public: // members
 
 // And structure the pool with types
 
-template<> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
-template<> uint64_t pmem::PersistentPtr<CustomType>::type_id = 1;
-template<> uint64_t pmem::PersistentPtr<pmem::PersistentVectorData<CustomType> >::type_id = 2;
+template<> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template<> uint64_t pmem::PersistentType<CustomType>::type_id = 1;
+template<> uint64_t pmem::PersistentType<pmem::PersistentVectorData<CustomType> >::type_id = 2;
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 
@@ -94,7 +103,7 @@ struct SuitePoolFixture {
     AutoPool autoPool_;
 };
 
-BOOST_GLOBAL_FIXTURE( SuitePoolFixture )
+BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -117,7 +126,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_not_pmem )
 
     PersistentVector<CustomType> pv;
 
-    BOOST_CHECK_THROW(pv.push_back(CustomType::Constructor(1234)), SeriousBug);
+    BOOST_CHECK_THROW(pv.push_back_ctr(CustomType::Constructor(1234)), SeriousBug);
 }
 
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
@@ -127,36 +136,36 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
     // Check that allocation works on an (as-of-yet null) PersistentVector
 
     BOOST_CHECK(pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 0);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 0);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(0));
 
-    pv.push_back(CustomType::Constructor(1111));
+    pv.push_back_ctr(CustomType::Constructor(1111));
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 1);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 1);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(1));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(1));
     BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
 
     PersistentPtr<CustomType> pp0 = pv[0];
     PersistentPtr<PersistentVectorData<CustomType> > pd0 = pv;
-    BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
-    BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
+    BOOST_CHECK_EQUAL(pv[0]->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pv[0]->data2_, uint32_t(1111));
 
     // Check that the next push_back works (will need to internally reallocate, as it goes in powers of two).
 
-    pv.push_back(CustomType::Constructor(2222));
+    pv.push_back_ctr(CustomType::Constructor(2222));
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 2);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 2);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(2));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(2));
     BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
 
-    BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
-    BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
+    BOOST_CHECK_EQUAL(pv[0]->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pv[0]->data2_, uint32_t(1111));
 
     PersistentPtr<CustomType> pp1 = pv[0];
-    BOOST_CHECK_EQUAL(pv[1]->data1_, 2222);
-    BOOST_CHECK_EQUAL(pv[1]->data2_, 2222);
+    BOOST_CHECK_EQUAL(pv[1]->data1_, uint32_t(2222));
+    BOOST_CHECK_EQUAL(pv[1]->data2_, uint32_t(2222));
 
     // Data itself is not reallocated, but the data vector is.
     PersistentPtr<PersistentVectorData<CustomType> > pd1 = pv;
@@ -165,31 +174,31 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
 
     // Check that the next 2 push_back works. Push back 4 doesn't need to reallocate.
 
-    pv.push_back(CustomType::Constructor(3333));
+    pv.push_back_ctr(CustomType::Constructor(3333));
     PersistentPtr<PersistentVectorData<CustomType> > pd2 = pv;
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
     BOOST_CHECK(!pv->full()); // Internal to PersistentVectorData
 
-    pv.push_back(CustomType::Constructor(4444));
+    pv.push_back_ctr(CustomType::Constructor(4444));
     PersistentPtr<PersistentVectorData<CustomType> > pd3 = pv;
 
-    BOOST_CHECK_EQUAL(pv.size(), 4);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(4));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
     BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
 
-    BOOST_CHECK_EQUAL(pv[0]->data1_, 1111);
-    BOOST_CHECK_EQUAL(pv[0]->data2_, 1111);
+    BOOST_CHECK_EQUAL(pv[0]->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pv[0]->data2_, uint32_t(1111));
 
-    BOOST_CHECK_EQUAL(pv[1]->data1_, 2222);
-    BOOST_CHECK_EQUAL(pv[1]->data2_, 2222);
+    BOOST_CHECK_EQUAL(pv[1]->data1_, uint32_t(2222));
+    BOOST_CHECK_EQUAL(pv[1]->data2_, uint32_t(2222));
 
-    BOOST_CHECK_EQUAL(pv[2]->data1_, 3333);
-    BOOST_CHECK_EQUAL(pv[2]->data2_, 3333);
+    BOOST_CHECK_EQUAL(pv[2]->data1_, uint32_t(3333));
+    BOOST_CHECK_EQUAL(pv[2]->data2_, uint32_t(3333));
 
-    BOOST_CHECK_EQUAL(pv[3]->data1_, 4444);
-    BOOST_CHECK_EQUAL(pv[3]->data2_, 4444);
+    BOOST_CHECK_EQUAL(pv[3]->data1_, uint32_t(4444));
+    BOOST_CHECK_EQUAL(pv[3]->data2_, uint32_t(4444));
 
     // Data itself is not reallocated.
     BOOST_CHECK_EQUAL(pp0, pv[0]);
@@ -200,6 +209,51 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back )
     BOOST_CHECK(pd2 == pd3); // The vectors data member is not extended when it isn't full.
 }
 
+BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_push_back_constructors )
+{
+    // Use the normal constructor interface
+
+    PersistentVector<CustomType>& pv(global_root->data_[3]);
+
+    // Check that allocation works on an (as-of-yet null) PersistentVector
+
+    BOOST_CHECK(pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(0));
+
+    pv.push_back(1111);
+
+    BOOST_CHECK(!pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), size_t(1));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(1));
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+
+    PersistentPtr<CustomType> pp0 = pv[0];
+    PersistentPtr<PersistentVectorData<CustomType> > pd0 = pv;
+    BOOST_CHECK_EQUAL(pv[0]->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pv[0]->data2_, uint32_t(1111));
+
+    // Check that the next push_back works (will need to internally reallocate, as it goes in powers of two).
+
+    pv.push_back(2222, 3333);
+
+    BOOST_CHECK(!pv.null());
+    BOOST_CHECK_EQUAL(pv.size(), size_t(2));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(2));
+    BOOST_CHECK(pv->full()); // Internal to PersistentVectorData
+
+    BOOST_CHECK_EQUAL(pv[0]->data1_, uint32_t(1111));
+    BOOST_CHECK_EQUAL(pv[0]->data2_, uint32_t(1111));
+
+    BOOST_CHECK_EQUAL(pv[1]->data1_, uint32_t(2222));
+    BOOST_CHECK_EQUAL(pv[1]->data2_, uint32_t(3333));
+
+    // Data itself is not reallocated, but the data vector is.
+    PersistentPtr<PersistentVectorData<CustomType> > pd1 = pv;
+    BOOST_CHECK(pd1 != pd0);
+    BOOST_CHECK_EQUAL(pp0, pv[0]);
+}
+
 BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_resize )
 {
     PersistentVector<CustomType>& pv(global_root->data_[1]);
@@ -207,58 +261,58 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_resize )
     // Run resize on an empty vector, should allocate initial space.
 
     BOOST_CHECK(pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 0);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 0);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(0));
 
     pv.resize(4);
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 0);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(0));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
 
     // Part-fill the available space
 
-    pv.push_back(CustomType::Constructor(9999));      PersistentPtr<CustomType> p0 = pv[0];
-    pv.push_back(CustomType::Constructor(8888));      PersistentPtr<CustomType> p1 = pv[1];
-    pv.push_back(CustomType::Constructor(7777));      PersistentPtr<CustomType> p2 = pv[2];
+    pv.push_back_ctr(CustomType::Constructor(9999));      PersistentPtr<CustomType> p0 = pv[0];
+    pv.push_back_ctr(CustomType::Constructor(8888));      PersistentPtr<CustomType> p1 = pv[1];
+    pv.push_back_ctr(CustomType::Constructor(7777));      PersistentPtr<CustomType> p2 = pv[2];
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
 
     // Resize the vector
 
     pv.resize(6);
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 6);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(6));
 
     // Fill the vector completely
 
-    pv.push_back(CustomType::Constructor(6666));      PersistentPtr<CustomType> p3 = pv[3];
-    pv.push_back(CustomType::Constructor(5555));      PersistentPtr<CustomType> p4 = pv[4];
-    pv.push_back(CustomType::Constructor(4444));      PersistentPtr<CustomType> p5 = pv[5];
+    pv.push_back_ctr(CustomType::Constructor(6666));      PersistentPtr<CustomType> p3 = pv[3];
+    pv.push_back_ctr(CustomType::Constructor(5555));      PersistentPtr<CustomType> p4 = pv[4];
+    pv.push_back_ctr(CustomType::Constructor(4444));      PersistentPtr<CustomType> p5 = pv[5];
 
     // Resize the vector again now that it is full
 
     pv.resize(8);
 
-    BOOST_CHECK_EQUAL(pv.size(), 6);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 8);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(6));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(8));
 
-    pv.push_back(CustomType::Constructor(3333));      PersistentPtr<CustomType> p6 = pv[6];
+    pv.push_back_ctr(CustomType::Constructor(3333));      PersistentPtr<CustomType> p6 = pv[6];
 
-    BOOST_CHECK_EQUAL(pv.size(), 7);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 8);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(7));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(8));
 
     // Check that all the data has been preserved throughout
 
-    BOOST_CHECK_EQUAL(pv[0]->data1_, 9999);
-    BOOST_CHECK_EQUAL(pv[1]->data1_, 8888);
-    BOOST_CHECK_EQUAL(pv[2]->data1_, 7777);
-    BOOST_CHECK_EQUAL(pv[3]->data1_, 6666);
-    BOOST_CHECK_EQUAL(pv[4]->data1_, 5555);
-    BOOST_CHECK_EQUAL(pv[5]->data1_, 4444);
-    BOOST_CHECK_EQUAL(pv[6]->data1_, 3333);
+    BOOST_CHECK_EQUAL(pv[0]->data1_, uint32_t(9999));
+    BOOST_CHECK_EQUAL(pv[1]->data1_, uint32_t(8888));
+    BOOST_CHECK_EQUAL(pv[2]->data1_, uint32_t(7777));
+    BOOST_CHECK_EQUAL(pv[3]->data1_, uint32_t(6666));
+    BOOST_CHECK_EQUAL(pv[4]->data1_, uint32_t(5555));
+    BOOST_CHECK_EQUAL(pv[5]->data1_, uint32_t(4444));
+    BOOST_CHECK_EQUAL(pv[6]->data1_, uint32_t(3333));
 
     // Check that none of the _data_ has been moved during the reallocation of the vectors internal data
     // (i.e. check the persistent pointers returned by the vector are the same as they were immediately
@@ -295,65 +349,65 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_vector_consistency_check )
     // -------------
     PersistentVector<CustomType>& pv(global_root->data_[2]);
 
-    pv.push_back(CustomType::Constructor(1234));
-    pv.push_back(CustomType::Constructor(1235));
-    pv.push_back(CustomType::Constructor(1236));
+    pv.push_back_ctr(CustomType::Constructor(1234));
+    pv.push_back_ctr(CustomType::Constructor(1235));
+    pv.push_back_ctr(CustomType::Constructor(1236));
 
     BOOST_CHECK(!pv.null());
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
     BOOST_CHECK(!pv->full());
 
     // Manipulate the internal count, and check that consistency_check fixes it
 
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 3);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(3));
     static_cast<Abuser*>(pv.get())->tweak_nelem(2);
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(2));
 
     pv->consistency_check();
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 3);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(3));
 
     // Manipulate the internal count. Check that it is automatically corrected if we try and read it.
 
     static_cast<Abuser*>(pv.get())->tweak_nelem(2);
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(2));
 
-    BOOST_CHECK_EQUAL(pv.size(), 3);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(3));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
 
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 3);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(3));
 
     // Manipulate the internal count. Check that it is automatically corrected if we try and push_back
 
     static_cast<Abuser*>(pv.get())->tweak_nelem(2);
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(2));
 
-    pv.push_back(CustomType::Constructor(1237));
+    pv.push_back_ctr(CustomType::Constructor(1237));
 
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 4);
-    BOOST_CHECK_EQUAL(pv.size(), 4);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(4));
+    BOOST_CHECK_EQUAL(pv.size(), size_t(4));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
     BOOST_CHECK(pv->full());
 
     // Check that the full() check (used to determine if we need to resize on push_back) does the correction
 
     static_cast<Abuser*>(pv.get())->tweak_nelem(2);
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 2);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(2));
 
     BOOST_CHECK(pv->full());
 
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 4);
-    BOOST_CHECK_EQUAL(pv.size(), 4);
-    BOOST_CHECK_EQUAL(pv.allocated_size(), 4);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(4));
+    BOOST_CHECK_EQUAL(pv.size(), size_t(4));
+    BOOST_CHECK_EQUAL(pv.allocated_size(), size_t(4));
 
     // If we manipulate nelem_ the wrong way, we end up with null() gaps in the vector.
     // This will be picked up by consistency check.
 
     pv.resize(8);
-    BOOST_CHECK_EQUAL(pv.size(), 4);
+    BOOST_CHECK_EQUAL(pv.size(), size_t(4));
 
     static_cast<Abuser*>(pv.get())->tweak_nelem(6);
-    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), 6);
+    BOOST_CHECK_EQUAL(static_cast<Abuser*>(pv.get())->raw_size(), size_t(6));
 
     BOOST_CHECK_THROW(pv->consistency_check(), AssertionFailed);
 }

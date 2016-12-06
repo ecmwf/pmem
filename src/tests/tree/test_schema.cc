@@ -15,13 +15,17 @@
 #include "ecbuild/boost_test_framework.h"
 
 #include "eckit/exception/Exceptions.h"
+#include "eckit/testing/Setup.h"
 
 #include "tree/TreeSchema.h"
 #include "tree/TreeNode.h"
 
 using namespace std;
 using namespace eckit;
+using namespace eckit::testing;
 using namespace tree;
+
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -42,7 +46,7 @@ BOOST_AUTO_TEST_CASE( test_schema_incorrect_key_count )
     // With the correct number of arguments, this should pass
     key["key2"] = "value2";
     TreeNode::KeyType k = schema.processInsertKey(key);
-    BOOST_CHECK_EQUAL(k.size(), 2);
+    BOOST_CHECK_EQUAL(k.size(), size_t(2));
 
     // And again it should
     key["key3"] = "value3";
@@ -78,7 +82,7 @@ BOOST_AUTO_TEST_CASE( test_schema_key_ordering )
     key["key2"] = "value2";
 
     TreeNode::KeyType k = schema.processInsertKey(key);
-    BOOST_CHECK_EQUAL(k.size(), 2);
+    BOOST_CHECK_EQUAL(k.size(), size_t(2));
 
     // Check that the keys are returned in the order specified in the schema
 

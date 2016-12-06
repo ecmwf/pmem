@@ -28,25 +28,11 @@ namespace pmem {
 //----------------------------------------------------------------------------------------------------------------------
 
 
-// Construction is easy - we just pass through to the PersistentBuffer we are built from!
+PersistentString::PersistentString(const std::string &str) :
+    PersistentBuffer(str.c_str(), str.size()+1) {
 
-PersistentString::Constructor::Constructor(const std::string& value) :
-    PersistentBuffer::Constructor(value.c_str(), value.size()+1) {}
-
-
-size_t PersistentString::Constructor::size() const {
-    return PersistentBuffer::Constructor::size();
+    ASSERT(data()[size()] == '\0');
 }
-
-
-void PersistentString::Constructor::make(PersistentString& object) const {
-    PersistentBuffer::Constructor::make(object);
-
-    ASSERT(object.data()[object.size()] == '\0');
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
 
 
 size_t PersistentString::size() const {

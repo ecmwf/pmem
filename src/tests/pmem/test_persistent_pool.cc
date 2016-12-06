@@ -16,6 +16,7 @@
 
 #include "eckit/filesystem/PathName.h"
 #include "eckit/memory/NonCopyable.h"
+#include "eckit/testing/Setup.h"
 #include "eckit/types/FixedString.h"
 
 #include "pmem/PersistentPtr.h"
@@ -26,13 +27,17 @@
 using namespace std;
 using namespace pmem;
 using namespace eckit;
+using namespace eckit::testing;
 
+BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
 /// A root type for testing purposes
 
-class RootType : private eckit::NonCopyable {
+//class RootType : private eckit::NonCopyable {
+class RootType : public PersistentType<RootType>
+               , private eckit::NonCopyable {
 
 public: // constructor
 
@@ -54,7 +59,7 @@ private: // members
 
 
 /// Declare a unique typeid associated with the type
-template <> uint64_t pmem::PersistentPtr<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
+template <> uint64_t pmem::PersistentType<RootType>::type_id = POBJ_ROOT_TYPE_NUM;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -105,7 +110,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_pool_open )
     BOOST_CHECK(!pool2.newPool());
 
     // Check that we have got a pool of the correct size, with a correctly initialised root.
-    BOOST_CHECK_EQUAL(pool2.size(), 1024 * 1024 * 20);
+    BOOST_CHECK_EQUAL(pool2.size(), size_t(1024 * 1024 * 20));
 
     PersistentPtr<RootType> root = pool2.getRoot<RootType>();
     BOOST_CHECK_EQUAL(root->tag(), "ROOT1234");

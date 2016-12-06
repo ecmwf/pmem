@@ -21,6 +21,8 @@
 
 #include "eckit/exception/Exceptions.h"
 
+#include "pmem/PersistentType.h"
+
 namespace pmem {
 
 // -------------------------------------------------------------------------------------------------
@@ -41,8 +43,12 @@ public:
         AllocationError(const std::string& what) : Exception(what) {}
     };
 
+    AtomicConstructorBase() {}
+    virtual ~AtomicConstructorBase() {}
+
     virtual int build(void * obj) const = 0;
     virtual size_t size() const = 0;
+    virtual uint64_t type_id() const = 0;
 };
 
 
@@ -74,8 +80,160 @@ public:
     /// @note This is virtual. This allows the constructor to actually allocate more memory
     ///       than the size of the declared structure (e.g. if allocating a buffer).
     virtual size_t size() const { return sizeof(T); }
+
+    /// Return the type_id to use during construction. Generally this just echoes whatever
+    /// is contained in the PersistentType<> structure for the type, but it can be customised
+    virtual uint64_t type_id() const { return PersistentType<T>::type_id; }
 };
 
+
+// TODO: Generate these templates from a script... DRY.
+
+// We use an indirection with AtomicConstructorNBase<T> -- > AtomicConstructorN<T>. This
+// allows partial specialisation of functions (as in PersistentPODVector), which is not
+// directly available in the C++ standard (sigh).
+
+
+template <typename T>
+class AtomicConstructor0Base : public AtomicConstructor<T> {
+
+public: // methods
+
+    virtual void make (T& object) const {
+        new (&object) T;
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+};
+
+
+template <typename T>
+class AtomicConstructor0 : public AtomicConstructor0Base<T> { };
+
+// --
+
+
+template <typename T, typename X1>
+class AtomicConstructor1Base : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor1Base(const X1& x1) : x1_(x1) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+protected: // members
+
+    const X1& x1_;
+};
+
+
+template <typename T, typename X1>
+class AtomicConstructor1 : public AtomicConstructor1Base<T, X1> {
+public:
+    AtomicConstructor1(const X1& x1) : AtomicConstructor1Base<T,X1>(x1) {}
+};
+
+// --
+
+
+template <typename T, typename X1, typename X2>
+class AtomicConstructor2Base : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor2Base(const X1& x1, const X2& x2) : x1_(x1), x2_(x2) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_, x2_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+protected: // members
+
+    const X1& x1_;
+    const X2& x2_;
+};
+
+
+template <typename T, typename X1, typename X2>
+class AtomicConstructor2 : public AtomicConstructor2Base<T, X1, X2> {
+public:
+    AtomicConstructor2(const X1& x1, const X2& x2) : AtomicConstructor2Base<T,X1,X2>(x1, x2) {}
+};
+
+// --
+
+
+template <typename T, typename X1, typename X2, typename X3>
+class AtomicConstructor3Base : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor3Base(const X1& x1, const X2& x2, const X3& x3) : x1_(x1), x2_(x2), x3_(x3) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_, x2_, x3_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+protected: // members
+
+    const X1& x1_;
+    const X2& x2_;
+    const X3& x3_;
+};
+
+
+template <typename T, typename X1, typename X2, typename X3>
+class AtomicConstructor3 : public AtomicConstructor3Base<T, X1, X2, X3> {
+public:
+    AtomicConstructor3(const X1& x1, const X2& x2, const X3& x3) :
+        AtomicConstructor3Base<T,X1,X2,X3>(x1, x2, x3) {}
+};
+
+// --
+
+
+template <typename T, typename X1, typename X2, typename X3, typename X4>
+class AtomicConstructor4Base : public AtomicConstructor<T> {
+
+public: // methods
+
+    AtomicConstructor4Base(const X1& x1, const X2& x2, const X3& x3, const X4& x4) : x1_(x1), x2_(x2), x3_(x3), x4_(x4) {}
+
+    virtual void make (T& object) const {
+        new (&object) T(x1_, x2_, x3_, x4_);
+    }
+
+    virtual size_t size() const { return AtomicConstructor<T>::size(); }
+    virtual uint64_t type_id() const { return AtomicConstructor<T>::type_id(); }
+
+protected: // members
+
+    const X1& x1_;
+    const X2& x2_;
+    const X3& x3_;
+    const X4& x4_;
+};
+
+
+template <typename T, typename X1, typename X2, typename X3, typename X4>
+class AtomicConstructor4 : public AtomicConstructor4Base<T, X1, X2, X3, X4> {
+public:
+    AtomicConstructor4(const X1& x1, const X2& x2, const X3& x3, const X4& x4) :
+        AtomicConstructor4Base<T,X1,X2,X3,X4>(x1, x2, x3, x4) {}
+};
 
 // -------------------------------------------------------------------------------------------------
 

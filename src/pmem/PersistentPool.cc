@@ -38,6 +38,7 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
     size_(0) {
 
     Log::info() << "Opening persistent pool: " << path << std::endl;
+    Log::info() << "C str: " << name.c_str() << std::endl;
 
     pool_ = ::pmemobj_open(path.localPath(), name.c_str());
 
@@ -106,7 +107,7 @@ bool PersistentPool::newPool() const {
 
 void PersistentPool::close() {
 
-    Log::info() << "Closing persistent pool." << std::endl;
+    Log::info() << "Closing persistent pool: " << path_ << std::endl;
     ASSERT(pool_);
 
     ::pmemobj_close(pool_);

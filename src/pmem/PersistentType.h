@@ -11,42 +11,37 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
+#ifndef pmem_PersistentType_H
+#define pmem_PersistentType_H
 
-#include "eckit/io/Buffer.h"
-
-#include "pmem/PersistentBuffer.h"
-
-
-using namespace eckit;
-
+#include <stdint.h>
 
 namespace pmem {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+template <typename T>
+class PersistentType {
 
-PersistentBuffer::PersistentBuffer(const void *data, size_t length)
-    : length_(length) {
+public: // types
 
-    if (length != 0 && data != 0)
-        ::memcpy(data_, data, length);
-}
+    typedef T object_type;
 
+    static uint64_t type_id;
 
-size_t PersistentBuffer::data_size(size_t length) {
-    return sizeof(PersistentBuffer) + length;
-}
+    static bool validate_type_id(uint64_t id);
+};
 
+//----------------------------------------------------------------------------------------------------------------------
 
-size_t PersistentBuffer::size() const {
-    return length_;
-}
+template <typename T>
+bool PersistentType<T>::validate_type_id(uint64_t id) {
 
-
-const void * PersistentBuffer::data () const {
-    return data_;
+    return type_id == id;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-} // namespace tree
+}
+
+#endif // pmem_PersistentType_H

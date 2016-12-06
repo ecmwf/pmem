@@ -1,6 +1,6 @@
 ecbuild_add_library(
 
-    TARGET pmem
+    TARGET pmempp
 
     SOURCES
         AtomicConstructor.h
@@ -17,6 +17,7 @@ ecbuild_add_library(
         PersistentPtr.h
         PersistentString.cc
         PersistentString.h
+        PersistentType.h
         PersistentVector.h
         PersistentType.h
 
