@@ -1,6 +1,6 @@
 ecbuild_add_library(
 
-    TARGET pmem
+    TARGET pmempp
 
     SOURCES
         AtomicConstructor.h

@@ -17,7 +17,7 @@ ecbuild_add_library(
         ${PMEMIO_INCLUDE_DIRS}
 
     LIBS
-        pmem
+        pmempp
         eckit )
 
 
