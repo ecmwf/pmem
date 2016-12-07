@@ -29,6 +29,12 @@ if( NOT pmemio_FOUND )
             PATH_SUFFIXES include src/include
         )
         find_library(
+            PMEMIO_BASE_LIBRARY
+            NAMES pmem
+            PATHS ${PMEMIO_PATH}
+            PATH_SUFFIXES debug nondebug src/debug src/nondebug
+        )
+        find_library(
             PMEMIO_OBJ_LIBRARY
             NAMES pmemobj
             PATHS ${PMEMIO_PATH}
@@ -46,6 +52,12 @@ if( NOT pmemio_FOUND )
         PATH_SUFFIXES include src/include
     )
     find_library(
+        PMEMIO_BASE_LIBRARY
+        NAMES pmem
+        PATHS
+        PATH_SUFFIXES debug nondebug src/debug src/nondebug
+    )
+    find_library(
         PMEMIO_OBJ_LIBRARY
         NAMES pmemobj
         PATHS
@@ -53,8 +65,11 @@ if( NOT pmemio_FOUND )
     )
 
     # This allows pmemio to be made up of more than just libpmemobj.
-    set( PMEMIO_LIBRARIES "${PMEMIO_OBJ_LIBRARY}" )
+    set( PMEMIO_LIBRARIES "${PMEMIO_OBJ_LIBRARY} ${PMEMIO_BASE_LIBRARY}" )
     set( PMEMIO_INCLUDE_DIRS "${PMEMIO_INCLUDE_DIR}" )
+
+    # We always need the base library
+    list( APPEND PMEMIO_OBJ_LIBRARY "${PMEMIO_BASE_LIBRARY}")
 
     include(FindPackageHandleStandardArgs)
 
