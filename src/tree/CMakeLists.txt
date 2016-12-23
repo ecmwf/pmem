@@ -12,7 +12,7 @@ ecbuild_add_library(
         TreeSchema.cc
         TreeSchema.h
 
-    INCLUDES
+    PRIVATE_INCLUDES
         ${ECKIT_INCLUDE_DIRS}
         ${PMEMIO_INCLUDE_DIRS}
 

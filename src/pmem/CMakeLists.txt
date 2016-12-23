@@ -22,7 +22,7 @@ ecbuild_add_library(
         PersistentType.h
 
 
-    INCLUDES
+    PRIVATE_INCLUDES
         ${ECKIT_INCLUDE_DIRS}
         ${PMEMIO_INCLUDE_DIRS}
 
