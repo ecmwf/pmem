@@ -64,6 +64,9 @@ public: // methods
     /// Give everyone access to the raw oid if they really want
     PMEMoid raw() const;
 
+    uint64_t uuid() const { return oid_.pool_uuid_lo; }
+    uint64_t offset() const { return oid_.off; }
+
 protected: // methods
 
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
@@ -116,8 +119,6 @@ public: // methods
     // bool null() const; // Inherited
 
     bool valid() const;
-
-    uint64_t uuid() const;
 
     /// For the implementation of simple polymorphism. Will required the PersistentTypes to be
     /// modified to support interconversion
@@ -218,12 +219,6 @@ typename PersistentPtr<T>::object_type* PersistentPtr<T>::get() const {
 template <typename T>
 bool PersistentPtr<T>::valid() const {
     return PersistentType<object_type>::validate_type_id(::pmemobj_type_num(oid_));
-}
-
-
-template <typename T>
-uint64_t PersistentPtr<T>::uuid() const {
-    return oid_.pool_uuid_lo;
 }
 
 /// Convert a PersistentPtr to another type of PersistentPtr. This will almost always
