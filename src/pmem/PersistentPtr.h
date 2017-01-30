@@ -64,6 +64,9 @@ public: // methods
     /// Give everyone access to the raw oid if they really want
     PMEMoid raw() const;
 
+    uint64_t uuid() const { return oid_.pool_uuid_lo; }
+    uint64_t offset() const { return oid_.off; }
+
 protected: // methods
 
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
