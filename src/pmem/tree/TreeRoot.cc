@@ -17,9 +17,9 @@
 
 #include "pmem/PersistentBuffer.h"
 
-#include "tree/TreeNode.h"
-#include "tree/TreeRoot.h"
-#include "tree/TreeSchema.h"
+#include "pmem/tree/TreeNode.h"
+#include "pmem/tree/TreeRoot.h"
+#include "pmem/tree/TreeSchema.h"
 
 using namespace eckit;
 using namespace pmem;

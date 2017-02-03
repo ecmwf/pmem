@@ -1,0 +1,12 @@
+#include "pmem/pmem_version.h"
+
+const char * pmem_version()     { return PMEM_VERSION; }
+const char * pmem_version_str() { return PMEM_VERSION_STR; }
+
+unsigned int pmem_version_int()
+{
+  return 10000*PMEM_MAJOR_VERSION + 100*PMEM_MINOR_VERSION + 1*PMEM_PATCH_VERSION;
+}
+
+const char * pmem_git_sha1() { return "@PMEM_GIT_SHA1@"; }
+

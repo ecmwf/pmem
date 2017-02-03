@@ -1,0 +1,8 @@
+#ifndef pmem_config_h
+#define pmem_config_h
+
+#include "pmem/pmem_ecbuild_config.h"
+
+#include "pmem/pmem_version.h"
+
+#endif // pmem_config_h

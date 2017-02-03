@@ -17,8 +17,8 @@
 #include "eckit/exception/Exceptions.h"
 #include "eckit/testing/Setup.h"
 
-#include "tree/TreeSchema.h"
-#include "tree/TreeNode.h"
+#include "pmem/tree/TreeSchema.h"
+#include "pmem/tree/TreeNode.h"
 
 using namespace std;
 using namespace eckit;
