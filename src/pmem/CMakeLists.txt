@@ -20,7 +20,8 @@ ecbuild_add_library(
         PersistentType.h
         PersistentVector.h
         PersistentType.h
-
+        PoolRegistry.h
+        PoolRegistry.cc
 
     PRIVATE_INCLUDES
         ${ECKIT_INCLUDE_DIRS}
