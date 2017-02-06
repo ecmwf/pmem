@@ -21,6 +21,7 @@
 #include "pmem/Exceptions.h"
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
+#include "pmem/PoolRegistry.h"
 
 using namespace eckit;
 
@@ -53,6 +54,10 @@ PersistentPool::PersistentPool(const eckit::PathName& path, const std::string& n
 
     Log::info() << "Pool size: " << Bytes(stat_buf.st_size) << std::endl;
     size_ = stat_buf.st_size;
+
+    // Register the pool to enable pointer lookups
+
+    PoolRegistry::instance().registerPool(*this);
 }
 
 /// Constructs a new persistent pool
@@ -88,6 +93,10 @@ PersistentPool::PersistentPool(const eckit::PathName& path, size_t size, const s
     // recast to const AtomicConstructorBase* inside ::pmem_constructor.
     ::pmemobj_root_construct(pool_, constructor.size(), pmem_constructor,
                              const_cast<AtomicConstructorBase*>(&constructor));
+
+    // Register the pool to enable pointer lookups
+
+    PoolRegistry::instance().registerPool(*this);
 }
 
 
