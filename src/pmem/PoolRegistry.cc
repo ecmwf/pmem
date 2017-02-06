@@ -43,10 +43,25 @@ void PoolRegistry::registerPool(PersistentPool& pool) {
 
     PMEMobjpool* handle = pool.raw_pool();
 
+    eckit::Log::info() << "Registering pool: " << handle << std::endl;
+
     // We are registering a pool. It needs to not already exist...
     ASSERT(pools_.find(handle) == pools_.end());
 
     pools_.insert(std::make_pair(handle, &pool));
+}
+
+
+void PoolRegistry::deregisterPool(PersistentPool& pool) {
+
+    PMEMobjpool* handle = pool.raw_pool();
+
+    eckit::Log::info() << "Deregistering pool: " << handle << std::endl;
+
+    // We are registering a pool. It needs to not already exist...
+    ASSERT(pools_.find(handle) != pools_.end());
+
+    pools_.erase(handle);
 }
 
 

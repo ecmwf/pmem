@@ -118,6 +118,8 @@ void PersistentPool::close() {
     Log::info() << "Closing persistent pool: " << path_ << std::endl;
     ASSERT(pool_);
 
+    PoolRegistry::instance().deregisterPool(*this);
+
     ::pmemobj_close(pool_);
     pool_ = 0;
 }

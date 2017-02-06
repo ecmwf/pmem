@@ -32,6 +32,7 @@ public: // methods
     static PoolRegistry& instance();
 
     void registerPool(PersistentPool& pool);
+    void deregisterPool(PersistentPool& pool);
 
     PersistentPool& poolFromPointer(void* ptr);
 
