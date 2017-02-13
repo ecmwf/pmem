@@ -1,0 +1,19 @@
+#ifndef pmem_version_h
+#define pmem_version_h
+
+#define PMEM_VERSION_STR "@PMEM_VERSION_STR@"
+#define PMEM_VERSION     "@PMEM_VERSION@"
+
+#define PMEM_MAJOR_VERSION @PMEM_MAJOR_VERSION@
+#define PMEM_MINOR_VERSION @PMEM_MINOR_VERSION@
+#define PMEM_PATCH_VERSION @PMEM_PATCH_VERSION@
+
+const char * pmem_version();
+
+unsigned int pmem_version_int();
+
+const char * pmem_version_str();
+
+const char * pmem_git_sha1();
+
+#endif // pmem_version_h

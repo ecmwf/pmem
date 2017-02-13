@@ -28,10 +28,10 @@
 #include "pmem/PersistentPool.h"
 #include "pmem/PersistentPtr.h"
 
-#include "tree/TreeNode.h"
-#include "tree/TreePool.h"
-#include "tree/TreeRoot.h"
-#include "tree/TreeSchema.h"
+#include "pmem/tree/TreeNode.h"
+#include "pmem/tree/TreePool.h"
+#include "pmem/tree/TreeRoot.h"
+#include "pmem/tree/TreeSchema.h"
 
 using namespace eckit;
 using namespace eckit::option;

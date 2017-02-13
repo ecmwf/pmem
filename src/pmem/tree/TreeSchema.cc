@@ -18,7 +18,7 @@
 #include "eckit/parser/JSONParser.h"
 #include "eckit/value/Value.h"
 
-#include "tree/TreeSchema.h"
+#include "pmem/tree/TreeSchema.h"
 
 using namespace eckit;
 

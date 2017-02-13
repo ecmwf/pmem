@@ -22,8 +22,8 @@
 
 #include "pmem/PersistentVector.h"
 
-#include "tree/TreeNode.h"
-#include "tree/TreeSchema.h"
+#include "pmem/tree/TreeNode.h"
+#include "pmem/tree/TreeSchema.h"
 
 namespace eckit {
     class DataBlob;

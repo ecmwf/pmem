@@ -16,9 +16,9 @@
 #include "pmem/AtomicConstructor.h"
 #include "pmem/PersistentString.h"
 
-#include "tree/TreePool.h"
-#include "tree/TreeRoot.h"
-#include "tree/TreeNode.h"
+#include "pmem/tree/TreePool.h"
+#include "pmem/tree/TreeRoot.h"
+#include "pmem/tree/TreeNode.h"
 
 using namespace eckit;
 using namespace pmem;

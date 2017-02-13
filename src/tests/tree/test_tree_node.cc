@@ -15,7 +15,7 @@
 #include "eckit/parser/JSONDataBlob.h"
 #include "eckit/testing/Setup.h"
 
-#include "tree/TreeNode.h"
+#include "pmem/tree/TreeNode.h"
 
 #include "tests/pmem/test_persistent_helpers.h"
 
