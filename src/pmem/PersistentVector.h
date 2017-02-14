@@ -69,7 +69,7 @@ public: // methods
     size_t allocated_size() const;
 
     /// Append an element to the list.
-    PersistentPtr<object_type> push_back(const AtomicConstructor<T>& constructor);
+    PersistentPtr<object_type> push_back(AtomicConstructor<T>& constructor);
 
     /// Append an existing element to the list.
     void push_back_elem(const PersistentPtr<object_type>& elem);
@@ -112,7 +112,7 @@ public: // types
 
 public:
 
-    PersistentPtr<object_type> push_back_ctr(const AtomicConstructor<object_type>& constructor);
+    PersistentPtr<object_type> push_back_ctr(AtomicConstructor<object_type>& constructor);
     void push_back_elem(const PersistentPtr<object_type>& ptr);
 
     PersistentPtr<object_type> push_back();
@@ -234,7 +234,7 @@ bool PersistentVectorData<T>::full() const {
 
 /// Append an element to the list.
 template <typename T>
-PersistentPtr<T> PersistentVectorData<T>::push_back(const AtomicConstructor<object_type>& constructor) {
+PersistentPtr<T> PersistentVectorData<T>::push_back(AtomicConstructor<object_type>& constructor) {
 
     consistency_check();
 
@@ -313,7 +313,7 @@ void PersistentVectorData<T>::update_nelem(size_t nelem) const {
 
 
 template <typename T>
-PersistentPtr<T> PersistentVector<T>::push_back_ctr(const AtomicConstructor<object_type>& constructor) {
+PersistentPtr<T> PersistentVector<T>::push_back_ctr(AtomicConstructor<object_type>& constructor) {
 
     // TODO: Determine a size at runtime, or set it at compile time, but this is the worst of both worlds.
     if (PersistentPtr<data_type>::null()) {

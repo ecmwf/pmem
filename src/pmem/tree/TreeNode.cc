@@ -18,6 +18,7 @@
 #include "pmem/PersistentBuffer.h"
 #include "pmem/PersistentPtr.h"
 #include "pmem/AtomicConstructor.h"
+#include "pmem/PoolRegistry.h"
 
 #include "pmem/tree/TreeNode.h"
 
@@ -34,19 +35,6 @@ TreeNode::LeafExistsError::LeafExistsError(const std::string& msg, const CodeLoc
 //----------------------------------------------------------------------------------------------------------------------
 
 
-TreeNode::TreeNode(const std::string& value, const DataBlob& blob) :
-    value_(eckit::FixedString<12>(value)),
-    key_("") {
-
-    ASSERT(blob.length() != 0);
-
-    items_.nullify();
-    data_.nullify();
-
-    data_.allocate(blob.buffer(), blob.length());
-}
-
-
 TreeNode::TreeNode(const std::string& value, const KeyType& subkeys, const DataBlob& blob) :
     value_(eckit::FixedString<12>(value)),
     key_(subkeys.size() > 0 ? subkeys[0].first : "") {
@@ -59,8 +47,109 @@ TreeNode::TreeNode(const std::string& value, const KeyType& subkeys, const DataB
     if (subkeys.size() > 0) {
         std::vector<std::pair<std::string, std::string> > new_subkeys(subkeys.begin()+1, subkeys.end());
         items_.push_back(subkeys[0].second, new_subkeys, blob);
-    } else
+    } else {
+        NOTIMP;
+        allocateLeaf(value, blob);
         data_.allocate(blob.buffer(), blob.length());
+    }
+}
+
+
+TreeNode::TreeNode(const std::string& value, const PersistentPtr<PersistentBuffer>& dataBlob) :
+    data_(dataBlob),
+    value_(value),
+    key_("") {
+
+    items_.nullify();
+}
+
+void allocateLeaf(PersistentPtr<TreeNode>& ptr, const std::string& value, const eckit::DataBlob& blob) {
+
+    class LeafConstructor : public AtomicConstructor<TreeNode> {
+    public:
+        LeafConstructor(PersistentPool& pool, const std::string& value, const eckit::DataBlob& blob) :
+            pool_(pool),
+            value_(value),
+            blob_(blob) {
+            pBlob_.nullify();
+        }
+        ~LeafConstructor() {
+            if (!pBlob_.null())
+                pBlob_.free();
+        }
+
+        virtual void preAllocate() {
+            pBlob_ = pool_.allocate<PersistentBuffer>(blob_.buffer(), blob_.length());
+        }
+
+        virtual void postAllocate() {
+            pBlob_.nullify();
+        }
+
+        virtual void make(TreeNode& object) const {
+            new (&object) TreeNode(value_, pBlob_);
+        }
+
+    private:
+        PersistentPool& pool_;
+        const std::string& value_;
+        const eckit::DataBlob& blob_;
+
+        PersistentPtr<PersistentBuffer> pBlob_;
+    };
+
+    PersistentPool& pool(pmem::PoolRegistry::instance().poolFromPointer(&ptr));
+    LeafConstructor constructor(pool, value, blob);
+
+    ptr.allocate_ctr(constructor);
+}
+
+/*
+ * ***********************************************************************************\
+ * SDS TODO
+ * Complete the allocate Nested worker in such a way that it can clean up reasonably.
+ *
+ * n.b. We will need to pass in a completed PersistentVector (in that way we can clean it up)
+ *      rather than creating the object and adding to the node.
+ *
+ * Possibly put the LeafConstructor and TreeConstructors into an anonymous namespace {}
+ */
+
+void allocateNested(PersistentPtr<TreeNode>& ptr) {
+
+    class TreeConstructor : public AtomicConstructor<TreeNode> {
+    public:
+        TreeConstructor(PersistentPool& pool, bool outer) :
+            pool_(pool),
+            outer_(outer),
+            complete_(false) {}
+        ~LeafConstructor() {}
+
+        virtual void preAllocate() {
+
+
+            pBlob_ = pool_.allocate<PersistentBuffer>(blob_.buffer(), blob_.length());
+        }
+
+        virtual void postAllocate() {
+            pBlob_.nullify();
+        }
+
+        virtual void make(TreeNode& object) const {
+            new (&object) TreeNode(value_, pBlob_);
+        }
+
+    private:
+        PersistentPool& pool_;
+
+        bool outer_;
+        bool complete_;
+    };
+
+    PersistentPool& pool(pmem::PoolRegistry::instance().poolFromPointer(&ptr));
+    Tree constructor(pool, value, blob);
+
+    ptr.allocate_ctr(constructor);
 }
 
 

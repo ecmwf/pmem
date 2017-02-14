@@ -73,6 +73,19 @@ public: // methods
     /// Obtain the UUID of the pool for later identification
     uint64_t uuid() const;
 
+    /// When given a particular pool explicitly, we can allocate from here. This is intended for
+    /// situations where the target persistent pointer is volatile, or persistence is being
+    /// managed explicitly.
+
+    template <typename T>
+    PersistentPtr<T> allocate();
+    template <typename T, typename X1>
+    PersistentPtr<T> allocate(const X1& x1);
+    template <typename T, typename X1, typename X2>
+    PersistentPtr<T> allocate(const X1& x1, const X2& x2);
+    template <typename T, typename X1, typename X2, typename X3>
+    PersistentPtr<T> allocate(const X1& x1, const X2& x2, const X3& x3);
+
 protected: // members
 
     eckit::PathName path_;
@@ -94,6 +107,46 @@ PersistentPtr<T> PersistentPool::getRoot()  const {
     return PersistentPtr<T>(::pmemobj_root(pool_, sizeof(T)));
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+PersistentPtr<T> PersistentPool::allocate() {
+
+    AtomicConstructor0<T> ctr;
+    PersistentPtr<T> ret;
+    ret.allocate_ctr(*this, ctr);
+    return ret;
+}
+
+
+template <typename T, typename X1>
+PersistentPtr<T> PersistentPool::allocate(const X1& x1) {
+
+    AtomicConstructor1<T, X1> ctr(x1);
+    PersistentPtr<T> ret;
+    ret.allocate_ctr(*this, ctr);
+    return ret;
+}
+
+
+template <typename T, typename X1, typename X2>
+PersistentPtr<T> PersistentPool::allocate(const X1& x1, const X2& x2) {
+
+    AtomicConstructor2<T, X1, X2> ctr(x1, x2);
+    PersistentPtr<T> ret;
+    ret.allocate_ctr(*this, ctr);
+    return ret;
+}
+
+
+template <typename T, typename X1, typename X2, typename X3>
+PersistentPtr<T> PersistentPool::allocate(const X1& x1, const X2& x2, const X3& x3) {
+
+    AtomicConstructor3<T, X1, X2, X3> ctr(x1, x2, x3);
+    PersistentPtr<T> ret;
+    ret.allocate_ctr(*this, ctr);
+    return ret;
+}
 //----------------------------------------------------------------------------------------------------------------------
 
 } // namespace pmem

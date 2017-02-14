@@ -53,6 +53,10 @@ public: // methods
     /// Construct a normal node, and its children.
     TreeNode(const std::string& value, const KeyType& subkeys, const eckit::DataBlob& blob);
 
+    TreeNode(const std::string& value, const pmem::PersistentPtr<pmem::PersistentBuffer>& dataBlob);
+
+    static void allocateLeaf(const std::string& value, const eckit::DataBlob& blob);
+
     /// Add a new node
     /// @param key - The value used to select this sub-node from the current node
     /// @param name - Select which key-value pair is examined to select sub-sub-nodes
