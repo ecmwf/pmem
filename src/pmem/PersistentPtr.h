@@ -72,6 +72,9 @@ protected: // methods
     /// Don't support user-manipulation of the oid directly, but we need to have a way internally.
     PersistentPtrBase(PMEMoid oid);
 
+    /// If this PersistentPtrBase is located in persistent memory then set it and persist it
+    void setPersist(PMEMobjpool * pool, PMEMoid oid);
+
 protected: // members
 
     /*
@@ -134,12 +137,12 @@ public: // methods
 
     /// @note Allocation and setting of the pointer are atomic. The work of setting up the
     /// object is done inside the functor atomic_constructor<T>.
-    void allocate_ctr(PMEMobjpool * pool, AtomicConstructor<object_type>& constructor);
-    void allocate_ctr(PersistentPool& pool, AtomicConstructor<object_type>& constructor);
+    void allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor);
+    void allocate_ctr(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
 
     /// We should be able to allocate directly on an object. If we don't specify the pool, then
     /// it will put the data into the same pool as the pointer is in
-    void allocate_ctr(AtomicConstructor<object_type>& constructor);
+    void allocate_ctr(const AtomicConstructor<object_type>& constructor);
 
     /// Allocate functions using argument passthrough
     void allocate();
@@ -149,15 +152,19 @@ public: // methods
 
     /// Atomically replace the existing object with a new one. If anything fails in the chain of
     /// construction, the original object is left unchanged.
-    void replace_ctr(PMEMobjpool* pool, AtomicConstructor<object_type>& constructor);
-    void replace_ctr(PersistentPool& pool, AtomicConstructor<object_type>& constructor);
-    void replace_ctr(AtomicConstructor<object_type>& constructor);
+    void replace_ctr(PMEMobjpool* pool, const AtomicConstructor<object_type>& constructor);
+    void replace_ctr(PersistentPool& pool, const AtomicConstructor<object_type>& constructor);
+    void replace_ctr(const AtomicConstructor<object_type>& constructor);
 
     /// Replace functions using argument passthrough
     void replace();
     template <typename X1> void replace(const X1& x1);
     template <typename X1, typename X2> void replace(const X1& x1, const X2& x2);
     template <typename X1, typename X2, typename X3> void replace(const X1& x1, const X2& x2, const X3& x3);
+
+    /// If we want to set a PersistentPtr that is is in persistent memory, then we need
+    /// to ensure that it is set with
+    void setPersist(const PersistentPtr<T>& ptr);
 
 protected: // methods
 
@@ -249,11 +256,9 @@ PersistentPtr<S> PersistentPtr<T>::as() const {
 
 
 template <typename T>
-void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, AtomicConstructor<object_type>& constructor) {
+void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, const AtomicConstructor<object_type>& constructor) {
 
     ASSERT(null());
-
-    constructor.preAllocate();
 
     // We don't want to assert(null()). We may be updating, say, pointers in a chain of
     // objects, with atomic rearrangement. That is fine.
@@ -267,19 +272,17 @@ void PersistentPtr<T>::allocate_ctr(PMEMobjpool * pool, AtomicConstructor<object
                         const_cast<void*>(reinterpret_cast<const void*>(&constructor))) != 0) {
         throw AtomicConstructorBase::AllocationError("Persistent allocation failed");
     }
-
-    constructor.postAllocate();
 }
 
 
 template <typename T>
-void PersistentPtr<T>::allocate_ctr(PersistentPool& pool, AtomicConstructor<object_type>& constructor) {
+void PersistentPtr<T>::allocate_ctr(PersistentPool& pool, const AtomicConstructor<object_type>& constructor) {
     allocate_ctr(pool.raw_pool(), constructor);
 }
 
 
 template <typename T>
-void PersistentPtr<T>::allocate_ctr(AtomicConstructor<object_type>& constructor) {
+void PersistentPtr<T>::allocate_ctr(const AtomicConstructor<object_type>& constructor) {
 
     // For allocating directly on an existing persistent object, we don't have to specify the pool manually. Get the
     // pool by using the same one as the current persistent object.
@@ -327,12 +330,10 @@ void PersistentPtr<T>::allocate(const X1& x1, const X2& x2, const X3& x3) {
 }
 
 template <typename T>
-void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, AtomicConstructor<object_type> &constructor) {
+void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, const AtomicConstructor<object_type> &constructor) {
 
     ASSERT(!null());
     PMEMoid oid_tmp = oid_;
-
-    constructor.preAllocate();
 
     if (::pmemobj_alloc(pool,
                         &oid_,
@@ -345,19 +346,17 @@ void PersistentPtr<T>::replace_ctr(PMEMobjpool* pool, AtomicConstructor<object_t
     } else {
         ::pmemobj_free(&oid_tmp);
     }
-
-    constructor.postAllocate();
 }
 
 
 template <typename T>
-void PersistentPtr<T>::replace_ctr(PersistentPool& pool, AtomicConstructor<object_type> &constructor) {
+void PersistentPtr<T>::replace_ctr(PersistentPool& pool, const AtomicConstructor<object_type> &constructor) {
     replace_ctr(pool.raw_pool(), constructor);
 }
 
 
 template <typename T>
-void PersistentPtr<T>::replace_ctr(AtomicConstructor<object_type> &constructor) {
+void PersistentPtr<T>::replace_ctr(const AtomicConstructor<object_type> &constructor) {
 
     PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
 
@@ -401,6 +400,13 @@ void PersistentPtr<T>::replace(const X1& x1, const X2& x2, const X3& x3) {
     replace_ctr(ctr);
 }
 
+
+template <typename T>
+void PersistentPtr<T>::setPersist(const PersistentPtr<T>& ptr) {
+
+    PMEMobjpool* pool = ::pmemobj_pool_by_ptr(this);
+    PersistentPtrBase::setPersist(pool, ptr.raw());
+}
 
 template <typename T>
 void PersistentPtr<T>::print(std::ostream& os) const {

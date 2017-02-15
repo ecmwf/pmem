@@ -16,6 +16,7 @@
 #include "eckit/types/Types.h"
 
 #include "pmem/PersistentBuffer.h"
+#include "pmem/PoolRegistry.h"
 
 #include "pmem/tree/TreeNode.h"
 #include "pmem/tree/TreeRoot.h"
@@ -76,7 +77,11 @@ void TreeRoot::addNode(const KeyType& key, const eckit::DataBlob& blob) {
     // n.b. This could in principle be done in the TreeRoot constructor, if we assumed we
     //      knew the data schema in advance.
     if (node_.null()) {
-        node_.allocate(key[0].first, key, blob);
+
+        // TODO: PERSIST THIS
+        PersistentPool& pool(pmem::PoolRegistry::instance().poolFromPointer(this));
+        node_ = TreeNode::allocateNested(pool, key.front().first, key, blob);
+
     } else {
         ASSERT(node_->key() == key[0].first);
         node_->addNode(key, blob);

@@ -47,15 +47,17 @@ public: // types
 
 public: // methods
 
-    /// Construct a leaf (data) node. Leaves do not have a name.
-    TreeNode(const std::string& value, const eckit::DataBlob& blob);
-
-    /// Construct a normal node, and its children.
-    TreeNode(const std::string& value, const KeyType& subkeys, const eckit::DataBlob& blob);
-
+    TreeNode(const std::string& key, const std::string& value);
     TreeNode(const std::string& value, const pmem::PersistentPtr<pmem::PersistentBuffer>& dataBlob);
 
-    static void allocateLeaf(const std::string& value, const eckit::DataBlob& blob);
+    static pmem::PersistentPtr<TreeNode> allocateLeaf(pmem::PersistentPool& pool,
+                                                      const std::string& value,
+                                                      const eckit::DataBlob& blob);
+
+    static pmem::PersistentPtr<TreeNode> allocateNested(pmem::PersistentPool& pool,
+                                                        const std::string& value,
+                                                        const KeyType& keyChain,
+                                                        const eckit::DataBlob& blob);
 
     /// Add a new node
     /// @param key - The value used to select this sub-node from the current node

@@ -77,6 +77,12 @@ PMEMoid PersistentPtrBase::raw() const {
 }
 
 
+void PersistentPtrBase::setPersist(PMEMobjpool * pool, PMEMoid oid) {
+    oid_ = oid;
+    ::pmemobj_persist(pool, &oid_, sizeof(oid_));
+}
+
+
 // -------------------------------------------------------------------------------------------------
 
 

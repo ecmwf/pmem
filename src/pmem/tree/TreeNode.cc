@@ -35,23 +35,12 @@ TreeNode::LeafExistsError::LeafExistsError(const std::string& msg, const CodeLoc
 //----------------------------------------------------------------------------------------------------------------------
 
 
-TreeNode::TreeNode(const std::string& value, const KeyType& subkeys, const DataBlob& blob) :
-    value_(eckit::FixedString<12>(value)),
-    key_(subkeys.size() > 0 ? subkeys[0].first : "") {
-
-    ASSERT(blob.length() != 0);
+TreeNode::TreeNode(const std::string& key, const std::string& value) :
+    value_(value),
+    key_(key) {
 
     items_.nullify();
     data_.nullify();
-
-    if (subkeys.size() > 0) {
-        std::vector<std::pair<std::string, std::string> > new_subkeys(subkeys.begin()+1, subkeys.end());
-        items_.push_back(subkeys[0].second, new_subkeys, blob);
-    } else {
-        NOTIMP;
-        allocateLeaf(value, blob);
-        data_.allocate(blob.buffer(), blob.length());
-    }
 }
 
 
@@ -63,93 +52,46 @@ TreeNode::TreeNode(const std::string& value, const PersistentPtr<PersistentBuffe
     items_.nullify();
 }
 
-void allocateLeaf(PersistentPtr<TreeNode>& ptr, const std::string& value, const eckit::DataBlob& blob) {
 
-    class LeafConstructor : public AtomicConstructor<TreeNode> {
-    public:
-        LeafConstructor(PersistentPool& pool, const std::string& value, const eckit::DataBlob& blob) :
-            pool_(pool),
-            value_(value),
-            blob_(blob) {
-            pBlob_.nullify();
-        }
-        ~LeafConstructor() {
-            if (!pBlob_.null())
-                pBlob_.free();
-        }
+PersistentPtr<TreeNode> TreeNode::allocateLeaf(PersistentPool& pool, const std::string& value, const DataBlob& blob) {
 
-        virtual void preAllocate() {
-            pBlob_ = pool_.allocate<PersistentBuffer>(blob_.buffer(), blob_.length());
-        }
+    PersistentPtr<PersistentBuffer> pBlob;
+    pBlob = pool.allocate<PersistentBuffer>(blob.buffer(), blob.length());
 
-        virtual void postAllocate() {
-            pBlob_.nullify();
-        }
+    PersistentPtr<TreeNode> pNode;
+    pNode = pool.allocate<TreeNode>(value, pBlob);
 
-        virtual void make(TreeNode& object) const {
-            new (&object) TreeNode(value_, pBlob_);
-        }
-
-    private:
-        PersistentPool& pool_;
-        const std::string& value_;
-        const eckit::DataBlob& blob_;
-
-        PersistentPtr<PersistentBuffer> pBlob_;
-    };
-
-    PersistentPool& pool(pmem::PoolRegistry::instance().poolFromPointer(&ptr));
-    LeafConstructor constructor(pool, value, blob);
-
-    ptr.allocate_ctr(constructor);
+    return pNode;
 }
 
-/*
- * ***********************************************************************************\
- * SDS TODO
- * Complete the allocate Nested worker in such a way that it can clean up reasonably.
- *
- * n.b. We will need to pass in a completed PersistentVector (in that way we can clean it up)
- *      rather than creating the object and adding to the node.
- *
- * Possibly put the LeafConstructor and TreeConstructors into an anonymous namespace {}
- */
 
-void allocateNested(PersistentPtr<TreeNode>& ptr) {
+/// This is an in-place constructor. Needs to know its pool already.
 
-    class TreeConstructor : public AtomicConstructor<TreeNode> {
-    public:
-        TreeConstructor(PersistentPool& pool, bool outer) :
-            pool_(pool),
-            outer_(outer),
-            complete_(false) {}
-        ~LeafConstructor() {}
+PersistentPtr<TreeNode> TreeNode::allocateNested(PersistentPool& pool,
+                                                 const std::string& value,
+                                                 const KeyType& keyChain,
+                                                 const DataBlob& blob) {
 
-        virtual void preAllocate() {
+    const std::string& leafValue(keyChain.size() == 0 ? value : keyChain.back().second);
 
+    PersistentPtr<TreeNode> pNode = allocateLeaf(pool, leafValue, blob);
 
-            pBlob_ = pool_.allocate<PersistentBuffer>(blob_.buffer(), blob_.length());
+    if (keyChain.size() != 0) {
+
+        for (int i = keyChain.size() - 1; i >= 0; i--) {
+
+            const std::string& k(keyChain[i].first);
+            const std::string& v(i > 0 ? keyChain[i-1].second : value);
+
+            // Allocate the relevant node
+
+            PersistentPtr<TreeNode> pNewNode = pool.allocate<TreeNode>(k, v);
+            pNewNode->items_.push_back_elem(pNode);
+            pNode = pNewNode;
         }
+    }
 
-        virtual void postAllocate() {
-            pBlob_.nullify();
-        }
-
-        virtual void make(TreeNode& object) const {
-            new (&object) TreeNode(value_, pBlob_);
-        }
-
-    private:
-        PersistentPool& pool_;
-
-        bool outer_;
-        bool complete_;
-    };
-
-    PersistentPool& pool(pmem::PoolRegistry::instance().poolFromPointer(&ptr));
-    Tree constructor(pool, value, blob);
-
-    ptr.allocate_ctr(constructor);
+    return pNode;
 }
 
 
@@ -182,8 +124,12 @@ void TreeNode::addNode(const KeyType& key, const eckit::DataBlob& blob) {
     // TODO: What happens if we are adding data in again...
 
     // We have reached the bottom of the known tree. Create new nodes from here-on down.
+
     KeyType subkeys(key.begin()+1, key.end());
-    items_.push_back(value, subkeys, blob);
+
+    PersistentPool& pool(pmem::PoolRegistry::instance().poolFromPointer(this));
+
+    items_.push_back_elem(allocateNested(pool, value, subkeys, blob));
 }
 
 

@@ -84,14 +84,6 @@ public:
     /// Return the type_id to use during construction. Generally this just echoes whatever
     /// is contained in the PersistentType<> structure for the type, but it can be customised
     virtual uint64_t type_id() const { return PersistentType<T>::type_id; }
-
-    /// The pre and post allocate functions are called immediately before the persistent
-    /// allocation is begun, and immediately after it has been returned successfully.
-    /// This allows nested allocations to be performed, with appropriate cleanup, etc.
-    ///
-    /// n.b. postAllocate will NOT be called if the allocation fails (but the constructor will).
-    virtual void preAllocate() {}
-    virtual void postAllocate() {}
 };
 
 

@@ -73,15 +73,18 @@ template<> uint64_t pmem::PersistentType<pmem::PersistentVectorData<TreeNode> >:
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 
 PersistentPtr<RootType> global_root;
+PersistentPool* global_pool;
 
 struct SuitePoolFixture {
 
     SuitePoolFixture() : autoPool_(RootType::Constructor()) {
         Log::info() << "Opening global pool" << std::endl;
         global_root = autoPool_.pool_.getRoot<RootType>();
+        global_pool = &autoPool_.pool_;
     }
     ~SuitePoolFixture() {
         global_root.nullify();
+        global_pool = 0;
     }
 
     AutoPool autoPool_;
@@ -92,6 +95,10 @@ BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
 //----------------------------------------------------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE( test_tree_node )
+
+BOOST_AUTO_TEST_CASE( test_tree_node_placeholder ) {
+//    BOOST_CHECK(false);
+}
 
 BOOST_AUTO_TEST_CASE( test_tree_node_raw_blob )
 {
@@ -104,7 +111,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_raw_blob )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate("value1", blob);
+    first.setPersist(TreeNode::allocateLeaf(*global_pool, "value1", blob));
 
     BOOST_CHECK(!first.null());
 
@@ -155,7 +162,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_recursive )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate("SAMPLE", key, blob);
+    first.setPersist(TreeNode::allocateNested(*global_pool, "SAMPLE", key, blob));
 
     // Check that we have created the correct structure (by manually walking the tree).
 
@@ -245,7 +252,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate("SAMPLE", key, blob);
+    first.setPersist(TreeNode::allocateNested(*global_pool, "SAMPLE", key, blob));
 
     // Add a second element to the tree being built
 
@@ -352,7 +359,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate("SAMPLE", key, blob);
+    first.setPersist(TreeNode::allocateNested(*global_pool, "SAMPLE", key, blob));
 
     // Attempt to branch by changing key2
 
@@ -389,7 +396,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate("SAMPLE", key, blob);
+    first.setPersist(TreeNode::allocateNested(*global_pool, "SAMPLE", key, blob));
 
     // What happens when we attempt to insert a leaf to the same key?
 
@@ -417,7 +424,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_leaf_branch )
     std::string data("\"data 1234\"");
     eckit::JSONDataBlob blob(data.c_str(), data.length());
 
-    first.allocate("SAMPLE", key, blob);
+    first.setPersist(TreeNode::allocateNested(*global_pool, "SAMPLE", key, blob));
 
     // What happens when we attempt to insert a leaf to the same key?
 
@@ -461,7 +468,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
     eckit::JSONDataBlob blob3(data3.c_str(), data3.length());
 
 
-    first.allocate("SAMPLE", key, blob);
+    first.setPersist(TreeNode::allocateNested(*global_pool, "SAMPLE", key, blob));
     first->addNode(key2, blob2);
     first->addNode(key3, blob3);
 
