@@ -15,6 +15,7 @@
 
 #include "pmem/PoolRegistry.h"
 #include "pmem/PersistentPool.h"
+#include "pmem/LibPMem.h"
 
 #include "eckit/exception/Exceptions.h"
 
@@ -43,7 +44,7 @@ void PoolRegistry::registerPool(PersistentPool& pool) {
 
     PMEMobjpool* handle = pool.raw_pool();
 
-    eckit::Log::info() << "Registering pool: " << handle << std::endl;
+    Log::debug<LibPMem>() << "Registering pool: " << handle << std::endl;
 
     // We are registering a pool. It needs to not already exist...
     ASSERT(pools_.find(handle) == pools_.end());
@@ -56,7 +57,7 @@ void PoolRegistry::deregisterPool(PersistentPool& pool) {
 
     PMEMobjpool* handle = pool.raw_pool();
 
-    eckit::Log::info() << "Deregistering pool: " << handle << std::endl;
+    Log::debug<LibPMem>() << "Deregistering pool: " << handle << std::endl;
 
     // We are registering a pool. It needs to not already exist...
     ASSERT(pools_.find(handle) != pools_.end());

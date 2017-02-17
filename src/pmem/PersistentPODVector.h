@@ -18,6 +18,7 @@
 
 
 #include "pmem/PersistentPtr.h"
+#include "pmem/LibPMem.h"
 
 
 /*
@@ -237,7 +238,7 @@ void PersistentPODVector<T>::push_back(const T& value) {
     // If all of the available space is full, then increase the space available (by factor of 2)
     if (PersistentPtr<data_type>::get()->full()) {
         size_t sz = size();
-        eckit::Log::info() << "Resizing POD vector from " << sz << " elements to " << 2*sz << std::endl;
+        eckit::Log::debug<LibPMem>() << "Resizing POD vector from " << sz << " elements to " << 2*sz << std::endl;
         resize(sz * 2);
     }
 

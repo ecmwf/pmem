@@ -14,8 +14,9 @@
 
 #include "eckit/log/Log.h"
 
-#include "pmem/PersistentPtr.h"
 #include "pmem/AtomicConstructor.h"
+#include "pmem/LibPMem.h"
+#include "pmem/PersistentPtr.h"
 
 using namespace eckit;
 
@@ -34,8 +35,8 @@ namespace pmem {
 int pmem_constructor(PMEMobjpool * pool, void * obj, void * arg) {
     const AtomicConstructorBase * constr_fn = reinterpret_cast<const AtomicConstructorBase*>(arg);
 
-    Log::info() << "Constructing persistent object of " << constr_fn->size()
-                << " bytes at: " << obj << std::endl;
+    Log::debug<LibPMem>() << "Constructing persistent object of " << constr_fn->size()
+                          << " bytes at: " << obj << std::endl;
 
     // The constructor should return zero for success. If it has failed (e.g. if a subobjects
     // allocation has failed) this needs to be propagated upwards so that the block reservation
