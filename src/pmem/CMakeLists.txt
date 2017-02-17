@@ -40,6 +40,8 @@ ecbuild_add_library(
         PersistentType.h
         PoolRegistry.h
         PoolRegistry.cc
+        LibPMem.h
+        LibPMem.cc
 
     GENERATED
         pmem_version.cc
