@@ -8,6 +8,11 @@
  * does it submit to any jurisdiction.
  */
 
+/*
+ * This software was developed as part of the EC H2020 funded project NextGenIO
+ * (Project ID: 671951) www.nextgenio.eu
+ */
+
 #define BOOST_TEST_MODULE test_pmem
 
 #include <fcntl.h>
