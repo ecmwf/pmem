@@ -13,16 +13,15 @@
  * (Project ID: 671951) www.nextgenio.eu
  */
 
-#define BOOST_TEST_MODULE test_pmem
+#include <cstdint>
 
-#include <stdint.h>
-
-#include "ecbuild/boost_test_framework.h"
+#include "eckit/testing/Test.h"
 
 #include "pmem/AtomicConstructor.h"
 
 using namespace std;
 using namespace pmem;
+using namespace eckit::testing;
 
 namespace {
 
@@ -36,7 +35,7 @@ namespace {
         uint32_t elem2;
     };
 
-    template<> uint64_t PersistentType<LocalType>::type_id = 99;
+    template<> uint64_t ::pmem::PersistentType<LocalType>::type_id = 99;
 }
 
 
@@ -55,10 +54,7 @@ uint64_t AtomicConstructor1Base<LocalType, int>::type_id() const {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE( test_pmem_atomic_constructor )
-
-
-BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_default_size )
+CASE( "test_pmem_atomic_constructor_default_size" )
 {
     struct Ctr : public AtomicConstructor<LocalType> {
         Ctr() {}
@@ -68,11 +64,11 @@ BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_default_size )
 
     Ctr ctr;
 
-    BOOST_CHECK_EQUAL(ctr.size(), 8);
+    EXPECT(ctr.size() == 8);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_manual_size )
+CASE( "test_pmem_atomic_constructor_manual_size" )
 {
     struct Ctr : public AtomicConstructor<LocalType> {
         Ctr() {}
@@ -85,11 +81,11 @@ BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_manual_size )
 
     Ctr ctr;
 
-    BOOST_CHECK_EQUAL(ctr.size(), 1234);
+    EXPECT(ctr.size() == 1234);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_build )
+CASE( "test_pmem_atomic_constructor_build" )
 {
     // Define a "spy" type, that can be used to test that make() was called, despite make()
     // being const in the class
@@ -143,56 +139,56 @@ BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor_build )
     obj.elem2 = 0;
 
     // Pass this object in as raw memory, as is done by ::pmem_constructor
-    BOOST_CHECK(!spy.called());
+    EXPECT(!spy.called());
     ctr.build(&obj);
-    BOOST_CHECK(spy.called());
+    EXPECT(spy.called());
 
-    BOOST_CHECK_EQUAL(obj.elem, 666);
-    BOOST_CHECK_EQUAL(obj.elem2, 666);
+    EXPECT(obj.elem == 666);
+    EXPECT(obj.elem2 == 666);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 // Consider the magic automatic constructors
 
-BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor0 )
+CASE( "test_pmem_atomic_constructor0" )
 {
     AtomicConstructor0<LocalType> ctr;
 
-    BOOST_CHECK_EQUAL(ctr.size(), 8);
-    BOOST_CHECK_EQUAL(ctr.type_id(), 99);
+    EXPECT(ctr.size() == 8);
+    EXPECT(ctr.type_id() == 99);
 
     LocalType x;
     x.elem = 0;
     x.elem2 = 0;
 
     ctr.build(&x);
-    BOOST_CHECK_EQUAL(x.elem, 11);
+    EXPECT(x.elem == 11);
 
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor1 )
+CASE( "test_pmem_atomic_constructor1" )
 {
     // This test makes use of the customised size/type_id functions!
 
     int arg1 = 33;
     AtomicConstructor1<LocalType, int> ctr(arg1);
 
-    BOOST_CHECK_EQUAL(ctr.size(), 99);
-    BOOST_CHECK_EQUAL(ctr.type_id(), 4321);
+    EXPECT(ctr.size() == 99);
+    EXPECT(ctr.type_id() == 4321);
 
     LocalType x;
     x.elem = 0;
     x.elem2 = 0;
 
     ctr.build(&x);
-    BOOST_CHECK_EQUAL(x.elem, 33);
+    EXPECT(x.elem == 33);
 
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor2 )
+CASE( "test_pmem_atomic_constructor2" )
 {
     // This test makes use of the customised size/type_id functions!
 
@@ -200,18 +196,20 @@ BOOST_AUTO_TEST_CASE( test_pmem_atomic_constructor2 )
     std::string arg2 = "An argument";
     AtomicConstructor2<LocalType, double, std::string> ctr(arg1, arg2);
 
-    BOOST_CHECK_EQUAL(ctr.size(), 8);
-    BOOST_CHECK_EQUAL(ctr.type_id(), 99);
+    EXPECT(ctr.size() == 8);
+    EXPECT(ctr.type_id() == 99);
 
     LocalType x;
     x.elem = 0;
     x.elem2 = 0;
 
     ctr.build(&x);
-    BOOST_CHECK_EQUAL(x.elem, 22);
-    BOOST_CHECK_EQUAL(x.elem2, 33);
+    EXPECT(x.elem == 22);
+    EXPECT(x.elem2 == 33);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE_END()
+int main(int argc, char** argv) {
+    return run_tests(argc, argv);
+}

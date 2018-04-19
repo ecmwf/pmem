@@ -13,12 +13,8 @@
  * (Project ID: 671951) www.nextgenio.eu
  */
 
-#define BOOST_TEST_MODULE test_tree
-
-#include "ecbuild/boost_test_framework.h"
-
 #include "eckit/parser/JSONDataBlob.h"
-#include "eckit/testing/Setup.h"
+#include "eckit/testing/Test.h"
 
 #include "pmem/tree/TreeNode.h"
 
@@ -29,8 +25,6 @@ using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
 using namespace tree;
-
-BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -77,39 +71,27 @@ template<> uint64_t pmem::PersistentType<pmem::PersistentVectorData<TreeNode> >:
 
 // Create a global fixture, so that this pool is only created once, and destroyed once.
 
-PersistentPtr<RootType> global_root;
-PersistentPool* global_pool;
+AutoPool globalAutoPool((RootType::Constructor()));
+PersistentPool* global_pool = &globalAutoPool.pool_;
 
-struct SuitePoolFixture {
-
-    SuitePoolFixture() : autoPool_(RootType::Constructor()) {
-        Log::info() << "Opening global pool" << std::endl;
-        global_root = autoPool_.pool_.getRoot<RootType>();
-        global_pool = &autoPool_.pool_;
-    }
-    ~SuitePoolFixture() {
-        global_root.nullify();
-        global_pool = 0;
-    }
-
-    AutoPool autoPool_;
+struct GlobalRootFixture : public PersistentPtr<RootType> {
+ GlobalRootFixture() : PersistentPtr<RootType>(globalAutoPool.pool_.getRoot<RootType>()) {}
+    ~GlobalRootFixture() { nullify(); }
 };
 
-BOOST_GLOBAL_FIXTURE( SuitePoolFixture );
+GlobalRootFixture global_root;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE( test_tree_node )
-
-BOOST_AUTO_TEST_CASE( test_tree_node_placeholder ) {
-//    BOOST_CHECK(false);
+CASE( "test_tree_node_placeholder" ) {
+//    EXPECT(false);
 }
 
-BOOST_AUTO_TEST_CASE( test_tree_node_raw_blob )
+CASE( "test_tree_node_raw_blob" )
 {
     PersistentPtr<TreeNode>& first(global_root->data_[0]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Ensure that we can do a direct allocation of a leaf node
 
@@ -118,44 +100,44 @@ BOOST_AUTO_TEST_CASE( test_tree_node_raw_blob )
 
     first.setPersist(TreeNode::allocateLeaf(*global_pool, "value1", blob));
 
-    BOOST_CHECK(!first.null());
+    EXPECT(!first.null());
 
     // Check that we have created a leaf node, with no subnodes
 
-    BOOST_CHECK(first->leaf());
-    BOOST_CHECK_EQUAL(first->nodeCount(), size_t(0));
+    EXPECT(first->leaf());
+    EXPECT(first->nodeCount() == size_t(0));
 
     // Leaf nodes have a value, by which they are referred by their parents, but no key (as they have no
     // subnodes)
 
-    BOOST_CHECK_EQUAL(first->value(), "value1");
-    BOOST_CHECK_EQUAL(first->key(), "");
+    EXPECT(first->value() == "value1");
+    EXPECT(first->key() == "");
 
     // Check that the data has been copied into persistent memory
 
-    BOOST_CHECK(first->data() != blob.buffer());
+    EXPECT(first->data() != blob.buffer());
 
     PMEMobjpool * pool_data = ::pmemobj_pool_by_ptr(first->data());
     PMEMobjpool * pool_root = ::pmemobj_pool_by_ptr(global_root.get());
 
-    BOOST_CHECK(pool_data != 0);
-    BOOST_CHECK_EQUAL(pool_data, pool_root);
+    EXPECT(pool_data != 0);
+    EXPECT(pool_data == pool_root);
 
     // Check the data contents
 
-    BOOST_CHECK_EQUAL(first->dataSize(), data.length());
+    EXPECT(first->dataSize() == data.length());
 
     std::string str_out(static_cast<const char*>(first->data()), first->dataSize());
 
-    BOOST_CHECK_EQUAL(data, str_out);
+    EXPECT(data == str_out);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_construct_recursive )
+CASE( "test_tree_node_construct_recursive" )
 {
     PersistentPtr<TreeNode>& first(global_root->data_[1]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Check that we can insert a leaf at a certain depth
 
@@ -171,81 +153,81 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_recursive )
 
     // Check that we have created the correct structure (by manually walking the tree).
 
-    BOOST_CHECK(!first.null());
-    BOOST_CHECK(!first->leaf());
-    BOOST_CHECK_EQUAL(first->nodeCount(), size_t(1));
+    EXPECT(!first.null());
+    EXPECT(!first->leaf());
+    EXPECT(first->nodeCount() == size_t(1));
 
-    BOOST_CHECK_EQUAL(first->value(), "SAMPLE");
-    BOOST_CHECK_EQUAL(first->key(), "key1");
-    BOOST_CHECK_EQUAL(first->dataSize(), size_t(0));
-    BOOST_CHECK(first->data() == 0);
+    EXPECT(first->value() == "SAMPLE");
+    EXPECT(first->key() == "key1");
+    EXPECT(first->dataSize() == size_t(0));
+    EXPECT(first->data() == 0);
 
     // ... next node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), size_t(1));
+    EXPECT((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size() == size_t(1));
     const PersistentPtr<TreeNode> child1 = (*reinterpret_cast<TreeNodeSpy*>(first.get())).items()[0];
 
-    BOOST_CHECK(!child1.null());
-    BOOST_CHECK(!child1->leaf());
-    BOOST_CHECK_EQUAL(child1->nodeCount(), size_t(1));
+    EXPECT(!child1.null());
+    EXPECT(!child1->leaf());
+    EXPECT(child1->nodeCount() == size_t(1));
 
-    BOOST_CHECK_EQUAL(child1->value(), "value1");
-    BOOST_CHECK_EQUAL(child1->key(), "key2");
-    BOOST_CHECK_EQUAL(child1->dataSize(), size_t(0));
-    BOOST_CHECK(child1->data() == 0);
+    EXPECT(child1->value() == "value1");
+    EXPECT(child1->key() == "key2");
+    EXPECT(child1->dataSize() == size_t(0));
+    EXPECT(child1->data() == 0);
 
     // ... next node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), size_t(1));
+    EXPECT((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size() == size_t(1));
     const PersistentPtr<TreeNode> child2 = (*reinterpret_cast<TreeNodeSpy*>(child1.get())).items()[0];
 
-    BOOST_CHECK(!child2.null());
-    BOOST_CHECK(!child2->leaf());
-    BOOST_CHECK_EQUAL(child2->nodeCount(), size_t(1));
+    EXPECT(!child2.null());
+    EXPECT(!child2->leaf());
+    EXPECT(child2->nodeCount() == size_t(1));
 
-    BOOST_CHECK_EQUAL(child2->value(), "value2");
-    BOOST_CHECK_EQUAL(child2->key(), "key3");
-    BOOST_CHECK_EQUAL(child2->dataSize(), size_t(0));
-    BOOST_CHECK(child2->data() == 0);
+    EXPECT(child2->value() == "value2");
+    EXPECT(child2->key() == "key3");
+    EXPECT(child2->dataSize() == size_t(0));
+    EXPECT(child2->data() == 0);
 
     // ... leaf node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), size_t(1));
+    EXPECT((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size() == size_t(1));
     const PersistentPtr<TreeNode> child3 = (*reinterpret_cast<TreeNodeSpy*>(child2.get())).items()[0];
 
-    BOOST_CHECK(!child3.null());
-    BOOST_CHECK(child3->leaf());
-    BOOST_CHECK_EQUAL(child3->nodeCount(), size_t(0));
+    EXPECT(!child3.null());
+    EXPECT(child3->leaf());
+    EXPECT(child3->nodeCount() == size_t(0));
 
-    BOOST_CHECK_EQUAL(child3->value(), "value3");
-    BOOST_CHECK_EQUAL(child3->key(), "");
+    EXPECT(child3->value() == "value3");
+    EXPECT(child3->key() == "");
 
     // Check that the data has been copied into persistent memory
 
-    BOOST_CHECK(child3->data() != 0);
-    BOOST_CHECK(child3->data() != blob.buffer());
+    EXPECT(child3->data() != 0);
+    EXPECT(child3->data() != blob.buffer());
 
     PMEMobjpool * pool_data = ::pmemobj_pool_by_ptr(child3->data());
     PMEMobjpool * pool_root = ::pmemobj_pool_by_ptr(global_root.get());
 
-    BOOST_CHECK(pool_data != 0);
-    BOOST_CHECK_EQUAL(pool_data, pool_root);
+    EXPECT(pool_data != 0);
+    EXPECT(pool_data == pool_root);
 
     // Check the data contents
 
-    BOOST_CHECK_EQUAL(child3->dataSize(), data.length());
+    EXPECT(child3->dataSize() == data.length());
 
     std::string str_out(static_cast<const char*>(child3->data()), child3->dataSize());
 
-    BOOST_CHECK_EQUAL(data, str_out);
+    EXPECT(data == str_out);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
+CASE( "test_tree_node_construct_addNode" )
 {
     PersistentPtr<TreeNode>& first(global_root->data_[2]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Check that we can insert a leaf at a certain depth
 
@@ -273,77 +255,77 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_addNode )
 
     // Check that the structure is correct.
 
-    BOOST_CHECK(!first.null());
-    BOOST_CHECK(!first->leaf());
-    BOOST_CHECK_EQUAL(first->nodeCount(), size_t(1));
+    EXPECT(!first.null());
+    EXPECT(!first->leaf());
+    EXPECT(first->nodeCount() == size_t(1));
 
-    BOOST_CHECK_EQUAL(first->value(), "SAMPLE");
-    BOOST_CHECK_EQUAL(first->key(), "key1");
-    BOOST_CHECK_EQUAL(first->dataSize(), size_t(0));
-    BOOST_CHECK(first->data() == 0);
+    EXPECT(first->value() == "SAMPLE");
+    EXPECT(first->key() == "key1");
+    EXPECT(first->dataSize() == size_t(0));
+    EXPECT(first->data() == 0);
 
     // ... next node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size(), size_t(1));
+    EXPECT((*reinterpret_cast<TreeNodeSpy*>(first.get())).items().size() == size_t(1));
     const PersistentPtr<TreeNode> child1 = (*reinterpret_cast<TreeNodeSpy*>(first.get())).items()[0];
 
-    BOOST_CHECK(!child1.null());
-    BOOST_CHECK(!child1->leaf());
-    BOOST_CHECK_EQUAL(child1->nodeCount(), size_t(2));
+    EXPECT(!child1.null());
+    EXPECT(!child1->leaf());
+    EXPECT(child1->nodeCount() == size_t(2));
 
-    BOOST_CHECK_EQUAL(child1->value(), "value1");
-    BOOST_CHECK_EQUAL(child1->key(), "key2");
-    BOOST_CHECK_EQUAL(child1->dataSize(), size_t(0));
-    BOOST_CHECK(child1->data() == 0);
+    EXPECT(child1->value() == "value1");
+    EXPECT(child1->key() == "key2");
+    EXPECT(child1->dataSize() == size_t(0));
+    EXPECT(child1->data() == 0);
 
     // ... Follow only the second branch (have checked the original add in a previous test).
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size(), size_t(2));
+    EXPECT((*reinterpret_cast<TreeNodeSpy*>(child1.get())).items().size() == size_t(2));
     const PersistentPtr<TreeNode> child2 = (*reinterpret_cast<TreeNodeSpy*>(child1.get())).items()[1];
 
-    BOOST_CHECK(!child2.null());
-    BOOST_CHECK(!child2->leaf());
-    BOOST_CHECK_EQUAL(child2->nodeCount(), size_t(1));
+    EXPECT(!child2.null());
+    EXPECT(!child2->leaf());
+    EXPECT(child2->nodeCount() == size_t(1));
 
-    BOOST_CHECK_EQUAL(child2->value(), "value2a");
-    BOOST_CHECK_EQUAL(child2->key(), "key99");
-    BOOST_CHECK_EQUAL(child2->dataSize(), size_t(0));
-    BOOST_CHECK(child2->data() == 0);
+    EXPECT(child2->value() == "value2a");
+    EXPECT(child2->key() == "key99");
+    EXPECT(child2->dataSize() == size_t(0));
+    EXPECT(child2->data() == 0);
 
     // ... leaf node
 
-    BOOST_CHECK_EQUAL((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size(), size_t(1));
+    EXPECT((*reinterpret_cast<TreeNodeSpy*>(child2.get())).items().size() == size_t(1));
     const PersistentPtr<TreeNode> child3 = (*reinterpret_cast<TreeNodeSpy*>(child2.get())).items()[0];
 
-    BOOST_CHECK(!child3.null());
-    BOOST_CHECK(child3->leaf());
-    BOOST_CHECK_EQUAL(child3->nodeCount(), size_t(0));
+    EXPECT(!child3.null());
+    EXPECT(child3->leaf());
+    EXPECT(child3->nodeCount() == size_t(0));
 
-    BOOST_CHECK_EQUAL(child3->value(), "valueX");
-    BOOST_CHECK_EQUAL(child3->key(), "");
+    EXPECT(child3->value() == "valueX");
+    EXPECT(child3->key() == "");
 
     // Check that the data has been copied into persistent memory
 
-    BOOST_CHECK(child3->data() != 0);
-    BOOST_CHECK(child3->data() != blob.buffer());
+    EXPECT(child3->data() != 0);
+    EXPECT(child3->data() != blob.buffer());
 
     PMEMobjpool * pool_data = ::pmemobj_pool_by_ptr(child3->data());
     PMEMobjpool * pool_root = ::pmemobj_pool_by_ptr(global_root.get());
 
-    BOOST_CHECK(pool_data != 0);
-    BOOST_CHECK_EQUAL(pool_data, pool_root);
+    EXPECT(pool_data != 0);
+    EXPECT(pool_data == pool_root);
 
     // Check the data contents
 
-    BOOST_CHECK_EQUAL(child3->dataSize(), data2.length());
+    EXPECT(child3->dataSize() == data2.length());
 
     std::string str_out(static_cast<const char*>(child3->data()), child3->dataSize());
 
-    BOOST_CHECK_EQUAL(data2, str_out);
+    EXPECT(data2 == str_out);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
+CASE( "test_tree_node_construct_branch_value" )
 {
     // When we are attempting to read a nodes children, the key is already set
     //
@@ -352,7 +334,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
 
     PersistentPtr<TreeNode>& first(global_root->data_[3]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Insert a leaf at a certain depth
 
@@ -376,11 +358,11 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_branch_value )
     std::string data2("\"Some more data\"");
     eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
 
-    BOOST_CHECK_THROW(first->addNode(key2, blob2), AssertionFailed);
+    EXPECT_THROWS_AS(first->addNode(key2, blob2), AssertionFailed);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
+CASE( "test_tree_node_construct_duplicate" )
 {
     // When we are attempting to read a nodes children, the key is already set
     //
@@ -389,7 +371,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
 
     PersistentPtr<TreeNode>& first(global_root->data_[4]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Insert a leaf at a certain depth
 
@@ -408,17 +390,17 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_duplicate )
     std::string data2("\"Another bit of data\"");
     eckit::JSONDataBlob blob2(data2.c_str(), data2.length());
 
-    BOOST_CHECK_THROW(first->addNode(key, blob2), TreeNode::LeafExistsError);
+    EXPECT_THROWS_AS(first->addNode(key, blob2), TreeNode::LeafExistsError);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_tree_node_construct_leaf_branch )
+CASE( "test_tree_node_construct_leaf_branch" )
 {
     // We cannot add further nodes to a leaf node.
 
     PersistentPtr<TreeNode>& first(global_root->data_[5]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Insert a leaf at a certain depth
 
@@ -435,14 +417,14 @@ BOOST_AUTO_TEST_CASE( test_tree_node_construct_leaf_branch )
 
     key.push_back(std::make_pair("key3", "value3"));
 
-    BOOST_CHECK_THROW(first->addNode(key, blob), TreeNode::LeafExistsError);
+    EXPECT_THROWS_AS(first->addNode(key, blob), TreeNode::LeafExistsError);
 }
 
-BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
+CASE( "test_tree_node_locate_leaf" )
 {
     PersistentPtr<TreeNode>& first(global_root->data_[6]);
 
-    BOOST_CHECK(first.null());
+    EXPECT(first.null());
 
     // Construct a
 
@@ -484,7 +466,7 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
     request["key2"] = "value_bad";
     request["key3"] = "value3";
 
-    BOOST_CHECK_EQUAL(first->lookup(request).size(), size_t(0));
+    EXPECT(first->lookup(request).size() == size_t(0));
 
     // Find a single key, as _fully_ specified
 
@@ -495,9 +477,9 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
 
     std::vector<PersistentPtr<TreeNode> > result2 = first->lookup(request2);
 
-    BOOST_CHECK_EQUAL(result2.size(), size_t(1));
-    BOOST_CHECK_EQUAL(result2[0]->value(), "value3");
-    BOOST_CHECK_EQUAL(std::string((const char*)result2[0]->data(), result2[0]->dataSize()), data2);
+    EXPECT(result2.size() == size_t(1));
+    EXPECT(result2[0]->value() == "value3");
+    EXPECT(std::string((const char*)result2[0]->data(), result2[0]->dataSize()) == data2);
 
     //// Do a wildcard (underspecified) lookup
 
@@ -507,14 +489,16 @@ BOOST_AUTO_TEST_CASE( test_tree_node_locate_leaf )
 
     std::vector<PersistentPtr<TreeNode> > result3 = first->lookup(request3);
 
-    BOOST_CHECK_EQUAL(result3.size(), size_t(2));
-    BOOST_CHECK_EQUAL(result3[0]->value(), "value3");
-    BOOST_CHECK_EQUAL(result3[1]->value(), "value3");
-    BOOST_CHECK_EQUAL(std::string((const char*)result3[0]->data(), result3[0]->dataSize()), data);
-    BOOST_CHECK_EQUAL(std::string((const char*)result3[1]->data(), result3[1]->dataSize()), data2);
+    EXPECT(result3.size() == size_t(2));
+    EXPECT(result3[0]->value() == "value3");
+    EXPECT(result3[1]->value() == "value3");
+    EXPECT(std::string((const char*)result3[0]->data(), result3[0]->dataSize()) == data);
+    EXPECT(std::string((const char*)result3[1]->data(), result3[1]->dataSize()) == data2);
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE_END()
+int main(int argc, char** argv) {
+    return run_tests(argc, argv);
+}

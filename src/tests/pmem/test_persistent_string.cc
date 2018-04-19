@@ -13,14 +13,10 @@
  * (Project ID: 671951) www.nextgenio.eu
  */
 
-#define BOOST_TEST_MODULE test_pmem
-
 #include <string>
 
-#include "ecbuild/boost_test_framework.h"
-
 #include "eckit/exception/Exceptions.h"
-#include "eckit/testing/Setup.h"
+#include "eckit/testing/Test.h"
 
 #include "pmem/PersistentString.h"
 #include "pmem/PersistentPtr.h"
@@ -31,8 +27,6 @@ using namespace std;
 using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
-
-BOOST_GLOBAL_FIXTURE(Setup);
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -68,15 +62,13 @@ template<> uint64_t pmem::PersistentType<PersistentString>::type_id = 1;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE( test_pmem_persistent_string );
-
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_valid_persistent_ptr )
+CASE( "test_pmem_persistent_string_valid_persistent_ptr" )
 {
     // If PersistentBuffer is not OK, this will trigger StaticAssert
     PersistentPtr<PersistentString> ptr;
 }
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_allocate )
+CASE( "test_pmem_persistent_string_allocate" )
 {
     std::string test_string = "I am a test string";
 
@@ -86,10 +78,10 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_allocate )
     root->data_.allocate(test_string);
 
     std::string get_back(root->data_->c_str(), root->data_->length());
-    BOOST_CHECK_EQUAL(get_back, test_string);
+    EXPECT(get_back == test_string);
 }
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_size )
+CASE( "test_pmem_persistent_string_size" )
 {
     std::string str_in("");
     AtomicConstructor1<PersistentString, std::string> ctr(str_in);
@@ -97,44 +89,44 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_size )
     // n.b. we store the null character, so that data() and c_str() can be implemented O(1) according to the std.
 
     // Check that space is allocated to store the data, and to store the size of the data
-    BOOST_CHECK_EQUAL(ctr.size(), sizeof(size_t) + sizeof(char));
+    EXPECT(ctr.size() == sizeof(size_t) + sizeof(char));
 
     std::string str_in2("1234");
     AtomicConstructor1<PersistentString, std::string> ctr2(str_in2);
 
     // Check that space is allocated to store the data, and to store the size of the data
-    BOOST_CHECK_EQUAL(ctr2.size(), sizeof(size_t) + 5 * sizeof(char));
+    EXPECT(ctr2.size() == sizeof(size_t) + 5 * sizeof(char));
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_empty )
+CASE( "test_pmem_persistent_string_empty" )
 {
     PersistentMock<PersistentString> stringMock(std::string(""));
     PersistentString& str(stringMock.object());
 
-    BOOST_CHECK_EQUAL(str, std::string(""));
-    BOOST_CHECK_EQUAL(str.size(), size_t(0));
-    BOOST_CHECK_EQUAL(str.length(), size_t(0));
+    EXPECT(str == std::string(""));
+    EXPECT(str.size() == size_t(0));
+    EXPECT(str.length() == size_t(0));
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_real )
+CASE( "test_pmem_persistent_string_real" )
 {
     PersistentMock<PersistentString> stringMock(std::string("this is a string"));
     PersistentString& str(stringMock.object());
 
-    BOOST_CHECK_EQUAL(str, std::string("this is a string"));
-    BOOST_CHECK_EQUAL(str.size(), size_t(16));
-    BOOST_CHECK_EQUAL(str.length(), size_t(16));
+    EXPECT(str == std::string("this is a string"));
+    EXPECT(str.size() == size_t(16));
+    EXPECT(str.length() == size_t(16));
 
-    BOOST_CHECK_EQUAL(str[0], 't');
-    BOOST_CHECK_EQUAL(str[15], 'g');
+    EXPECT(str[0] == 't');
+    EXPECT(str[15] == 'g');
 
-    BOOST_CHECK_EQUAL(::strcmp("this is a string", str.c_str()), 0);
+    EXPECT(::strcmp("this is a string", str.c_str()) == 0);
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_out_of_range )
+CASE( "test_pmem_persistent_string_out_of_range" )
 {
     struct Tester {
         void operator() () {
@@ -149,7 +141,7 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_out_of_range )
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_equality_operators )
+CASE( "test_pmem_persistent_string_equality_operators" )
 {
     PersistentMock<PersistentString> stringMock1(std::string("This is a string 1"));
     PersistentMock<PersistentString> stringMock1b(std::string("This is a string 1"));
@@ -161,9 +153,9 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_equality_operators )
 
     // Compare two Persistent Strings
 
-    BOOST_CHECK(str1 == str1b);         BOOST_CHECK(!(str1 != str1b));
-    BOOST_CHECK(str1 != str2);          BOOST_CHECK(!(str1 == str2));
-    BOOST_CHECK(str2 != str1);          BOOST_CHECK(!(str2 == str1));
+    EXPECT(str1 == str1b);         EXPECT(!(str1 != str1b));
+    EXPECT(str1 != str2);          EXPECT(!(str1 == str2));
+    EXPECT(str2 != str1);          EXPECT(!(str2 == str1));
 
     // Compare persistent strings to C strings
 
@@ -172,15 +164,15 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_equality_operators )
     const char* cstrshorter = "This";
     const char* cstrlonger = "This is a string that is somewhat longer";
 
-    BOOST_CHECK(str1 == cstrsame);      BOOST_CHECK(!(str1 != cstrsame));
-    BOOST_CHECK(str1 != cstrdiff);      BOOST_CHECK(!(str1 == cstrdiff));
-    BOOST_CHECK(str1 != cstrshorter);   BOOST_CHECK(!(str1 == cstrshorter));
-    BOOST_CHECK(str1 != cstrlonger);    BOOST_CHECK(!(str1 == cstrlonger));
+    EXPECT(str1 == cstrsame);      EXPECT(!(str1 != cstrsame));
+    EXPECT(str1 != cstrdiff);      EXPECT(!(str1 == cstrdiff));
+    EXPECT(str1 != cstrshorter);   EXPECT(!(str1 == cstrshorter));
+    EXPECT(str1 != cstrlonger);    EXPECT(!(str1 == cstrlonger));
 
-    BOOST_CHECK(cstrsame == str1);      BOOST_CHECK(!(cstrsame != str1));
-    BOOST_CHECK(cstrdiff != str1);      BOOST_CHECK(!(cstrdiff == str1));
-    BOOST_CHECK(cstrshorter != str1);   BOOST_CHECK(!(cstrshorter == str1));
-    BOOST_CHECK(cstrlonger != str1);    BOOST_CHECK(!(cstrlonger == str1));
+    EXPECT(cstrsame == str1);      EXPECT(!(cstrsame != str1));
+    EXPECT(cstrdiff != str1);      EXPECT(!(cstrdiff == str1));
+    EXPECT(cstrshorter != str1);   EXPECT(!(cstrshorter == str1));
+    EXPECT(cstrlonger != str1);    EXPECT(!(cstrlonger == str1));
 
     // Compare persistent strings to std::strings
 
@@ -189,18 +181,20 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_string_equality_operators )
     std::string strshorter(cstrshorter);
     std::string strlonger(cstrlonger);
 
-    BOOST_CHECK(str1 == strsame);       BOOST_CHECK(!(str1 != strsame));
-    BOOST_CHECK(str1 != strdiff);       BOOST_CHECK(!(str1 == strdiff));
-    BOOST_CHECK(str1 != strshorter);    BOOST_CHECK(!(str1 == strshorter));
-    BOOST_CHECK(str1 != strlonger);     BOOST_CHECK(!(str1 == strlonger));
+    EXPECT(str1 == strsame);       EXPECT(!(str1 != strsame));
+    EXPECT(str1 != strdiff);       EXPECT(!(str1 == strdiff));
+    EXPECT(str1 != strshorter);    EXPECT(!(str1 == strshorter));
+    EXPECT(str1 != strlonger);     EXPECT(!(str1 == strlonger));
 
-    BOOST_CHECK(strsame == str1);       BOOST_CHECK(!(strsame != str1));
-    BOOST_CHECK(strdiff != str1);       BOOST_CHECK(!(strdiff == str1));
-    BOOST_CHECK(strshorter != str1);    BOOST_CHECK(!(strshorter == str1));
-    BOOST_CHECK(strlonger != str1);     BOOST_CHECK(!(strlonger == str1));
+    EXPECT(strsame == str1);       EXPECT(!(strsame != str1));
+    EXPECT(strdiff != str1);       EXPECT(!(strdiff == str1));
+    EXPECT(strshorter != str1);    EXPECT(!(strshorter == str1));
+    EXPECT(strlonger != str1);     EXPECT(!(strlonger == str1));
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE_END()
+int main(int argc, char** argv) {
+    return run_tests(argc, argv);
+}
