@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 2.8.11 FATAL_ERROR )
+cmake_minimum_required( VERSION 3.1 FATAL_ERROR )
 
 project( pmem C CXX )
 
@@ -6,13 +6,18 @@ set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} 
 
 include( ecbuild_system NO_POLICY_SCOPE )
 
-ecbuild_requires_macro_version( 2.0 )
-
-ecbuild_use_package( PROJECT eckit VERSION  0.10  REQUIRED )
-
-find_package(pmemio REQUIRED)
+ecbuild_requires_macro_version( 2.9 )
 
 ecbuild_declare_project()
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+### dependencies
+
+ecbuild_use_package( PROJECT eckit VERSION  0.21  REQUIRED )
+
+find_package(pmemio REQUIRED)
 
 ### export package to other ecbuild packages
 
