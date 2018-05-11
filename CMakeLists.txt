@@ -29,8 +29,7 @@ add_subdirectory( src )
 
 ### finalize project
 
-ecbuild_add_resources( TARGET top_files SOURCES README.md)
-#ecbuild_add_resources( TARGET top_files SOURCES TODO AUTHORS README.md NOTICE LICENSE INSTALL ChangeLog COPYING )
+ecbuild_add_resources( TARGET ${PROJECT_NAME}_top_files SOURCES README.md)
 
 ecbuild_pkgconfig(NAME pmem
                   DESCRIPTION "Use the persistent memory libs"
