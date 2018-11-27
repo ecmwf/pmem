@@ -23,10 +23,16 @@
 
 #include "eckit/exception/Exceptions.h"
 
+#include <mutex>
+
 using namespace eckit;
 
 
 namespace pmem {
+
+namespace {
+std::mutex registryMutex;
+}
 
 
 // -------------------------------------------------------------------------------------------------
@@ -46,9 +52,11 @@ PoolRegistry& PoolRegistry::instance() {
 
 void PoolRegistry::registerPool(PersistentPool& pool) {
 
+    std::lock_guard<std::mutex> lock(registryMutex);
+
     PMEMobjpool* handle = pool.raw_pool();
 
-    Log::debug<LibPMem>() << "Registering pool: " << handle << std::endl;
+    Log::debug<LibPMem>() << "Registering pool (" << pool.path() << "): " << handle << std::endl;
 
     // We are registering a pool. It needs to not already exist...
     ASSERT(pools_.find(handle) == pools_.end());
@@ -59,9 +67,11 @@ void PoolRegistry::registerPool(PersistentPool& pool) {
 
 void PoolRegistry::deregisterPool(PersistentPool& pool) {
 
+    std::lock_guard<std::mutex> lock(registryMutex);
+
     PMEMobjpool* handle = pool.raw_pool();
 
-    Log::debug<LibPMem>() << "Deregistering pool: " << handle << std::endl;
+    Log::debug<LibPMem>() << "Deregistering pool (" << pool.path() << "): " << handle << std::endl;
 
     // We are registering a pool. It needs to not already exist...
     ASSERT(pools_.find(handle) != pools_.end());
@@ -71,6 +81,8 @@ void PoolRegistry::deregisterPool(PersistentPool& pool) {
 
 
 PersistentPool& PoolRegistry::poolFromPointer(void* ptr) {
+
+    std::lock_guard<std::mutex> lock(registryMutex);
 
     PMEMobjpool* handle = ::pmemobj_pool_by_ptr(ptr);
 
