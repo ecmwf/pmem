@@ -32,13 +32,13 @@ if( NOT pmemio_FOUND )
             PMEMIO_BASE_LIBRARY
             NAMES pmem
             PATHS ${PMEMIO_PATH}
-            PATH_SUFFIXES debug nondebug src/debug src/nondebug
+            PATH_SUFFIXES debug nondebug src/debug src/nondebug lib
         )
         find_library(
             PMEMIO_OBJ_LIBRARY
             NAMES pmemobj
             PATHS ${PMEMIO_PATH}
-            PATH_SUFFIXES debug nondebug src/debug src/nondebug
+            PATH_SUFFIXES debug nondebug src/debug src/nondebug lib
         )
 
     endif()
