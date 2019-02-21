@@ -16,6 +16,7 @@
 /// @author Simon Smart
 /// @date   Feb 2016
 
+#include <cstring>
 
 #include "eckit/io/Buffer.h"
 

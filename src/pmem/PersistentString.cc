@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cstring>
 
 
 using namespace eckit;

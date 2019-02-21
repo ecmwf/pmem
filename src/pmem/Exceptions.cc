@@ -17,6 +17,7 @@
 /// @date   Feb 2016
 
 #include <string>
+#include <cstring>
 
 #include "pmem/Exceptions.h"
 
