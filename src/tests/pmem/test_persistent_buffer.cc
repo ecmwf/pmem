@@ -8,16 +8,17 @@
  * does it submit to any jurisdiction.
  */
 
-#define BOOST_TEST_MODULE test_pmem
+/*
+ * This software was developed as part of the EC H2020 funded project NextGenIO
+ * (Project ID: 671951) www.nextgenio.eu
+ */
 
 #include <string>
-
-#include "ecbuild/boost_test_framework.h"
 
 #include "eckit/filesystem/PathName.h"
 #include "eckit/io/Buffer.h"
 #include "eckit/memory/NonCopyable.h"
-#include "eckit/testing/Setup.h"
+#include "eckit/testing/Test.h"
 #include "eckit/types/FixedString.h"
 
 #include "pmem/PersistentBuffer.h"
@@ -29,9 +30,6 @@ using namespace std;
 using namespace pmem;
 using namespace eckit;
 using namespace eckit::testing;
-
-BOOST_GLOBAL_FIXTURE(Setup);
-
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -68,15 +66,13 @@ template<> uint64_t pmem::PersistentType<PersistentBuffer>::type_id = 1;
 //----------------------------------------------------------------------------------------------------------------------
 
 
-BOOST_AUTO_TEST_SUITE( test_pmem_persistent_buffer )
-
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_valid_persistent_ptr )
+CASE( "test_pmem_persistent_buffer_valid_persistent_ptr" )
 {
     // If PersistentBuffer is not OK, this will trigger StaticAssert
     PersistentPtr<PersistentBuffer> ptr;
 }
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_allocate )
+CASE( "test_pmem_persistent_buffer_allocate" )
 {
     std::string test_string = "I am a test string";
 
@@ -86,38 +82,38 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_allocate )
     root->data_[0].allocate(test_string.data(), test_string.length());
 
     std::string get_back(static_cast<const char*>(root->data_[0]->data()), root->data_[0]->size());
-    BOOST_CHECK_EQUAL(get_back, test_string);
+    EXPECT(get_back == test_string);
 }
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_size )
+CASE( "test_pmem_persistent_buffer_size" )
 {
     const void* dat = 0;
     size_t len = 1234;
     AtomicConstructor2<PersistentBuffer, const void*, size_t> ctr(dat, len);
 
     // Check that space is allocated to store the data, and to store the size of the data
-    BOOST_CHECK_EQUAL(ctr.size(), 1234 + sizeof(size_t));
+    EXPECT(ctr.size() == 1234 + sizeof(size_t));
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_buffer_size_zero )
+CASE( "test_pmem_persistent_buffer_size_zero" )
 {
     const void* dat = 0;
     size_t len(0);
     AtomicConstructor2<PersistentBuffer, const void*, size_t> ctr(dat, len);
 
     // If we specify a zero-sized buffer, then check that the constructor does the right thing...
-    BOOST_CHECK_EQUAL(ctr.size(), sizeof(size_t));
+    EXPECT(ctr.size() == sizeof(size_t));
 
     Buffer buf(ctr.size());
     PersistentBuffer& buf_ref(*reinterpret_cast<PersistentBuffer*>((void*)buf));
     ctr.make(buf_ref);
 
-    BOOST_CHECK_EQUAL(buf_ref.size(), size_t(0));
+    EXPECT(buf_ref.size() == size_t(0));
 }
 
 
-BOOST_AUTO_TEST_CASE( test_pmem_persistent_stores_data )
+CASE( "test_pmem_persistent_stores_data" )
 {
     std::string dat("SOME DATA");
     const void* data_ptr = dat.data();
@@ -125,16 +121,18 @@ BOOST_AUTO_TEST_CASE( test_pmem_persistent_stores_data )
 
     AtomicConstructor2<PersistentBuffer, const void*, size_t> ctr(data_ptr, len);
 
-    BOOST_CHECK_EQUAL(ctr.size(), dat.length() + sizeof(size_t));
+    EXPECT(ctr.size() == dat.length() + sizeof(size_t));
 
     Buffer buf(ctr.size());
     PersistentBuffer& buf_ref(*reinterpret_cast<PersistentBuffer*>((void*)buf));
     ctr.make(buf_ref);
 
-    BOOST_CHECK_EQUAL(buf_ref.size(), dat.length());
-//    BOOST_CHECK_EQUAL(::memcmp(dat.c_str(), buf_ref.data(), buf_ref.size()), 0);
+    EXPECT(buf_ref.size() == dat.length());
+//    EXPECT(::memcmp(dat.c_str(), buf_ref.data(), buf_ref.size()), 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE_END()
+int main(int argc, char** argv) {
+    return run_tests(argc, argv);
+}
