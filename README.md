@@ -1,3 +1,49 @@
+pmem
+====
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/ecmwf/pmem/blob/develop/LICENSE)
+
+Requirements
+------------
+
+Runtime dependencies:
+
+- eckit -- http://github.com/ecmwf/eckit
+- pmdk -- https://github.com/pmem/pmdk
+
+Build dependencies:
+
+- CMake --- For use and installation see http://www.cmake.org/
+- ecbuild --- ECMWF library of CMake macros ()
+
+Installation
+------------
+
+pmem employs an out-of-source build/install based on CMake.
+
+Make sure ecbuild is installed and the ecbuild executable script is found ( `which ecbuild` ).
+
+Now proceed with installation as follows:
+
+```bash
+# Environment --- Edit as needed
+srcdir=$(pwd)
+builddir=build
+installdir=$HOME/local  
+
+# 1. Create the build directory:
+mkdir $builddir
+cd $builddir
+
+# 2. Run CMake
+ecbuild --prefix=$installdir -- -DCMAKE_PREFIX_PATH=/path/to/installations $srcdir
+
+# 3. Compile / Install
+make -j10
+make install
+```
+
+
 # Persistent memory tools
 
 ## Dependencies
@@ -198,6 +244,3 @@
 
     This type does what it says on the tin. Its constructor object accepts a pointer to a
     region of memory and a length. This data is then stored persistently.
-
-
-
