@@ -18,6 +18,9 @@ configure_file( pmem_version.cc.in  pmem_version.cc )
 ecbuild_add_library(
 
     TARGET pmempp
+    INSTALL_HEADERS LISTED
+    HEADER_DESTINATION
+        ${INSTALL_INCLUDE_DIR}/pmem
 
     SOURCES
         pmem_version.cc
@@ -46,8 +49,7 @@ ecbuild_add_library(
     GENERATED
         pmem_version.cc
 
-    PRIVATE_INCLUDES
-        ${ECKIT_INCLUDE_DIRS}
+    INCLUDES
         ${PMEMIO_INCLUDE_DIRS}
 
     LIBS
